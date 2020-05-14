@@ -1,0 +1,411 @@
+﻿[[~ // parameters begin
+
+//using namespace cxtpl_utils;
+
+//const auto headerGuard
+//  = GetWithDefault<std::string>(cxtpl_params, "headerGuard", "");
+//
+//const auto generator_path
+//  = GetWithDefault<std::string>(cxtpl_params, "generator_path", "");
+//
+//const auto fullBaseType
+//  = GetWithDefault<std::string>(cxtpl_params, "fullBaseType", "");
+//
+//std::vector<std::string> generator_includes
+//  = GetWithDefault<std::vector<std::string>>
+//      (cxtpl_params, "generator_includes", std::vector<std::string>{});
+
+/*std::string OriginalTypeclassBaseCode
+  = GetWithDefault<std::string>
+      (cxtpl_params, "OriginalTypeclassBaseCode", std::string{});
+
+std::string GeneratedTypeclassName
+  = GetWithDefault<std::string>
+      (cxtpl_params, "GeneratedTypeclassName", std::string{});*/
+
+/*std::string structTemplateParams
+  = templateParamsFullDecls(structInfo->templateParams);
+
+std::string GeneratedTypeclassName =
+  structInfo->GetFullQualifiedName();
+  //structInfo->decl->getNameAsString();
+
+if(!structTemplateParams.empty())
+{
+  GeneratedTypeclassName =
+    structInfo->decl->getNameAsString()
+    + "<" + structTemplateParams + ">";
+}*/
+
+//templateParams
+
+//reflection::ClassInfoPtr ReflectedStructInfo
+//  = GetWithDefault<reflection::ClassInfoPtr>
+//      (cxtpl_params, "ReflectedStructInfo", nullptr);
+
+const size_t ReflectedStructInfoMethodsSize =
+    ReflectedStructInfo->methods.size();
+
+const size_t ReflectedStructInfoCompoundIdSize =
+    ReflectedStructInfo->compoundId.size();
+
+// parameters end
+/* no newline */ ~]][[~]]
+// This is generated file. Do not modify directly.
+// Path to the code generator: [[+ generator_path +]].
+
+[[+ startHeaderGuard(headerGuard) /* no newline */ +]][[~]]
+
+[[~]] for(const auto& fileName: generator_includes) {
+[[+ fileName +]]
+[[~]] } // end for
+
+#include <array>
+#include <functional>
+#include <memory>
+
+namespace cxxctp {
+namespace generated {
+
+[[~]]  { // startscope
+[[~]]    for(const auto& method: ReflectedStructInfo->methods) {
+[[~]]      const size_t methodParamsSize = method->params.size();
+[[~]]      const bool needPrint = !method->isImplicit
+[[~]]          && !method->isOperator
+[[~]]          && !method->isCtor
+[[~]]          && !method->isDtor;
+[[~]]      const std::string tplTypenames = typenameParamsFullDecls(method->params);
+[[~]]      if(needPrint) {
+  template<
+    [[+ tplTypenames +]][[+ tplTypenames.empty() ? "" : "," +]]
+[[~]]    int index_compoundId1 = 0;
+[[~]]    for(const auto& compoundId: ReflectedStructInfo->compoundId) {
+    typename T[[* index_compoundId1 *]],
+[[~]]      index_compoundId1++;
+[[~]]    } // end for
+    typename V,
+[[~]]    int index_compoundId2 = 0;
+[[~]]    for(const auto& compoundId: ReflectedStructInfo->compoundId) {
+[[~]]      const std::string delimiter =
+[[~]]       index_compoundId2 < (ReflectedStructInfoCompoundIdSize - 1) ? "," : "";
+    typename std::enable_if<std::is_same<[[+ compoundId +]], T[[* index_compoundId2 *]]>::value>::type* = nullptr[[+ delimiter +]]
+[[~]]      index_compoundId2++;
+[[~]]    } // end for
+  >
+[[+ method->isExplicitCtor ? "explicit " : "" +]][[~]] /* no newline */
+[[+ method->isConstexpr ? "constexpr " : "" +]][[~]] /* no newline */
+[[+ method->isStatic ? "static " : "" +]][[~]] /* no newline */
+[[+ method->returnType->getPrintedName() +]][[~]] /* no newline */
+[[+ " " +]][[~]] /* no newline */
+[[+ method->name +]][[~]] /* no newline */
+(const V&[[~]]/* no newline */
+[[~]] if(methodParamsSize) {
+[[+   ", " +]][[~]] /* no newline */
+[[+ paramsFullDecls(method->params) +]][[~]] /* no newline */
+[[~]] } // methodParamsSize
+) [[~]] /* no newline */
+[[+ method->isNoExcept ? "noexcept " : "" +]][[~]] /* no newline */
+;
+[[~ /* newline */ ~]]
+[[~]]      } // needPrint
+[[~]]    } // methods endfor
+[[~]]  } // endscope
+
+[[~]] if(structInfo->templateParams.empty()) {
+
+template<>
+struct _tc_model_t<[[+ fullBaseType +]]> {
+  virtual ~_tc_model_t() noexcept { }
+
+  virtual std::unique_ptr<_tc_model_t>
+    clone() noexcept = 0;
+
+  virtual std::unique_ptr<_tc_model_t>
+    move_clone() noexcept = 0;
+
+#if defined(ENABLE_TYPECLASS_GUID)
+  virtual std::string
+    get_GUID() const noexcept = 0;
+#endif // ENABLE_TYPECLASS_GUID
+
+  //virtual const size_t getModelTypeIndex() const noexcept = 0;
+
+[[~]]  { // startscope
+[[~]]    for(const auto& method: ReflectedStructInfo->methods) {
+[[~]]      const size_t methodParamsSize = method->params.size();
+[[~]]      const bool needPrint = !method->isImplicit
+[[~]]          && !method->isOperator
+[[~]]          && !method->isCtor
+[[~]]          && !method->isDtor;
+[[~]]      if(method->isTemplate()) {
+template< [[+ templateParamsFullDecls(method->tplParams) +]] >
+[[~]]      } // method->isTemplate
+[[~]]      if(needPrint) {
+[[+ method->isExplicitCtor ? "explicit " : "" +]][[~]] /* no newline */
+[[+ method->isVirtual ? "virtual " : "" +]][[~]] /* no newline */
+[[+ method->isConstexpr ? "constexpr " : "" +]][[~]] /* no newline */
+[[+ method->isStatic ? "static " : "" +]][[~]] /* no newline */
+[[+ method->returnType->getPrintedName() +]][[~]] /* no newline */
+[[+ " __" +]][[~]] /* no newline */
+[[+ method->name +]][[~]] /* no newline */
+(
+[[+ paramsFullDecls(method->params) +]][[~]] /* no newline */
+) [[~]] /* no newline */
+[[+ method->isConst ? "const " : "" +]][[~]] /* no newline */
+[[+ method->isNoExcept ? "noexcept " : "" +]][[~]] /* no newline */
+[[+ method->isPure ? "= 0 " : "" +]][[~]] /* no newline */
+[[+ method->isDeleted ? "= delete " : "" +]][[~]] /* no newline */
+[[+ method->isDefault ? "= default " : "" +]][[~]] /* no newline */
+[[~]]      if(method->isDefined && method->isClassScopeInlined) {
+[[+ method->body +]]
+[[~]]      } else {
+;
+[[~]]      } // method->isDefined && method->isClassScopeInlined
+[[~ /* newline */ ~]]
+[[~]]      } // needPrint
+[[~]]    } // methods endfor
+[[~]]  } // endscope
+
+  /*template <typename T>
+  T& ref_concrete() noexcept;
+
+  template <typename U>
+  _tc_impl_t<U, [[+ fullBaseType +]]>* as() noexcept
+  {
+    return nullptr;
+  }*/
+
+  //template <typename T>
+  //T& ref_concrete() noexcept;
+};
+
+template<>
+struct _tc_combined_t<[[+ fullBaseType +]]> {
+    // Default initializer creates an empty _tc_combined_t.
+    _tc_combined_t() = default;
+
+    _tc_combined_t(
+      std::reference_wrapper<
+        _tc_combined_t<[[+ fullBaseType +]]>>&& rhs) noexcept
+    {
+        //puts("_tc_combined_t<[[+ fullBaseType +]]> ref copy ctor");
+        if(rhs.get()) {
+            model_ = rhs.get().model_;
+        }
+    }
+
+    /// \note moves passed argument
+    template <
+        class T,
+        typename = IsNotReference<T>,
+        typename std::enable_if<!std::is_same<_tc_combined_t, T>::value>::type* = nullptr
+        >
+    _tc_combined_t(std::shared_ptr<T>&& u) noexcept :
+                                                      model_(std::move(u)) {
+        static_assert(!std::is_const<typename std::remove_reference<T>::type>::value,
+                      "You've attempted a cast to a const rvalue reference. "
+                      "Make sure you're not trying to move a const object, "
+                      "as this would likely result in a copy not a move. "
+                      "If you need it for real, call std::move(...) instead.");
+        //puts("_tc_combined_t<[[+ fullBaseType +]]> called, moves passed argument");
+    }
+
+    template <
+        class T,
+        typename = IsNotReference<T>,
+        typename std::enable_if<!std::is_same<_tc_combined_t, T>::value>::type* = nullptr
+        >
+    _tc_combined_t(const std::shared_ptr<T>& u) noexcept :
+                                                           model_(u) {
+        //puts("_tc_combined_t<[[+ fullBaseType +]]> called, shares passed argument");
+    }
+
+    template <
+        class T,
+        typename std::enable_if<!std::is_same<_tc_combined_t, T>::value>::type* = nullptr
+        >
+    _tc_combined_t(const std::reference_wrapper<T>& u) noexcept :
+          model_(
+              std::make_shared<
+                  _tc_impl_t<std::reference_wrapper<T>, [[+ fullBaseType +]]>>
+              (std::forward<const std::reference_wrapper<std::decay_t<T>>>(u)))
+    {
+        //puts("_tc_combined_t{T} reference_wrapper called");
+    }
+
+    template<
+        typename T,
+        typename = IsNotReference<T>,
+        typename std::enable_if<!std::is_same<_tc_combined_t, T>::value>::type* = nullptr
+        >
+    _tc_combined_t(const T&& u) noexcept :
+         model_(
+             std::make_shared<
+                 _tc_impl_t<T, [[+ fullBaseType +]]>>
+             (std::forward<const std::decay_t<T>>(u)))
+    {
+        //puts("_tc_combined_t{T} called");
+    }
+
+    // Call clone for copy ctor/assign.
+    explicit _tc_combined_t(const _tc_combined_t& rhs) noexcept {
+        //puts("_tc_combined_t<[[+ fullBaseType +]]> copy ctor");
+        if(rhs)
+            model_ = rhs.model_->clone();
+    }
+
+    // Call move_clone for move ctor/assign.
+    explicit _tc_combined_t(_tc_combined_t&& rhs) noexcept {
+        if(rhs)
+            model_ = rhs.model_->move_clone();
+    }
+
+    // The preferred initializer for a _tc_combined_t. This constructs an _tc_impl_t of
+    // type_t on the heap, and stores the pointer in a new _tc_combined_t.
+    template<
+        typename type_t,
+        typename... args_t,
+        typename = IsNotReference<type_t>
+        >
+    static _tc_combined_t construct(args_t&&... args) noexcept {
+        return _tc_combined_t(std::make_shared<_tc_impl_t<type_t, [[+ fullBaseType +]]> >(
+            std::forward<args_t>(args)...
+            ));
+    }
+
+    _tc_combined_t& operator=(_tc_combined_t&& rhs) noexcept {
+        model_.reset();
+        if(rhs)
+            model_ = rhs.model_->move_clone();
+        return *this;
+    }
+
+    _tc_combined_t& operator=(const _tc_combined_t& rhs) noexcept {
+        model_.reset();
+        if(rhs)
+            model_ = rhs.model_->clone();
+        return *this;
+    }
+
+    void reset() noexcept {
+        model_.reset();
+    }
+
+    // A virtual dtor triggers the dtor in the impl.
+    virtual ~_tc_combined_t() noexcept { }
+
+[[~]]  { // startscope
+[[~]]    for(const auto& method: ReflectedStructInfo->methods) {
+[[~]]      const size_t methodParamsSize = method->params.size();
+[[~]]      const bool needPrint = !method->isImplicit
+[[~]]          && !method->isOperator
+[[~]]          && !method->isCtor
+[[~]]          && !method->isDtor;
+[[~]]      if(method->isTemplate()) {
+template< [[+ templateParamsFullDecls(method->tplParams) +]] >
+[[~]]      } // method->isTemplate
+[[~]]      if(needPrint) {
+[[+ method->isExplicitCtor ? "explicit " : "" +]][[~]] /* no newline */
+[[+ method->isConstexpr ? "constexpr " : "" +]][[~]] /* no newline */
+[[+ method->isStatic ? "static " : "" +]][[~]] /* no newline */
+[[+ method->returnType->getPrintedName() +]][[~]] /* no newline */
+[[+ " " +]][[~]] /* no newline */
+[[+ method->name +]][[~]] /* no newline */
+(
+[[+ paramsFullDecls(method->params) +]][[~]] /* no newline */
+) [[~]] /* no newline */
+[[+ method->isConst ? "const " : "" +]][[~]] /* no newline */
+[[+ method->isNoExcept ? "noexcept " : "" +]][[~]] /* no newline */
+  {
+    if(!model_) {
+        std::terminate();
+    }
+    model_->__[[+ method->name +]]([[+ paramsCallDecls(method->params) +]]);
+  }
+[[~ /* newline */ ~]]
+[[~]]      } // needPrint
+[[~]]    } // methods endfor
+[[~]]  } // endscope
+
+    explicit operator bool() const noexcept {
+        return (bool)model_;
+    }
+
+    std::shared_ptr<
+        _tc_model_t<[[+ fullBaseType +]]>
+      > ref_model() const noexcept {
+        /// \note may be nullptr
+        return model_;
+    }
+
+#if defined(ENABLE_TYPECLASS_GUID)
+    std::string
+      get_GUID() const noexcept {
+      return model_->get_GUID();
+    };
+#endif // ENABLE_TYPECLASS_GUID
+
+    std::unique_ptr<_tc_model_t<[[+ fullBaseType +]]>> clone_model() const noexcept {
+        if(!model_) {
+            std::terminate();
+        }
+        return model_->clone();
+    }
+
+    const _tc_model_t<[[+ fullBaseType +]]>* raw_model() const noexcept {
+        return model_.get();
+    }
+
+    void replace_model(
+        const std::shared_ptr<_tc_model_t<[[+ fullBaseType +]]>> rhs) noexcept {
+        model_ = rhs;
+    }
+
+    /*const size_t getModelTypeIndex() {
+        if(!model_) {
+            std::terminate();
+        }
+        return model_->getModelTypeIndex();
+    }
+
+    template <typename T>
+    static const size_t getGlobalTypeIndex() {
+        return _tc_registry<[[+ fullBaseType +]]>
+            ::getTypeIndex<T>();
+    }
+
+    template <typename T>
+    T& ref_concrete() noexcept {
+        if(!model_ || model_->getModelTypeIndex()
+                != getGlobalTypeIndex<T>()) {
+            std::terminate();
+        }
+        return model_->ref_concrete<T>();
+    }*/
+
+    template <typename... typeclass>
+    bool can_convert() const
+    {
+        return false;
+    }
+
+    // This is actually a unique_ptr to an impl type. We store a pointer to
+    // the base type and rely on _tc_model_t's virtual dtor to free the object.
+private:
+    std::shared_ptr<_tc_model_t<[[+ fullBaseType +]]>> model_;
+};
+
+template <>
+bool _tc_combined_t<
+    [[+ fullBaseType +]]
+  >::
+  can_convert<
+    [[+ fullBaseType +]]
+  >() const;
+
+[[~]] } // if(structInfo->templateParams.empty())
+
+} // namespace cxxctp
+} // namespace generated
+
+[[+ endHeaderGuard(headerGuard) /* no newline */ +]][[~]]
