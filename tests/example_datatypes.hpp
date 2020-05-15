@@ -16,27 +16,34 @@
   : __VA_ARGS__ \
   {};
 
-#define $apply(...) \
+#define $generate(...) \
   /* generate definition required to use __attribute__ */ \
   struct \
     __attribute__((annotate("{gen};{funccall};" #__VA_ARGS__))) \
     GEN_UNIQUE_NAME(__gen_tmp__apply) \
     ;
 
+#define $generateStr(...) \
+  /* generate definition required to use __attribute__ */ \
+  struct \
+    __attribute__((annotate("{gen};{funccall};" __VA_ARGS__))) \
+    GEN_UNIQUE_NAME(__gen_tmp__apply) \
+    ;
+
 // combination of multiple typeclasses
 // each stored typeclass is optional
 // EXAMPLE:
-// _tc_combined_t<Spell, MagicItem> tcCombo {
+// _tc_combined_t<Spell, MagicItemTraits> tcCombo {
 //     FireSpell{"someFireSpellTitle", "someFireSpelldescription1"}
 // };
 // tcCombo.can_convert<Spell>() // true
-// tcCombo.can_convert<MagicItem>() // true
+// tcCombo.can_convert<MagicItemTraits>() // true
 // tcCombo.has_model<Spell>() // true
-// tcCombo.has_model<MagicItem>() // false
+// tcCombo.has_model<MagicItemTraits>() // false
 #define $typeclass_combo(...) \
   /* generate definition required to use __attribute__ */ \
   struct \
-    __attribute__((annotate("{gen};{funccall};" #__VA_ARGS__))) \
+    __attribute__((annotate("{gen};{funccall};typeclass_combo" #__VA_ARGS__))) \
     GEN_UNIQUE_NAME(__gen_tmp__typeclass_combo) \
     ;
 
@@ -72,7 +79,7 @@ struct Spell {
 
 // like `trait`
 struct
-MagicItem {
+MagicItemTraits {
   virtual void has_enough_mana(const char* spellname) const noexcept = 0;
 };
 

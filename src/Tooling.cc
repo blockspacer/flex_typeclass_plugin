@@ -308,11 +308,13 @@ Tooling::Tooling(
 #endif // CLING_IS_ON
 ) : clingInterpreter_(clingInterpreter)
 {
-  DCHECK(clingInterpreter_);
+  DCHECK(clingInterpreter_)
+    << "clingInterpreter_";
 
   DETACH_FROM_SEQUENCE(sequence_checker_);
 
-  DCHECK(event.sourceTransformPipeline);
+  DCHECK(event.sourceTransformPipeline)
+    << "event.sourceTransformPipeline";
   ::clang_utils::SourceTransformPipeline& sourceTransformPipeline
     = *event.sourceTransformPipeline;
 
@@ -416,22 +418,43 @@ clang_utils::SourceTransformResult
       return clang_utils::SourceTransformResult{""};
     }
 
+    std::string targetTypeName;
+    for(const auto& tit : typeclassBaseNames.as_vec_) {
+      if(tit.name_ =="name") {
+        targetTypeName = tit.value_;
+        prepareTplArg(targetTypeName);
+      }
+    }
+
+    VLOG(9)
+     << "targetTypeName: "
+     << targetTypeName;
+
     {
+      std::string registryTargetName =
+        targetTypeName.empty()
+        ? fullBaseType
+        : targetTypeName;
+
       DLOG(INFO) << "ReflectionRegistry... for record " <<
-        fullBaseType;
+        registryTargetName;
 
       reflection::ReflectionRegistry::getInstance()->
-        reflectionCXXRecordRegistry[fullBaseType]
+        reflectionCXXRecordRegistry[registryTargetName]
           = std::make_unique<
               reflection::ReflectionCXXRecordRegistry>(
-                fullBaseType, /*node,*/ structInfo);
+                registryTargetName, /*node,*/ structInfo);
 
       DLOG(INFO) << "templateParams.size"
         << structInfo->templateParams.size();
       DLOG(INFO) << "genericParts.size"
         << structInfo->genericParts.size();
 
-      std::string fileTargetName = fullBaseType;
+      std::string fileTargetName =
+        targetTypeName.empty()
+        ? fullBaseType
+        : targetTypeName;
+
       normalizeFileName(fileTargetName);
 
       fs::path gen_hpp_name = fs::absolute(
@@ -452,7 +475,8 @@ clang_utils::SourceTransformResult
         std::string generator_path
           = TYPECLASS_TEMPLATE_HPP;
         DCHECK(!generator_path.empty())
-          << TYPECLASS_TEMPLATE_HPP;
+          << TYPECLASS_TEMPLATE_HPP
+          << "generator_path.empty()";
 
         const auto fileID = SM.getMainFileID();
         const auto fileEntry = SM.getFileEntryForID(
@@ -492,7 +516,8 @@ clang_utils::SourceTransformResult
         std::string generator_path
           = TYPECLASS_TEMPLATE_CPP;
         DCHECK(!generator_path.empty())
-          << TYPECLASS_TEMPLATE_CPP;
+          << TYPECLASS_TEMPLATE_CPP
+          << "generator_path.empty()";
 
         reflection::ClassInfoPtr ReflectedStructInfo
           = structInfo;
@@ -576,10 +601,31 @@ clang_utils::SourceTransformResult
       return clang_utils::SourceTransformResult{nullptr};
   }
 
+  std::string typeAlias;
   for(const auto& tit : typeclassBaseNames.as_vec_) {
-    if(tit.name_ =="target") {
+    if(tit.name_ == "type") {
+      typeAlias = tit.value_;
+      prepareTplArg(typeAlias);
+    }
+  }
+
+  size_t processedTimes = 0;
+  for(const auto& tit : typeclassBaseNames.as_vec_) {
+    VLOG(9)
+      << "arg name: "
+      << tit.name_
+      << "arg value: "
+      << tit.value_;
+
+    if(tit.name_ == "target") {
       continue;
     }
+
+    if(tit.name_ == "type") {
+      continue;
+    }
+
+    processedTimes++;
 
     std::string typeclassBaseName = tit.value_;
     prepareTplArg(typeclassBaseName);
@@ -651,7 +697,10 @@ clang_utils::SourceTransformResult
           = targetName;
 
         std::string& BaseTypeclassName
-          = typeclassBaseName;
+          //= ReflectedBaseTypeclassRegistry->classInfoPtr_->name;
+          = typeAlias.empty()
+            ? typeclassBaseName
+            : typeAlias;
 
         reflection::ClassInfoPtr ReflectedBaseTypeclass
           = ReflectedBaseTypeclassRegistry->classInfoPtr_;
@@ -661,7 +710,8 @@ clang_utils::SourceTransformResult
         std::string generator_path
           = TYPECLASS_INSTANCE_TEMPLATE_CPP;
         DCHECK(!generator_path.empty())
-          << TYPECLASS_INSTANCE_TEMPLATE_CPP;
+          << TYPECLASS_INSTANCE_TEMPLATE_CPP
+          << "generator_path.empty()";
 
         std::vector<std::string> generator_includes{
              wrapLocalInclude(
@@ -688,6 +738,12 @@ clang_utils::SourceTransformResult
           << "saved file: "
           << gen_hpp_name;
     }
+  }
+  if(processedTimes <= 0) {
+    LOG(ERROR)
+      << "nothing to do with "
+      << sourceTransformOptions.func_with_args.func_with_args_as_string_;
+    CHECK(false);
   }
 
   return clang_utils::SourceTransformResult{nullptr};
@@ -716,15 +772,37 @@ clang_utils::SourceTransformResult
 
   std::string combinedTypeclassNames;
   std::vector<std::string> typeclassNames;
-  std::vector<reflection::ClassInfoPtr> ReflectedTypeclasses;
+  std::vector<
+    std::pair<std::string, reflection::ClassInfoPtr>
+    > ReflectedTypeclasses;
   std::vector<std::string> generator_includes;
+
+  std::string typeAlias;
+  for(const auto& tit : typeclassBaseNames.as_vec_) {
+    if(tit.name_ == "type") {
+      typeAlias = tit.value_;
+      prepareTplArg(typeAlias);
+    }
+  }
 
   const size_t typeclassBaseNamesSize
     = typeclassBaseNames.as_vec_.size();
 
   size_t titIndex = 0;
+  size_t processedTimes = 0;
   for(const auto& tit : typeclassBaseNames.as_vec_) {
-      const std::string typeclassBaseName = tit.value_;
+      if(tit.name_ == "type") {
+        continue;
+      }
+
+      processedTimes++;
+
+      std::string typeclassBaseName = tit.value_;
+      //typeclassBaseName
+      //  = typeAlias.empty()
+      //    ? tit.value_
+      //    : typeAlias;
+
       DLOG(INFO) << "typeclassBaseName = " << typeclassBaseName;
       if(typeclassBaseName.empty()) {
           return clang_utils::SourceTransformResult{""};
@@ -745,10 +823,18 @@ clang_utils::SourceTransformResult
           reflection::ReflectionRegistry::getInstance()->
             reflectionCXXRecordRegistry[typeclassBaseName].get();
 
-      combinedTypeclassNames += typeclassBaseName
+      combinedTypeclassNames
+        += typeclassBaseName
+        //ReflectedBaseTypeclassRegistry->classInfoPtr_->name
         + (titIndex < (typeclassBaseNamesSize - 1) ? "_" : "");
 
-      typeclassNames.push_back(typeclassBaseName);
+      typeclassNames.push_back(
+        //typeclassBaseName
+        //ReflectedBaseTypeclassRegistry->classInfoPtr_->name
+        typeAlias.empty()
+        ? ReflectedBaseTypeclassRegistry->classInfoPtr_->name
+        : typeAlias
+      );
       generator_includes.push_back(
         wrapLocalInclude(
           typeclassBaseName + R"raw(.typeclass.generated.hpp)raw"));
@@ -771,10 +857,17 @@ clang_utils::SourceTransformResult
           return clang_utils::SourceTransformResult{""};
       }
 
-      ReflectedTypeclasses.push_back(
-        ReflectedBaseTypeclassRegistry->classInfoPtr_);
+      ReflectedTypeclasses.push_back(std::make_pair(
+        typeclassBaseName
+        , ReflectedBaseTypeclassRegistry->classInfoPtr_));
 
       titIndex++;
+  }
+  if(processedTimes <= 0) {
+    LOG(ERROR)
+      << "nothing to do with "
+      << sourceTransformOptions.func_with_args.func_with_args_as_string_;
+    CHECK(false);
   }
 
   if(typeclassNames.empty()) {
@@ -816,6 +909,7 @@ clang_utils::SourceTransformResult
     std::string generator_path
       = TYPECLASS_COMBO_TEMPLATE_CPP;
     DCHECK(!generator_path.empty())
+      << "generator_path.empty()"
       << TYPECLASS_COMBO_TEMPLATE_CPP;
 
     const auto fileID = SM.getMainFileID();
@@ -854,6 +948,7 @@ clang_utils::SourceTransformResult
     std::string generator_path
       = TYPECLASS_COMBO_TEMPLATE_HPP;
     DCHECK(!generator_path.empty())
+      << "generator_path.empty()"
       << TYPECLASS_COMBO_TEMPLATE_HPP;
 
     generator_includes.push_back(

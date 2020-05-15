@@ -30,12 +30,12 @@ namespace generated {
 [[~]]        ; index++)
 [[~]]    {
 [[~]]      const auto typeclassName = typeclassNames.at(index);
-[[~]]
+[[~]]      const auto& ReflectedBaseTypeclass = ReflectedTypeclasses[index].second;
 template <>
 bool _tc_combined_t<
     [[+ typeclassComboDecls(typeclassNames) +]] >::
   can_convert<
-      [[+ typeclassName +]]>() const {
+      [[+ ReflectedBaseTypeclass->name +]]>() const {
     return true;
   }
 [[~]]

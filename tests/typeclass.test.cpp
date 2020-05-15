@@ -181,8 +181,10 @@
 namespace cxxctp {
 namespace generated {
 
+// allow FireSpell to be used as MagicItemTraits
+// MagicItemTraits is base class (typeclass)
 template<>
-void has_enough_mana<MagicItem, FireSpell>
+void has_enough_mana<MagicItemType, FireSpell>
     (const FireSpell& data, const char* spellname) noexcept {
     /// \note don`t use get_concrete<type> here, it may be get_concrete<ref_type>
     std::cout << "(lib1) has_enough_mana " << " by "
@@ -195,8 +197,10 @@ void has_enough_mana<MagicItem, FireSpell>
 namespace cxxctp {
 namespace generated {
 
+// allow WaterSpell to be used as MagicItemTraits
+// MagicItemTraits is base class (typeclass)
 template<>
-void has_enough_mana<MagicItem, WaterSpell>
+void has_enough_mana<MagicItemType, WaterSpell>
     (const WaterSpell& data, const char* spellname) noexcept {
     /// \note don`t use get_concrete<type> here, it may be get_concrete<ref_type>
     std::cout << "(lib1) has_enough_mana " << " by "
@@ -445,56 +449,56 @@ TEST(Typeclass, TypeclassGeneration) {
 #endif // ENABLE_TYPECLASS_GUID
   }
 
-  std::vector<_tc_combined_t<MagicItem>> magicItems;
+  std::vector<MagicItem> magicItems;
   magicItems.push_back(FireSpell{"FireSpelltitle1", "description1"});
   magicItems.push_back(WaterSpell{"WaterSpelltitle1", "description1"});
 
-  for(const _tc_combined_t<MagicItem>& it : magicItems) {
+  for(const _tc_combined_t<MagicItemType>& it : magicItems) {
     it.has_enough_mana("");
   }
 
-  std::vector<_tc_combined_t<Spell, MagicItem>> spellMagicItems;
+  std::vector<_tc_combined_t<Spell, MagicItemType>> spellmagicItems;
   {
-    _tc_combined_t<Spell, MagicItem> pushed{};
+    _tc_combined_t<Spell, MagicItemType> pushed{};
     pushed = magicItems.at(0); // copy
-    spellMagicItems.push_back(std::move(pushed));
+    spellmagicItems.push_back(std::move(pushed));
   }
   {
-    _tc_combined_t<Spell, MagicItem> pushed{};
+    _tc_combined_t<Spell, MagicItemTraits> pushed{};
     _tc_combined_t<Spell> someTmpSpell{
       FireSpell{"someTmpSpell", "someTmpSpell"}};
     pushed = std::move(someTmpSpell); // move
-    spellMagicItems.push_back(std::move(pushed));
+    spellmagicItems.push_back(std::move(pushed));
   }
-  //spellMagicItems.push_back(someFireSpell.raw_model());
-  //spellMagicItems.push_back(
+  //spellmagicItems.push_back(someFireSpell.raw_model());
+  //spellmagicItems.push_back(
   //  someFireSpell.ref_model()); // shared data
-  //spellMagicItems.push_back(someFireSpell.clone_model());
+  //spellmagicItems.push_back(someFireSpell.clone_model());
 
-  for(const _tc_combined_t<Spell, MagicItem>& it : spellMagicItems) {
+  for(const _tc_combined_t<Spell, MagicItemTraits>& it : spellmagicItems) {
     if(it.has_model<Spell>()) {
       it.cast("", 1, "");
     }
-    if(it.has_model<MagicItem>()) {
+    if(it.has_model<MagicItemTraits>()) {
       it.has_enough_mana("");
     }
   }
 
-  /*_tc_combined_t<Spell, MagicItem> combined1 {
+  /*_tc_combined_t<Spell, MagicItemTraits> combined1 {
       _tc_combined_t<Spell>{FireSpell{"someFireSpellTitle", "someFireSpelldescription1"}}
   };*/
 
-  _tc_combined_t<Spell, MagicItem> combined1 {
+  _tc_combined_t<Spell, MagicItemTraits> combined1 {
       FireSpell{"someFireSpellTitle", "someFireSpelldescription1"}
   };
 
-  if(combined1.has_model<MagicItem>()) {
+  if(combined1.has_model<MagicItemType>()) {
     combined1.has_enough_mana("");
   }
 
   //combined1 = WaterSpell{"WaterSpell", "WaterSpell"};
 
-  if(combined1.has_model<MagicItem>()) {
+  if(combined1.has_model<MagicItemTraits>()) {
     combined1.has_enough_mana("");
   }
 
@@ -504,7 +508,7 @@ TEST(Typeclass, TypeclassGeneration) {
 
   combined1 = magicItems.at(0);
 
-  if(combined1.has_model<MagicItem>()) {
+  if(combined1.has_model<MagicItemTraits>()) {
     combined1.has_enough_mana("");
   }
 
@@ -516,20 +520,20 @@ TEST(Typeclass, TypeclassGeneration) {
     FireSpell{"someFireSpellTitle", "someFireSpelldescription1"}
   };*/
 
-  _tc_combined_t<Spell, MagicItem> combined2 {
+  _tc_combined_t<Spell, MagicItemType> combined2 {
       FireSpell{"someFireSpellTitle", "someFireSpelldescription1"}
   };
 
-  std::cout << "combined2: can_convert to MagicItem: "
+  std::cout << "combined2: can_convert to MagicItemTraits: "
     << combined2.can_convert<Spell>() << std::endl;
 
-  std::cout << "combined2: can_convert to MagicItem: "
-    << combined2.can_convert<MagicItem>() << std::endl;
+  std::cout << "combined2: can_convert to MagicItemTraits: "
+    << combined2.can_convert<MagicItemTraits>() << std::endl;
 
   std::cout << "combined2: can_convert to int: "
     << combined2.can_convert<int>() << std::endl;
 
-  if(combined2.has_model<MagicItem>()) {
+  if(combined2.has_model<MagicItemTraits>()) {
     combined1.has_enough_mana("");
   }
 
@@ -574,11 +578,14 @@ TEST(Typeclass, TypeclassGeneration) {
 
   /// \note Uses std::reference_wrapper
   FireSpell fs{"FireSpellRef", "FireSpellRef!"};
-  _tc_combined_t<Spell, MagicItem> combinedRef1 {
+
+  has_enough_mana<MagicItemTraits, FireSpell>(fs, "spellname");
+
+  _tc_combined_t<Spell, MagicItemTraits> combinedRef1 {
       std::ref(fs)
   };
 
-  _tc_combined_t<Spell, MagicItem> combinedRef2;
+  _tc_combined_t<Spell, MagicItemTraits> combinedRef2;
   combinedRef2.create_model<Spell>
     (std::ref(fs));
 
