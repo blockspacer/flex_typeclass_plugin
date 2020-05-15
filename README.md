@@ -63,6 +63,7 @@ CONAN_REVISIONS_ENABLED=1 \
 # optional: remove generated files (change paths to yours)
 rm build/*generated*
 rm build/generated/ -rf
+rm build/bin/${build_type}/ -rf
 
 # configure via cmake
 cmake -E chdir build \

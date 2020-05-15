@@ -13,6 +13,16 @@ set(LIB_NAME ${PROJECT_NAME})
 
 option(ENABLE_TESTS "Enable tests" OFF)
 
+# path to /generated folder,
+# auto-completion in IDE will not work
+# if IDE can not find header file
+# NOTE: don't forget to set ENABLE_TESTS in IDE settings
+# and build type to Debug
+set(GENERATED_FOLDER_FOR_IDE
+  "${CMAKE_CURRENT_BINARY_DIR}"
+  CACHE
+  STRING "GENERATED_FOLDER_FOR_IDE" )
+
 set(BUILD_SHARED_LIBS
   TRUE CACHE BOOL
   "Use .so/.dll")
@@ -531,16 +541,13 @@ target_compile_definitions(${LIB_NAME} PRIVATE
   BOOST_SYSTEM_NO_DEPRECATED BOOST_ERROR_CODE_HEADER_ONLY
   # see https://github.com/mosra/corrade/blob/af9d4216f07307a2dff471664eed1e50e180568b/modules/UseCorrade.cmake#L568
   CORRADE_DYNAMIC_PLUGIN=1
-  # dummy to supress warning in editor
-  TYPECLASS_TEMPLATE_CPP=""
-  # dummy to supress warning in editor
-  TYPECLASS_TEMPLATE_HPP=""
-  # dummy to supress warning in editor
-  TYPECLASS_INSTANCE_TEMPLATE_CPP=""
-  # dummy to supress warning in editor
-  TYPECLASS_COMBO_TEMPLATE_CPP=""
-  # dummy to supress warning in editor
-  TYPECLASS_COMBO_TEMPLATE_HPP=""
+  # fixes IDE support and allows
+  # to print paths to TEMPLATE files in executable
+  TYPECLASS_TEMPLATE_CPP="${TYPECLASS_TEMPLATE_CPP}"
+  TYPECLASS_TEMPLATE_HPP="${TYPECLASS_TEMPLATE_HPP}"
+  TYPECLASS_INSTANCE_TEMPLATE_CPP="${TYPECLASS_INSTANCE_TEMPLATE_CPP}"
+  TYPECLASS_COMBO_TEMPLATE_CPP="${TYPECLASS_COMBO_TEMPLATE_CPP}"
+  TYPECLASS_COMBO_TEMPLATE_HPP="${TYPECLASS_COMBO_TEMPLATE_HPP}"
 )
 
 target_compile_definitions(${LIB_NAME} PUBLIC

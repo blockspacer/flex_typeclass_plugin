@@ -1,25 +1,5 @@
 ﻿[[~ // parameters begin
 
-//using namespace cxtpl_utils;
-//
-//const auto headerGuard
-//  = GetWithDefault<std::string>(cxtpl_params, "headerGuard", "");
-//
-//const auto generator_path
-//  = GetWithDefault<std::string>(cxtpl_params, "generator_path", "");
-//
-//std::vector<std::string> generator_includes
-//  = GetWithDefault<std::vector<std::string>>
-//      (cxtpl_params, "generator_includes", std::vector<std::string>{});
-//
-//std::vector<std::string> typeclassNames
-//  = GetWithDefault<std::vector<std::string>>
-//      (cxtpl_params, "typeclassNames", std::vector<std::string>{});
-//
-//std::vector<reflection::ClassInfoPtr> ReflectedTypeclasses
-//  = GetWithDefault<std::vector<reflection::ClassInfoPtr>>
-//      (cxtpl_params, "ReflectedTypeclasses", std::vector<reflection::ClassInfoPtr>{});
-
 const size_t ReflectedTypeclassesSize =
     ReflectedTypeclasses.size();
 
@@ -45,7 +25,10 @@ namespace cxxctp {
 namespace generated {
 
 [[~]]  { // startscope
-[[~]]    for(size_t index = 0; index < ReflectedTypeclassesSize; index++) {
+[[~]]    for(size_t index = 0
+[[~]]        ; index < ReflectedTypeclassesSize
+[[~]]        ; index++)
+[[~]]    {
 [[~]]      const auto typeclassName = typeclassNames.at(index);
 [[~]]
 template <>

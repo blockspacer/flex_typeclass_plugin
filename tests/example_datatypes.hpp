@@ -6,6 +6,8 @@
 
 #define GEN_UNIQUE_NAME(base) GEN_CAT(base, __COUNTER__)
 
+// generates class that will have functions with same names
+// as in passed data type, forwards calls
 #define $typeclass(...) \
   /* generate definition required to use __attribute__ */ \
   struct \
@@ -14,13 +16,23 @@
   : __VA_ARGS__ \
   {};
 
-#define $typeclass_impl(...) \
+#define $apply(...) \
   /* generate definition required to use __attribute__ */ \
   struct \
     __attribute__((annotate("{gen};{funccall};" #__VA_ARGS__))) \
-    GEN_UNIQUE_NAME(__gen_tmp__typeclass_impl) \
+    GEN_UNIQUE_NAME(__gen_tmp__apply) \
     ;
 
+// combination of multiple typeclasses
+// each stored typeclass is optional
+// EXAMPLE:
+// _tc_combined_t<Spell, MagicItem> tcCombo {
+//     FireSpell{"someFireSpellTitle", "someFireSpelldescription1"}
+// };
+// tcCombo.can_convert<Spell>() // true
+// tcCombo.can_convert<MagicItem>() // true
+// tcCombo.has_model<Spell>() // true
+// tcCombo.has_model<MagicItem>() // false
 #define $typeclass_combo(...) \
   /* generate definition required to use __attribute__ */ \
   struct \
@@ -33,7 +45,6 @@ struct FireSpell {
   std::string description = "FireSpell";
 };
 
-// like impl for trait
 struct WaterSpell {
   std::string title = "WaterSpell";
   std::string description = "WaterSpell";
@@ -41,11 +52,10 @@ struct WaterSpell {
 
 // like `trait`
 struct Printable {
-    virtual void print() const noexcept = 0;
+  virtual void print() const noexcept = 0;
 };
 
 // like `trait`
-//template<typename S, typename A>
 struct Spell {
   virtual void cast(const char* spellname, const int spellpower,
                     const char* target) const noexcept = 0;
@@ -58,39 +68,31 @@ struct Spell {
 
   virtual void set_spell_power(const char* spellname,
                                const int spellpower) const noexcept = 0;
-
-  /// \note same for all types
-  // @gen(inject_to_all)
-  //S interface_data;
 };
 
+// like `trait`
 struct
 MagicItem {
   virtual void has_enough_mana(const char* spellname) const noexcept = 0;
-
-  /// \note same for all types
-  // @gen(inject_to_all)
-  //S interface_data;
 };
 
+// like `trait`
 template<typename T1>
 struct
 ParentTemplated_1 {
   virtual void has_P1(T1 name1) const noexcept = 0;
 };
 
+// like `trait`
 template<typename T1>
 struct
 ParentTemplated_2 {
   virtual void has_P2(T1 name1) const noexcept = 0;
 };
 
+// like `trait`
 template<typename T1, typename T2>
 struct
 MagicTemplated {
   virtual void has_T(const T1& name1, const T2& name2) const noexcept = 0;
-
-  /// \note same for all types
-  // @gen(inject_to_all)
-  //S interface_data;
 };

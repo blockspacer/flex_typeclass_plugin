@@ -1,25 +1,5 @@
 ﻿[[~ // parameters begin
 
-//using namespace cxtpl_utils;
-//
-//const auto headerGuard
-//  = GetWithDefault<std::string>(cxtpl_params, "headerGuard", "");
-//
-//const auto generator_path
-//  = GetWithDefault<std::string>(cxtpl_params, "generator_path", "");
-//
-//std::vector<std::string> generator_includes
-//  = GetWithDefault<std::vector<std::string>>
-//      (cxtpl_params, "generator_includes", std::vector<std::string>{});
-//
-//std::vector<std::string> typeclassNames
-//  = GetWithDefault<std::vector<std::string>>
-//      (cxtpl_params, "typeclassNames", std::vector<std::string>{});
-//
-//std::vector<reflection::ClassInfoPtr> ReflectedTypeclasses
-//  = GetWithDefault<std::vector<reflection::ClassInfoPtr>>
-//      (cxtpl_params, "ReflectedTypeclasses", std::vector<reflection::ClassInfoPtr>{});
-
 const size_t ReflectedTypeclassesSize =
     ReflectedTypeclasses.size();
 
@@ -65,44 +45,6 @@ struct _tc_combined_t<[[~]] /* no newline */
 [[~]]
 [[~]]    } // endfor
 [[~]]  } // endscope
-
-    /*/// \note moves passed argument
-    template <
-        class T,
-        typename = IsNotReference<T>,
-        typename std::enable_if<!std::is_same<_tc_combined_t, T>::value>::type* = nullptr
-        >
-    _tc_combined_t(std::shared_ptr<T>&& u) noexcept :
-                                                      model_(std::move(u)) {
-        static_assert(!std::is_const<typename std::remove_reference<T>::type>::value,
-                      "You've attempted a cast to a const rvalue reference. "
-                      "Make sure you're not trying to move a const object, "
-                      "as this would likely result in a copy not a move. "
-                      "If you need it for real, call std::move(...) instead.");
-        //puts("_tc_combined_t<[[+ typeclassComboDecls(typeclassNames) +]]> called, moves passed argument");
-    }
-
-    template <
-        class T,
-        typename = IsNotReference<T>,
-        typename std::enable_if<!std::is_same<_tc_combined_t, T>::value>::type* = nullptr
-        >
-    _tc_combined_t(const std::shared_ptr<T>& u) noexcept :
-                                                           model_(u) {
-        //puts("_tc_combined_t<[[+ typeclassComboDecls(typeclassNames) +]]> called, shares passed argument");
-    }*/
-
-    /*template <
-        class T,
-        typename std::enable_if<!std::is_same<_tc_combined_t, T>::value>::type* = nullptr
-        >
-    _tc_combined_t(const std::reference_wrapper<T>& u) noexcept :
-                                                                  model_(
-                                                                      std::make_shared<
-                                                                          _tc_impl_t<std::reference_wrapper<T>, GeneratedTypeclassName >>
-                                                                      (std::forward<const std::reference_wrapper<std::decay_t<T>>>(u))) {
-        //puts("_tc_combined_t{T} reference_wrapper called");
-    }*/
 
     template<
         typename T,
@@ -408,67 +350,6 @@ struct _tc_combined_t<[[~]] /* no newline */
 
     // A virtual dtor triggers the dtor in the impl.
     virtual ~_tc_combined_t() noexcept { }
-
-    /*
-
-  _tc_combined_t& operator=(const _tc_combined_t<template_interface<int, const std::string&>>& rhs) noexcept {
-    model_.reset();
-    if(rhs) {
-      model_ = rhs.ref_model()->clone();
-    } // if(rhs)
-    return *this;
-  }
-
-  _tc_combined_t& operator=(const _tc_combined_t<my_interface2>& rhs) noexcept {
-    my_interface2_model.reset();
-    if(rhs) {
-      my_interface2_model = rhs.ref_model()->clone();
-    } // if(rhs)
-    return *this;
-  }
-
-  template<
-  typename T,
-  typename C,
-  typename std::enable_if<std::is_same<my_interface2, T>::value>::type* = nullptr
-  >
-  T& ref_concrete() noexcept {
-    if(!my_interface2_model) {
-      //throw std::runtime_error("model_2 not set");
-      std::terminate();
-    }
-    return my_interface2_model->ref_concrete<C>();
-  }
-
-  template<
-  typename T,
-  typename C,
-  typename std::enable_if<std::is_same<template_interface<int, const std::string&>, T>::value>::type* = nullptr
-  >
-  T& ref_concrete() noexcept {
-    if(!model_) {
-      //throw std::runtime_error("model_2 not set");
-      std::terminate();
-    }
-    return model_->ref_concrete<C>();
-  }
-    */
-
-    /*const size_t getModelTypeIndex() {
-        if(!model_) {
-            std::terminate();
-        }
-        return model_->getModelTypeIndex();
-    }
-
-    template <typename T>
-    T& ref_concrete() noexcept {
-        if(!model_ || model_->getModelTypeIndex()
-                != getGlobalTypeIndex<T>()) {
-            std::terminate();
-        }
-        return model_->ref_concrete<T>();
-    }*/
 
     template <typename... typeclass>
     bool can_convert() const

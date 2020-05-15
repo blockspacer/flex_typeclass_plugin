@@ -1,20 +1,5 @@
 ﻿[[~ // parameters begin
 
-//using namespace cxtpl_utils;
-
-//const auto headerGuard
-//  = GetWithDefault<std::string>(cxtpl_params, "headerGuard", "");
-//
-//const auto generator_path
-//  = GetWithDefault<std::string>(cxtpl_params, "generator_path", "");
-//
-//const auto fullBaseType
-//  = GetWithDefault<std::string>(cxtpl_params, "fullBaseType", "");
-//
-//std::vector<std::string> generator_includes
-//  = GetWithDefault<std::vector<std::string>>
-//      (cxtpl_params, "generator_includes", std::vector<std::string>{});
-
 // parameters end
 /* no newline */ ~]][[~]]
 // This is generated file. Do not modify directly.

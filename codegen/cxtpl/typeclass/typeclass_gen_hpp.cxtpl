@@ -1,48 +1,5 @@
 ﻿[[~ // parameters begin
 
-//using namespace cxtpl_utils;
-
-//const auto headerGuard
-//  = GetWithDefault<std::string>(cxtpl_params, "headerGuard", "");
-//
-//const auto generator_path
-//  = GetWithDefault<std::string>(cxtpl_params, "generator_path", "");
-//
-//const auto fullBaseType
-//  = GetWithDefault<std::string>(cxtpl_params, "fullBaseType", "");
-//
-//std::vector<std::string> generator_includes
-//  = GetWithDefault<std::vector<std::string>>
-//      (cxtpl_params, "generator_includes", std::vector<std::string>{});
-
-/*std::string OriginalTypeclassBaseCode
-  = GetWithDefault<std::string>
-      (cxtpl_params, "OriginalTypeclassBaseCode", std::string{});
-
-std::string GeneratedTypeclassName
-  = GetWithDefault<std::string>
-      (cxtpl_params, "GeneratedTypeclassName", std::string{});*/
-
-/*std::string structTemplateParams
-  = templateParamsFullDecls(structInfo->templateParams);
-
-std::string GeneratedTypeclassName =
-  structInfo->GetFullQualifiedName();
-  //structInfo->decl->getNameAsString();
-
-if(!structTemplateParams.empty())
-{
-  GeneratedTypeclassName =
-    structInfo->decl->getNameAsString()
-    + "<" + structTemplateParams + ">";
-}*/
-
-//templateParams
-
-//reflection::ClassInfoPtr ReflectedStructInfo
-//  = GetWithDefault<reflection::ClassInfoPtr>
-//      (cxtpl_params, "ReflectedStructInfo", nullptr);
-
 const size_t ReflectedStructInfoMethodsSize =
     ReflectedStructInfo->methods.size();
 
@@ -166,17 +123,6 @@ template< [[+ templateParamsFullDecls(method->tplParams) +]] >
 [[~]]    } // methods endfor
 [[~]]  } // endscope
 
-  /*template <typename T>
-  T& ref_concrete() noexcept;
-
-  template <typename U>
-  _tc_impl_t<U, [[+ fullBaseType +]]>* as() noexcept
-  {
-    return nullptr;
-  }*/
-
-  //template <typename T>
-  //T& ref_concrete() noexcept;
 };
 
 template<>
@@ -360,28 +306,6 @@ template< [[+ templateParamsFullDecls(method->tplParams) +]] >
         const std::shared_ptr<_tc_model_t<[[+ fullBaseType +]]>> rhs) noexcept {
         model_ = rhs;
     }
-
-    /*const size_t getModelTypeIndex() {
-        if(!model_) {
-            std::terminate();
-        }
-        return model_->getModelTypeIndex();
-    }
-
-    template <typename T>
-    static const size_t getGlobalTypeIndex() {
-        return _tc_registry<[[+ fullBaseType +]]>
-            ::getTypeIndex<T>();
-    }
-
-    template <typename T>
-    T& ref_concrete() noexcept {
-        if(!model_ || model_->getModelTypeIndex()
-                != getGlobalTypeIndex<T>()) {
-            std::terminate();
-        }
-        return model_->ref_concrete<T>();
-    }*/
 
     template <typename... typeclass>
     bool can_convert() const

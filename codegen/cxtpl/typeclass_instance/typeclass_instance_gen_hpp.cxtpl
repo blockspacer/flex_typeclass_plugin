@@ -1,29 +1,5 @@
 ﻿[[~ // parameters begin
 
-//using namespace cxtpl_utils;
-//
-//const auto headerGuard
-//  = GetWithDefault<std::string>(cxtpl_params, "headerGuard", "");
-//
-//const auto generator_path
-//  = GetWithDefault<std::string>(cxtpl_params, "generator_path", "");
-//
-//std::vector<std::string> generator_includes
-//  = GetWithDefault<std::vector<std::string>>
-//      (cxtpl_params, "generator_includes", std::vector<std::string>{});
-//
-//reflection::ClassInfoPtr ReflectedBaseTypeclass
-//  = GetWithDefault<reflection::ClassInfoPtr>
-//      (cxtpl_params, "ReflectedBaseTypeclass", nullptr);
-//
-//std::string ImplTypeclassName
-//  = GetWithDefault<std::string>
-//      (cxtpl_params, "ImplTypeclassName", "");
-//
-//std::string BaseTypeclassName
-//  = GetWithDefault<std::string>
-//      (cxtpl_params, "BaseTypeclassName", "");
-
 // parameters end
 /* no newline */ ~]][[~]]
 // This is generated file. Do not modify directly.

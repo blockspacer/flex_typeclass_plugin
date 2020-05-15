@@ -2,7 +2,9 @@ cmake_minimum_required( VERSION 3.13.3 FATAL_ERROR )
 
 set( PROJECT_NAME "${ROOT_PROJECT_NAME}-tests" )
 set( PROJECT_DESCRIPTION "unit tests" )
-set( ${PROJECT_NAME}_PROJECT_DIR ${CMAKE_CURRENT_SOURCE_DIR} CACHE INTERNAL "${PROJECT_NAME}_PROJECT_DIR" )
+set( ${PROJECT_NAME}_PROJECT_DIR
+  ${CMAKE_CURRENT_SOURCE_DIR}
+  CACHE INTERNAL "${PROJECT_NAME}_PROJECT_DIR" )
 
 set(ROOT_PROJECT_NAME ${LIB_NAME})
 set(ROOT_PROJECT_LIB ${LIB_NAME})
@@ -176,7 +178,7 @@ set_source_files_properties(
   PROPERTIES GENERATED 1)
 
 set(flextool_input_files
-  ${CMAKE_SOURCE_DIR}/tests/code_generation/main.cc
+  ${CMAKE_SOURCE_DIR}/tests/code_generation/typeclass_generation.cc
 )
 
 get_property(${LIB_NAME}_location TARGET "${LIB_NAME}" PROPERTY LIBRARY_OUTPUT_DIRECTORY)
@@ -211,8 +213,6 @@ add_custom_command(
           # path to tests/example_datatypes.hpp
           --extra-arg=-I${CMAKE_SOURCE_DIR}/tests
           --extra-arg=-Wno-undefined-inline
-          #--extra-arg=-DTYPECLASS_TEMPLATE_CPP="${TYPECLASS_TEMPLATE_CPP}"
-          #--extra-arg=-DTYPECLASS_TEMPLATE_HPP="${TYPECLASS_TEMPLATE_HPP}"
           ${flextool_extra_args}
           ${flextool_input_files}
           --cling_scripts=${flex_support_headers}
@@ -265,7 +265,9 @@ target_compile_definitions( test_main_gtest PUBLIC
 
 target_include_directories( test_main_gtest SYSTEM PUBLIC
   # path to /generated folder
-  ${CMAKE_BINARY_DIR})
+  ${CMAKE_BINARY_DIR}
+  ${GENERATED_FOLDER_FOR_IDE}
+)
 
 option(AUTORUN_TESTS "Autorun tests" OFF) # see add_test_autostarter
 
@@ -279,11 +281,11 @@ if(${ROOT_PROJECT_NAME}_BUILD_TESTS)
   tests_add_executable(pimpl
     "${pimpl_deps}" "${CATCH2_TEST_ARGS}" "test_main_catch")
 
-  set ( gmock_deps
-    gmock.test.cpp
+  set ( typeclass_deps
+    typeclass.test.cpp
   )
-  tests_add_executable(gmock
-    "${gmock_deps}" "${GTEST_TEST_ARGS}" "test_main_gtest")
+  tests_add_executable(typeclass
+    "${typeclass_deps}" "${GTEST_TEST_ARGS}" "test_main_gtest")
 
   set ( fakeit_deps
     fakeit.test.cpp

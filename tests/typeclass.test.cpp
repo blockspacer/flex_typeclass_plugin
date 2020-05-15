@@ -546,7 +546,9 @@ TEST(Typeclass, TypeclassGeneration) {
   }
 
   std::vector<_tc_combined_t<
-    MagicTemplated<std::string, int>,ParentTemplated_1<const char *>,ParentTemplated_2<const int &>
+    MagicTemplated<std::string, int>
+    , ParentTemplated_1<const char *>
+    , ParentTemplated_2<const int &>
   >> tpls;
   tpls.push_back({
       WaterSpell{"WaterSpell", "WaterSpell"}
@@ -557,7 +559,9 @@ TEST(Typeclass, TypeclassGeneration) {
 
   int idx = 0;
   for(const _tc_combined_t<
-    MagicTemplated<std::string, int>,ParentTemplated_1<const char *>,ParentTemplated_2<const int &>
+    MagicTemplated<std::string, int>
+    , ParentTemplated_1<const char *>
+    , ParentTemplated_2<const int &>
     >& it : tpls) {
     it.has_T("name1", idx++);
     it.has_P1("name~");
@@ -608,45 +612,4 @@ TEST(Typeclass, TypeclassGeneration) {
   if(combinedRef2.has_model<Spell>()) {
     combinedRef2.cast("", 0, "");
   }
-}
-
-TEST(AnnotationParser, LinksWithClingLLVM) {
-  ::flexlib::AnnotationMethods annotationMethods;
-  ::clang_utils::SourceTransformPipeline sourceTransformPipeline;
-
-  ::flexlib::AnnotationParser annotationParser(&annotationMethods);
-
-  ::flexlib::AnnotationMatchHandler anotationMatchHandler(
-      &annotationParser
-      , &annotationMethods
-      // SaveFileHandler
-      , base::BindRepeating(
-          [
-          ](
-            const clang::FileID& fileID
-            , const clang::FileEntry* fileEntry
-            , clang::Rewriter& rewriter
-          ){
-
-          }
-      ));
-
-  scoped_refptr<clang_utils::AnnotationMatchOptions>
-    annotationMatchOptions
-      = new clang_utils::AnnotationMatchOptions(
-          ::flexlib::kAnnotateAttrName
-          , base::BindRepeating(
-              &::flexlib::AnnotationMatchHandler::matchHandler
-              , base::Unretained(&anotationMatchHandler))
-          , base::BindRepeating(
-              &::flexlib::AnnotationMatchHandler::endSourceFileHandler
-              , base::Unretained(&anotationMatchHandler))
-        );
-
-  // see http://llvm.org/docs/doxygen/html/classllvm_1_1cl_1_1OptionCategory.html
-  llvm::cl::OptionCategory UseOverrideCategory("Use override options");
-
-  // Dummy test.
-  // We just check that code can compile and link with LLVM cling libs
-  EXPECT_TRUE(annotationMethods.empty());
 }

@@ -449,7 +449,10 @@ clang_utils::SourceTransformResult
       {
         std::string headerGuard = "";
 
-        std::string generator_path = TYPECLASS_TEMPLATE_HPP;
+        std::string generator_path
+          = TYPECLASS_TEMPLATE_HPP;
+        DCHECK(!generator_path.empty())
+          << TYPECLASS_TEMPLATE_HPP;
 
         const auto fileID = SM.getMainFileID();
         const auto fileEntry = SM.getFileEntryForID(
@@ -486,7 +489,10 @@ clang_utils::SourceTransformResult
       {
         std::string headerGuard = "";
 
-        std::string generator_path = TYPECLASS_TEMPLATE_CPP;
+        std::string generator_path
+          = TYPECLASS_TEMPLATE_CPP;
+        DCHECK(!generator_path.empty())
+          << TYPECLASS_TEMPLATE_CPP;
 
         reflection::ClassInfoPtr ReflectedStructInfo
           = structInfo;
@@ -519,84 +525,6 @@ clang_utils::SourceTransformResult
           << "saved file: "
           << gen_cpp_name;
       }
-
-#if 0
-      {
-        const auto fileID = SM.getMainFileID();
-        const auto fileEntry = SM.getFileEntryForID(
-          SM.getMainFileID());
-        std::string full_file_path = fileEntry->getName();
-        DLOG(INFO) << "full_file_path is "
-          << full_file_path;
-
-        std::map<std::string, std::any> cxtpl_params;
-
-        cxtpl_params.emplace("ReflectedStructInfo",
-                       std::make_any<
-                        reflection::ClassInfoPtr>(structInfo));
-        //DLOG(INFO) << "methods count: " << structInfo->methods.size();
-
-        cxtpl_params.emplace("fullBaseType",
-                       std::make_any<std::string>(
-                        fullBaseType));
-
-        cxtpl_params.emplace("generator_path",
-                       std::make_any<std::string>(
-                        "typeclass_gen_hpp.cxtpl"));
-
-        cxtpl_params.emplace("generator_includes",
-                             std::make_any<
-                               std::vector<std::string>>(
-                                 std::vector<std::string>{
-                                     wrapLocalInclude(
-                                      full_file_path),
-                                     wrapLocalInclude(
-                                      R"raw(type_erasure_common.hpp)raw")
-                                 })
-                             );
-
-        std::string cxtpl_output;
-
-/// \note generated file
-#include "flex_typeclass_plugin/generated/typeclass_gen_hpp.cxtpl.cpp"
-
-        writeToFile(cxtpl_output, gen_hpp_name);
-      }
-
-      {
-        std::map<std::string, std::any> cxtpl_params;
-
-        cxtpl_params.emplace("ReflectedStructInfo",
-                       std::make_any<
-                        reflection::ClassInfoPtr>(structInfo));
-        //DLOG(INFO) << "methods count: " << structInfo->methods.size();
-
-        cxtpl_params.emplace("fullBaseType",
-                       std::make_any<
-                        std::string>(fullBaseType));
-
-        cxtpl_params.emplace("generator_path",
-                       std::make_any<
-                        std::string>("typeclass_gen_cpp.cxtpl"));
-        cxtpl_params.emplace("generator_includes",
-                             std::make_any<
-                               std::vector<std::string>>(
-                                 std::vector<std::string>{
-                                     wrapLocalInclude(
-                                      gen_hpp_name),
-                                     wrapLocalInclude(
-                                      R"raw(type_erasure_common.hpp)raw")
-                                 })
-                             );
-
-        std::string cxtpl_output;
-
-/// \note generated file
-#include "flex_typeclass_plugin/generated/typeclass_gen_cpp.cxtpl.cpp"
-
-        writeToFile(cxtpl_output, gen_cpp_name);
-      }
-#endif // 0
 
     }
   }
@@ -732,7 +660,8 @@ clang_utils::SourceTransformResult
 
         std::string generator_path
           = TYPECLASS_INSTANCE_TEMPLATE_CPP;
-          // "typeclass_instance_gen_hpp.cxtpl";
+        DCHECK(!generator_path.empty())
+          << TYPECLASS_INSTANCE_TEMPLATE_CPP;
 
         std::vector<std::string> generator_includes{
              wrapLocalInclude(
@@ -758,43 +687,6 @@ clang_utils::SourceTransformResult
         LOG(INFO)
           << "saved file: "
           << gen_hpp_name;
-#if 0
-        std::map<std::string, std::any> cxtpl_params;
-
-        cxtpl_params.emplace("ImplTypeclassName",
-                             std::make_any<std::string>(
-                              targetName));
-
-        cxtpl_params.emplace("BaseTypeclassName",
-                             std::make_any<std::string>(
-                              typeclassBaseName));
-
-        cxtpl_params.emplace("ReflectedBaseTypeclass",
-                             std::make_any<reflection::ClassInfoPtr>(
-                              ReflectedBaseTypeclass->classInfoPtr_));
-
-        cxtpl_params.emplace("generator_path",
-                             std::make_any<std::string>(
-                             "typeclass_instance_gen_hpp.cxtpl"));
-        cxtpl_params.emplace("generator_includes",
-                             std::make_any<std::vector<std::string>>(
-                                 std::vector<std::string>{
-                                     /// \TODO
-                                     R"raw(#include "type_erasure_common.hpp")raw",
-                                     wrapLocalInclude(
-                                      gen_base_typeclass_hpp_name),
-                                     wrapLocalInclude(
-                                      original_full_file_path)
-                                 })
-                             );
-
-        std::string cxtpl_output;
-
-/// \note generated file
-#include "flex_typeclass_plugin/generated/typeclass_instance_gen_hpp.cxtpl.cpp"
-
-        writeToFile(cxtpl_output, gen_hpp_name);
-#endif // 0
     }
   }
 
@@ -921,7 +813,10 @@ clang_utils::SourceTransformResult
   {
     std::string headerGuard = "";
 
-    std::string generator_path = TYPECLASS_COMBO_TEMPLATE_CPP;
+    std::string generator_path
+      = TYPECLASS_COMBO_TEMPLATE_CPP;
+    DCHECK(!generator_path.empty())
+      << TYPECLASS_COMBO_TEMPLATE_CPP;
 
     const auto fileID = SM.getMainFileID();
     const auto fileEntry = SM.getFileEntryForID(
@@ -945,79 +840,6 @@ clang_utils::SourceTransformResult
       << gen_hpp_name;
   }
 
-#if 0
-  {
-    std::map<std::string, std::any> cxtpl_params;
-
-    cxtpl_params.emplace("typeclassNames",
-                   std::make_any<std::vector<std::string>>(
-                    typeclassNames));
-
-    cxtpl_params.emplace("ReflectedTypeclasses",
-                   std::make_any<std::vector<reflection::ClassInfoPtr>>(
-                    ReflectedTypeclasses));
-
-    cxtpl_params.emplace("generator_path",
-                   std::make_any<std::string>(
-                    "typeclass_combo_gen_hpp.cxtpl"));
-
-    generator_includes.push_back(
-      wrapLocalInclude(R"raw(type_erasure_common.hpp)raw"));
-
-    cxtpl_params.emplace("generator_includes",
-                         std::make_any<std::vector<std::string>>(
-                             std::move(generator_includes))
-                         );
-
-    std::string cxtpl_output;
-
-/// \note generated file
-#include "flex_typeclass_plugin/generated/typeclass_combo_gen_hpp.cxtpl.cpp"
-
-    writeToFile(cxtpl_output, gen_hpp_name);
-  }
-
-  {
-    fs::path gen_cpp_name = fs::absolute(
-      fs::path("generated")
-      ///\todo
-      ///ctp::Options::res_path
-      / (combinedTypeclassNames + ".typeclass_combo.generated.cpp"));
-
-    std::map<std::string, std::any> cxtpl_params;
-
-    cxtpl_params.emplace("typeclassNames",
-                   std::make_any<std::vector<std::string>>(
-                    typeclassNames));
-
-    cxtpl_params.emplace("ReflectedTypeclasses",
-                   std::make_any<std::vector<reflection::ClassInfoPtr>>(
-                    ReflectedTypeclasses));
-
-    cxtpl_params.emplace("generator_path",
-                   std::make_any<std::string>(
-                    "typeclass_combo_gen_cpp.cxtpl"));
-
-    generator_includes.push_back(
-      wrapLocalInclude(R"raw(type_erasure_common.hpp)raw"));
-
-    generator_includes.push_back(
-      wrapLocalInclude(gen_hpp_name));
-
-    cxtpl_params.emplace("generator_includes",
-                         std::make_any<std::vector<std::string>>(
-                             std::move(generator_includes))
-                         );
-
-    std::string cxtpl_output;
-
-/// \note generated file
-#include "flex_typeclass_plugin/generated/typeclass_combo_gen_cpp.cxtpl.cpp"
-
-    writeToFile(cxtpl_output, gen_cpp_name);
-  }
-#endif // 0
-
   {
     std::string headerGuard = "";
 
@@ -1029,7 +851,10 @@ clang_utils::SourceTransformResult
 
     std::map<std::string, std::any> cxtpl_params;;
 
-    std::string generator_path = TYPECLASS_COMBO_TEMPLATE_HPP;
+    std::string generator_path
+      = TYPECLASS_COMBO_TEMPLATE_HPP;
+    DCHECK(!generator_path.empty())
+      << TYPECLASS_COMBO_TEMPLATE_HPP;
 
     generator_includes.push_back(
          wrapLocalInclude(
