@@ -14,10 +14,13 @@ GEN_UNIQUE_NAME(__gen_tmp__typeclass)
 // like `trait`
 /// \note example of merged typeclasses
 /// \note in most cases prefer combined typeclasses to merged
-$typeclass(
-  public MagicTemplated<std::string, int>
+struct
+__attribute__((annotate("{gen};{funccall};typeclass(public MagicTemplated<std::string, int>, public ParentTemplated_1<const char *>, public ParentTemplated_2<const int &>, name = MagicLongType)" )))
+GEN_UNIQUE_NAME(__gen_tmp__typeclass)
+: public MagicTemplated<std::string, int>
   , public ParentTemplated_1<const char *>
-  , public ParentTemplated_2<const int &>)
+  , public ParentTemplated_2<const int &>
+{};
 
 // like `trait`
 $typeclass(public Printable)
@@ -59,10 +62,11 @@ $generate(
 // allow typeclass<MagicTemplated...long name> to store FireSpell
 $generate(
   typeclass_instance(
-    target = "FireSpell",
-    "MagicTemplated<std::string, int>,"
-    "ParentTemplated_1<const char *>,"
-    "ParentTemplated_2<const int &>")
+    target = "FireSpell"
+    , type = "MagicTemplated<std::string, int>,"
+             "ParentTemplated_1<const char *>,"
+             "ParentTemplated_2<const int &>"
+    , "MagicLongType")
 )
 
 // like impl for trait
@@ -91,22 +95,22 @@ $generate(
 /// because combined typeclasses avoids problems releted to
 /// collision of function names
 // allow typeclass<MagicTemplated...long name> to store WaterSpell
-$generate(
-  typeclass_instance(
-    target = "WaterSpell"
-    , "MagicTemplated<std::string, int>,"
-    "ParentTemplated_1<const char *>,"
-    "ParentTemplated_2<const int &>")
-)
-/// \todo support for short alias
 //$generate(
 //  typeclass_instance(
 //    target = "WaterSpell"
-//    , type = "MagicTemplated<std::string, int>,"
-//             "ParentTemplated_1<const char *>,"
-//             "ParentTemplated_2<const int &>"
-//    , "MagicLongType")
+//    , "MagicTemplated<std::string, int>,"
+//    "ParentTemplated_1<const char *>,"
+//    "ParentTemplated_2<const int &>")
 //)
+// \todo support for short alias
+$generate(
+  typeclass_instance(
+    target = "WaterSpell"
+    , type = "MagicTemplated<std::string, int>,"
+             "ParentTemplated_1<const char *>,"
+             "ParentTemplated_2<const int &>"
+    , "MagicLongType")
+)
 
 // just wraps multiple `traits`, forwards calls
 /// \note example of combined typeclasses

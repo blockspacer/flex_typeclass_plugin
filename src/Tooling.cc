@@ -693,6 +693,10 @@ clang_utils::SourceTransformResult
             / (fileTypeclassBaseName
               + ".typeclass.generated.hpp"));
 
+        /*
+         * Used by:
+         * struct _tc_impl_t<ImplTypeclassName, BaseTypeclassName>
+        >*/
         std::string& ImplTypeclassName
           = targetName;
 

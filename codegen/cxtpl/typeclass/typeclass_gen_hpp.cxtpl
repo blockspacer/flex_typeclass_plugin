@@ -332,8 +332,10 @@ bool _tc_combined_t<
 [[~]] if(!targetTypeName.empty()) {
 // Type alias, alias template (since C++11)
 using [[+ targetTypeName +]] = _tc_combined_t<[[+ fullBaseType +]]>;
-// fullBaseType may be long templated type, we can shorten it
-using [[+ targetTypeName +]]Type = [[+ fullBaseType +]];
+
+// fullBaseType may be VERY long templated type,
+// but we can shorten it with #define
+#define DEFINE_[[+ targetTypeName +]] [[+ fullBaseType +]]
 [[~]] } // if(!targetTypeName.empty())
 
 } // namespace cxxctp

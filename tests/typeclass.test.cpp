@@ -167,13 +167,11 @@
 #include "generated/Spell.typeclass.generated.hpp"
 #include "generated/WaterSpell_MagicItem.typeclass_instance.generated.hpp"
 
-#include "generated/MagicTemplated_std__string__int__ParentTemplated_1_const_char____ParentTemplated_2_const_int___.typeclass.generated.hpp"
+#include "generated/MagicLongType.typeclass.generated.hpp"
 
-#include "generated/FireSpell_MagicTemplated_std__string__int__ParentTemplated_1_const_char____ParentTemplated_2_const_int___.typeclass_instance.generated.hpp"
+#include "generated/FireSpell_MagicLongType.typeclass_instance.generated.hpp"
 
-#include "generated/MagicTemplated_std__string__int__ParentTemplated_1_const_char____ParentTemplated_2_const_int___.typeclass.generated.hpp"
-
-#include "generated/WaterSpell_MagicTemplated_std__string__int__ParentTemplated_1_const_char____ParentTemplated_2_const_int___.typeclass_instance.generated.hpp"
+#include "generated/WaterSpell_MagicLongType.typeclass_instance.generated.hpp"
 
 #include "generated/Printable.typeclass.generated.hpp"
 #include "generated/FireSpell_Printable.typeclass_instance.generated.hpp"
@@ -184,7 +182,7 @@ namespace generated {
 // allow FireSpell to be used as MagicItemTraits
 // MagicItemTraits is base class (typeclass)
 template<>
-void has_enough_mana<MagicItemType, FireSpell>
+void has_enough_mana<DEFINE_MagicItem, FireSpell>
     (const FireSpell& data, const char* spellname) noexcept {
     /// \note don`t use get_concrete<type> here, it may be get_concrete<ref_type>
     std::cout << "(lib1) has_enough_mana " << " by "
@@ -200,7 +198,7 @@ namespace generated {
 // allow WaterSpell to be used as MagicItemTraits
 // MagicItemTraits is base class (typeclass)
 template<>
-void has_enough_mana<MagicItemType, WaterSpell>
+void has_enough_mana<DEFINE_MagicItem, WaterSpell>
     (const WaterSpell& data, const char* spellname) noexcept {
     /// \note don`t use get_concrete<type> here, it may be get_concrete<ref_type>
     std::cout << "(lib1) has_enough_mana " << " by "
@@ -215,10 +213,7 @@ namespace generated {
 
 template<>
 void has_T<
-  MagicTemplated<std::string, int>,
-  ParentTemplated_1<const char *>,
-  ParentTemplated_2<const int &>
-  , FireSpell >
+  DEFINE_MagicLongType>
 (const FireSpell& data, const std::string &name1, const int &name2) noexcept {
     /// \note don`t use get_concrete<type> here, it may be get_concrete<ref_type>
     std::cout << "(Fire) has_T on " << name1
@@ -228,9 +223,7 @@ void has_T<
 
 template<>
 void has_P1<
-  MagicTemplated<std::string, int>,
-  ParentTemplated_1<const char *>,
-  ParentTemplated_2<const int &>
+  DEFINE_MagicLongType
   , FireSpell >
 (const FireSpell& data, const char *name1) noexcept {
     /// \note don`t use get_concrete<type> here, it may be get_concrete<ref_type>
@@ -240,9 +233,7 @@ void has_P1<
 
 template<>
 void has_P2<
-  MagicTemplated<std::string, int>,
-  ParentTemplated_1<const char *>,
-  ParentTemplated_2<const int &>
+  DEFINE_MagicLongType
   , FireSpell >
 (const FireSpell& data, const int& name1) noexcept {
     /// \note don`t use get_concrete<type> here, it may be get_concrete<ref_type>
@@ -258,9 +249,7 @@ namespace generated {
 
 template<>
 void has_T<
-  MagicTemplated<std::string, int>,
-  ParentTemplated_1<const char *>,
-  ParentTemplated_2<const int &>
+  DEFINE_MagicLongType
   , WaterSpell >
 (const WaterSpell& data, const std::string &name1, const int &name2) noexcept {
     /// \note don`t use get_concrete<type> here, it may be get_concrete<ref_type>
@@ -271,9 +260,7 @@ void has_T<
 
 template<>
 void has_P1<
-  MagicTemplated<std::string, int>,
-  ParentTemplated_1<const char *>,
-  ParentTemplated_2<const int &>
+  DEFINE_MagicLongType
   , WaterSpell >
 (const WaterSpell& data, const char *name1) noexcept {
     /// \note don`t use get_concrete<type> here, it may be get_concrete<ref_type>
@@ -283,9 +270,7 @@ void has_P1<
 
 template<>
 void has_P2<
-  MagicTemplated<std::string, int>,
-  ParentTemplated_1<const char *>,
-  ParentTemplated_2<const int &>
+  DEFINE_MagicLongType
   , WaterSpell >
 (const WaterSpell& data, const int& name1) noexcept {
     /// \note don`t use get_concrete<type> here, it may be get_concrete<ref_type>
@@ -453,13 +438,13 @@ TEST(Typeclass, TypeclassGeneration) {
   magicItems.push_back(FireSpell{"FireSpelltitle1", "description1"});
   magicItems.push_back(WaterSpell{"WaterSpelltitle1", "description1"});
 
-  for(const _tc_combined_t<MagicItemType>& it : magicItems) {
+  for(const _tc_combined_t<DEFINE_MagicItem>& it : magicItems) {
     it.has_enough_mana("");
   }
 
-  std::vector<_tc_combined_t<Spell, MagicItemType>> spellmagicItems;
+  std::vector<_tc_combined_t<Spell, DEFINE_MagicItem>> spellmagicItems;
   {
-    _tc_combined_t<Spell, MagicItemType> pushed{};
+    _tc_combined_t<Spell, DEFINE_MagicItem> pushed{};
     pushed = magicItems.at(0); // copy
     spellmagicItems.push_back(std::move(pushed));
   }
@@ -492,7 +477,7 @@ TEST(Typeclass, TypeclassGeneration) {
       FireSpell{"someFireSpellTitle", "someFireSpelldescription1"}
   };
 
-  if(combined1.has_model<MagicItemType>()) {
+  if(combined1.has_model<DEFINE_MagicItem>()) {
     combined1.has_enough_mana("");
   }
 
@@ -520,7 +505,7 @@ TEST(Typeclass, TypeclassGeneration) {
     FireSpell{"someFireSpellTitle", "someFireSpelldescription1"}
   };*/
 
-  _tc_combined_t<Spell, MagicItemType> combined2 {
+  _tc_combined_t<Spell, DEFINE_MagicItem> combined2 {
       FireSpell{"someFireSpellTitle", "someFireSpelldescription1"}
   };
 
@@ -549,11 +534,7 @@ TEST(Typeclass, TypeclassGeneration) {
     it.print();
   }
 
-  std::vector<_tc_combined_t<
-    MagicTemplated<std::string, int>
-    , ParentTemplated_1<const char *>
-    , ParentTemplated_2<const int &>
-  >> tpls;
+  std::vector<MagicLongType> tpls;
   tpls.push_back({
       WaterSpell{"WaterSpell", "WaterSpell"}
   });
@@ -562,11 +543,7 @@ TEST(Typeclass, TypeclassGeneration) {
   });
 
   int idx = 0;
-  for(const _tc_combined_t<
-    MagicTemplated<std::string, int>
-    , ParentTemplated_1<const char *>
-    , ParentTemplated_2<const int &>
-    >& it : tpls) {
+  for(const _tc_combined_t<DEFINE_MagicLongType>& it : tpls) {
     it.has_T("name1", idx++);
     it.has_P1("name~");
     it.has_P2(idx);

@@ -169,7 +169,7 @@ set(generated_typeclasses
   ${CMAKE_BINARY_DIR}/generated/Printable.typeclass.generated.cpp
   ${CMAKE_BINARY_DIR}/generated/Spell_MagicItem.typeclass_combo.generated.cpp
   ${CMAKE_BINARY_DIR}/generated/Spell.typeclass.generated.cpp
-  ${CMAKE_BINARY_DIR}/generated/MagicTemplated_std__string__int__ParentTemplated_1_const_char____ParentTemplated_2_const_int___.typeclass.generated.cpp
+  ${CMAKE_BINARY_DIR}/generated/MagicLongType.typeclass.generated.cpp
 )
 
 # generated files
