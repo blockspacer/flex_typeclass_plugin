@@ -60,16 +60,16 @@ CONAN_REVISIONS_ENABLED=1 \
                 -e enable_tests=True \
                 ..
 
+# optional: remove generated files (change paths to yours)
+rm build/*generated*
+rm build/generated/ -rf
+
 # configure via cmake
 cmake -E chdir build \
   cmake -E time cmake .. \
   -DENABLE_TESTS=TRUE \
   -DCONAN_AUTO_INSTALL=OFF \
   -DCMAKE_BUILD_TYPE=${build_type}
-
-# optional: remove generated files
-rm build/*generated*
-rm build/generated/ -rf
 
 # build code
 cmake -E chdir build \

@@ -338,11 +338,10 @@ set(generated_sources
   ${CMAKE_CURRENT_BINARY_DIR}/Tooling.cc.generated.cc
 )
 
-#add_custom_command(
-#    OUTPUT ${generated_sources}
-#    COMMAND ${CMAKE_COMMAND} -E echo " Removing ${generated_sources}."
-#    COMMAND ${CMAKE_COMMAND} -E remove ${generated_sources}
-#)
+# generated files
+set_source_files_properties(
+  ${generated_sources}
+  PROPERTIES GENERATED 1)
 
 add_custom_command(
     OUTPUT ${generated_sources}
@@ -553,50 +552,12 @@ target_compile_definitions(${LIB_NAME} PUBLIC
 include(cmake/Exports)
 
 if(ENABLE_TESTS)
+  # allows to run tests without `cmake install` step
+  # copies files required to start test executable
   execute_process(
     COMMAND ${CMAKE_COMMAND} -E copy_if_different
             ${CMAKE_SOURCE_DIR}/conf/${LIB_NAME}.conf
             ${CMAKE_BINARY_DIR}/${LIB_NAME}.conf
-  )
-
-  set(flextool_input_files ${CMAKE_CURRENT_SOURCE_DIR}/tests/code_generation/main.cc)
-
-  get_property(${LIB_NAME}_location TARGET "${LIB_NAME}" PROPERTY LIBRARY_OUTPUT_DIRECTORY)
-  set(${LIB_NAME}_file "${${LIB_NAME}_location}/${LIB_NAME}${CMAKE_SHARED_LIBRARY_SUFFIX}")
-  message (STATUS "${LIB_NAME} file == ${${LIB_NAME}_file}")
-
-  add_custom_command(TARGET ${LIB_NAME}
-      POST_BUILD
-      COMMAND ${flextool}
-            --vmodule=*=200 --enable-logging=stderr --log-level=100
-            --indir=${CMAKE_CURRENT_SOURCE_DIR}
-            --outdir=${flextool_outdir}
-            --load_plugin=${flex_squarets_plugin}
-            #--load_plugin=${flex_meta_plugin}
-            --load_plugin=${flex_reflect_plugin}
-            --load_plugin=${${LIB_NAME}_file}
-            --extra-arg=-I${cling_includes}
-            --extra-arg=-I${clang_includes}
-            --extra-arg=-I${corrade_includes}
-            --extra-arg=-I${entt_includes}
-            # NOTE: Cling does not support compile_commands.json
-            # so we must add headers used by `flex_support_headers` package
-            # place into `flex_support_headers` includes that can be used by Cling
-            --extra-arg=-I${chromium_base_headers}
-            --extra-arg=-I${chromium_build_util_headers}
-            --extra-arg=-I${basis_headers}
-            --extra-arg=-I${flexlib_headers}
-            --extra-arg=-DCLING_IS_ON=1
-            # path to tests/example_datatypes.hpp
-            --extra-arg=-I${CMAKE_CURRENT_SOURCE_DIR}/tests
-            --extra-arg=-Wno-undefined-inline
-            #--extra-arg=-DTYPECLASS_TEMPLATE_CPP="${TYPECLASS_TEMPLATE_CPP}"
-            #--extra-arg=-DTYPECLASS_TEMPLATE_HPP="${TYPECLASS_TEMPLATE_HPP}"
-            ${flextool_extra_args}
-            ${flextool_input_files}
-            --cling_scripts=${flex_support_headers}
-      COMMENT "running ${flextool}"
-      VERBATIM # to support \t for example
   )
 
   add_subdirectory( tests )

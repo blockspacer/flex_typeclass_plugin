@@ -159,12 +159,78 @@ add_library( test_main_gtest OBJECT
   #${${ROOT_PROJECT_NAME}_SRCS} # all source files  of root project without main.cpp
   #${THIRDPARTY_SOURCES}
   testsCommon.h # include in IDE
-  )
+)
+
+# generated files
+set(generated_typeclasses
+  ${CMAKE_BINARY_DIR}/generated/MagicItem.typeclass.generated.cpp
+  ${CMAKE_BINARY_DIR}/generated/Printable.typeclass.generated.cpp
+  ${CMAKE_BINARY_DIR}/generated/Spell_MagicItem.typeclass_combo.generated.cpp
+  ${CMAKE_BINARY_DIR}/generated/Spell.typeclass.generated.cpp
+  ${CMAKE_BINARY_DIR}/generated/MagicTemplated_std__string__int__ParentTemplated_1_const_char____ParentTemplated_2_const_int___.typeclass.generated.cpp
+)
+
+# generated files
+set_source_files_properties(
+  ${generated_typeclasses}
+  PROPERTIES GENERATED 1)
+
+set(flextool_input_files
+  ${CMAKE_SOURCE_DIR}/tests/code_generation/main.cc
+)
+
+get_property(${LIB_NAME}_location TARGET "${LIB_NAME}" PROPERTY LIBRARY_OUTPUT_DIRECTORY)
+set(${LIB_NAME}_file "${${LIB_NAME}_location}/${LIB_NAME}${CMAKE_SHARED_LIBRARY_SUFFIX}")
+message (STATUS "${LIB_NAME} file == ${${LIB_NAME}_file}")
+
+add_custom_command(
+    OUTPUT ${generated_typeclasses}
+    COMMAND ${CMAKE_COMMAND} -E echo " Removing ${generated_typeclasses}."
+    COMMAND ${CMAKE_COMMAND} -E remove ${generated_typeclasses}
+    COMMAND ${CMAKE_COMMAND} -E echo " Creating ${generated_typeclasses}."
+    COMMAND ${flextool}
+          --vmodule=*=200 --enable-logging=stderr --log-level=100
+          --indir=${CMAKE_SOURCE_DIR}
+          --outdir=${flextool_outdir}
+          --load_plugin=${flex_squarets_plugin}
+          #--load_plugin=${flex_meta_plugin}
+          --load_plugin=${flex_reflect_plugin}
+          --load_plugin=${${LIB_NAME}_file}
+          --extra-arg=-I${cling_includes}
+          --extra-arg=-I${clang_includes}
+          --extra-arg=-I${corrade_includes}
+          --extra-arg=-I${entt_includes}
+          # NOTE: Cling does not support compile_commands.json
+          # so we must add headers used by `flex_support_headers` package
+          # place into `flex_support_headers` includes that can be used by Cling
+          --extra-arg=-I${chromium_base_headers}
+          --extra-arg=-I${chromium_build_util_headers}
+          --extra-arg=-I${basis_headers}
+          --extra-arg=-I${flexlib_headers}
+          --extra-arg=-DCLING_IS_ON=1
+          # path to tests/example_datatypes.hpp
+          --extra-arg=-I${CMAKE_SOURCE_DIR}/tests
+          --extra-arg=-Wno-undefined-inline
+          #--extra-arg=-DTYPECLASS_TEMPLATE_CPP="${TYPECLASS_TEMPLATE_CPP}"
+          #--extra-arg=-DTYPECLASS_TEMPLATE_HPP="${TYPECLASS_TEMPLATE_HPP}"
+          ${flextool_extra_args}
+          ${flextool_input_files}
+          --cling_scripts=${flex_support_headers}
+    COMMENT "running ${flextool}"
+    VERBATIM # to support \t for example
+)
+
+
+# generated files
+target_sources(test_main_gtest PRIVATE
+  ${generated_typeclasses}
+)
 
 set_property(TARGET test_main_gtest PROPERTY CXX_STANDARD 17)
 
 # ensure that dependencies build before <target> does.
-add_dependencies(test_main_gtest ${ROOT_PROJECT_LIB})
+add_dependencies(test_main_gtest
+  ${ROOT_PROJECT_LIB})
 
 set_test_compile_options( test_main_gtest )
 
