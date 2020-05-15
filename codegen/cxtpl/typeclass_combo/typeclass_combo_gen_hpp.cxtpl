@@ -28,7 +28,7 @@ namespace generated {
 
 template<>
 struct _tc_combined_t<[[~]] /* no newline */
-  [[+ typeclassComboDecls(typeclassNames) +]][[~]] /* no newline */
+  [[+ fullBaseType +]][[~]] /* no newline */
 > {
     // Default initializer creates an empty _tc_combined_t.
     _tc_combined_t() = default;
@@ -37,10 +37,11 @@ struct _tc_combined_t<[[~]] /* no newline */
 [[~]]    for(size_t index = 0; index < ReflectedTypeclassesSize; index++) {
 [[~]]      const auto typeclassName = typeclassNames.at(index);
 [[~]]      const auto& ReflectedBaseTypeclass = ReflectedTypeclasses[index].second;
+[[~]]      const auto& baseName = ReflectedTypeclasses[index].first;
     _tc_combined_t(std::reference_wrapper<
-      _tc_combined_t<[[+ ReflectedBaseTypeclass->name +]]>>&& rhs) noexcept {
+      _tc_combined_t<[[+ typeclassName +]]>>&& rhs) noexcept {
         if(rhs.get())
-            [[+ typeclassModelName(typeclassName) +]] = rhs.get().ref_model();
+            [[+ typeclassModelName(baseName) +]] = rhs.get().ref_model();
     }
 [[~]]
 [[~]]    } // endfor
@@ -58,9 +59,10 @@ struct _tc_combined_t<[[~]] /* no newline */
 [[~]]       index < (ReflectedTypeclassesSize - 1) ? "," : "";
 [[~]]      const auto typeclassName = typeclassNames.at(index);
 [[~]]      const auto& ReflectedBaseTypeclass = ReflectedTypeclasses[index].second;
-         [[+ typeclassModelName(typeclassName) +]](
+[[~]]      const auto& baseName = ReflectedTypeclasses[index].first;
+         [[+ typeclassModelName(baseName) +]](
              std::make_shared<
-                 _tc_impl_t<std::reference_wrapper<T>, [[+ ReflectedBaseTypeclass->name +]] >>
+                 _tc_impl_t<std::reference_wrapper<T>, [[+ typeclassName +]] >>
              (std::forward<const std::reference_wrapper<std::decay_t<T>>>(u)))
              [[+ delimiter +]]
 [[~]]
@@ -83,9 +85,10 @@ struct _tc_combined_t<[[~]] /* no newline */
 [[~]]       index < (ReflectedTypeclassesSize - 1) ? "," : "";
 [[~]]      const auto typeclassName = typeclassNames.at(index);
 [[~]]      const auto& ReflectedBaseTypeclass = ReflectedTypeclasses[index].second;
-         [[+ typeclassModelName(typeclassName) +]](
+[[~]]      const auto& baseName = ReflectedTypeclasses[index].first;
+         [[+ typeclassModelName(baseName) +]](
              std::make_shared<
-                 _tc_impl_t<T, [[+ ReflectedBaseTypeclass->name +]] >>
+                 _tc_impl_t<T, [[+ typeclassName +]] >>
              (std::forward<const std::decay_t<T>>(u)))
              [[+ delimiter +]]
 [[~]]
@@ -103,8 +106,9 @@ struct _tc_combined_t<[[~]] /* no newline */
 [[~]]    for(size_t index = 0; index < ReflectedTypeclassesSize; index++) {
 [[~]]      const auto typeclassName = typeclassNames.at(index);
 [[~]]      const auto& ReflectedBaseTypeclass = ReflectedTypeclasses[index].second;
-            [[+ typeclassModelName(typeclassName) +]] =
-              rhs.[[+ typeclassModelName(typeclassName) +]]->clone();
+[[~]]      const auto& baseName = ReflectedTypeclasses[index].first;
+            [[+ typeclassModelName(baseName) +]] =
+              rhs.[[+ typeclassModelName(baseName) +]]->clone();
 [[~]]
 [[~]]    } // endfor
 [[~]]  } // endscope
@@ -118,8 +122,9 @@ struct _tc_combined_t<[[~]] /* no newline */
 [[~]]    for(size_t index = 0; index < ReflectedTypeclassesSize; index++) {
 [[~]]      const auto typeclassName = typeclassNames.at(index);
 [[~]]      const auto& ReflectedBaseTypeclass = ReflectedTypeclasses[index].second;
-          [[+ typeclassModelName(typeclassName) +]] =
-            rhs.[[+ typeclassModelName(typeclassName) +]]->move_clone();
+[[~]]      const auto& baseName = ReflectedTypeclasses[index].first;
+          [[+ typeclassModelName(baseName) +]] =
+            rhs.[[+ typeclassModelName(baseName) +]]->move_clone();
 [[~]]
 [[~]]    } // endfor
 [[~]]  } // endscope
@@ -134,7 +139,8 @@ struct _tc_combined_t<[[~]] /* no newline */
 [[~]]       index < (ReflectedTypeclassesSize - 1) ? "&&" : "";
 [[~]]      const auto typeclassName = typeclassNames.at(index);
 [[~]]      const auto& ReflectedBaseTypeclass = ReflectedTypeclasses[index].second;
-      (bool)[[+ typeclassModelName(typeclassName) +]] [[+ delimiter +]]
+[[~]]      const auto& baseName = ReflectedTypeclasses[index].first;
+      (bool)[[+ typeclassModelName(baseName) +]] [[+ delimiter +]]
 [[~]]
 [[~]]    } // endfor
 [[~]]  } // endscope
@@ -147,9 +153,10 @@ struct _tc_combined_t<[[~]] /* no newline */
 [[~]]    for(size_t index = 0; index < ReflectedTypeclassesSize; index++) {
 [[~]]      const auto typeclassName = typeclassNames.at(index);
 [[~]]      const auto& ReflectedBaseTypeclass = ReflectedTypeclasses[index].second;
-            [[+ typeclassModelName(typeclassName) +]].reset();
-            [[+ typeclassModelName(typeclassName) +]]
-              = rhs.[[+ typeclassModelName(typeclassName) +]]->move_clone();
+[[~]]      const auto& baseName = ReflectedTypeclasses[index].first;
+            [[+ typeclassModelName(baseName) +]].reset();
+            [[+ typeclassModelName(baseName) +]]
+              = rhs.[[+ typeclassModelName(baseName) +]]->move_clone();
 [[~]]
 [[~]]    } // endfor
 [[~]]  } // endscope
@@ -163,9 +170,10 @@ struct _tc_combined_t<[[~]] /* no newline */
 [[~]]    for(size_t index = 0; index < ReflectedTypeclassesSize; index++) {
 [[~]]      const auto typeclassName = typeclassNames.at(index);
 [[~]]      const auto& ReflectedBaseTypeclass = ReflectedTypeclasses[index].second;
-            [[+ typeclassModelName(typeclassName) +]].reset();
-            [[+ typeclassModelName(typeclassName) +]]
-              = rhs.[[+ typeclassModelName(typeclassName) +]]->clone();
+[[~]]      const auto& baseName = ReflectedTypeclasses[index].first;
+            [[+ typeclassModelName(baseName) +]].reset();
+            [[+ typeclassModelName(baseName) +]]
+              = rhs.[[+ typeclassModelName(baseName) +]]->clone();
 [[~]]
 [[~]]    } // endfor
 [[~]]  } // endscope
@@ -177,12 +185,13 @@ struct _tc_combined_t<[[~]] /* no newline */
 [[~]]    for(size_t index = 0; index < ReflectedTypeclassesSize; index++) {
 [[~]]      const auto typeclassName = typeclassNames.at(index);
 [[~]]      const auto& ReflectedBaseTypeclass = ReflectedTypeclasses[index].second;
+[[~]]      const auto& baseName = ReflectedTypeclasses[index].first;
   _tc_combined_t& operator=(
       const _tc_combined_t<
         [[+ typeclassName +]]>& rhs) noexcept {
     if(rhs) {
-      [[+ typeclassModelName(typeclassName) +]].reset();
-      [[+ typeclassModelName(typeclassName) +]]
+      [[+ typeclassModelName(baseName) +]].reset();
+      [[+ typeclassModelName(baseName) +]]
         = rhs.clone_model();
     }
     return *this;
@@ -196,7 +205,8 @@ struct _tc_combined_t<[[~]] /* no newline */
 [[~]]    for(size_t index = 0; index < ReflectedTypeclassesSize; index++) {
 [[~]]      const auto typeclassName = typeclassNames.at(index);
 [[~]]      const auto& ReflectedBaseTypeclass = ReflectedTypeclasses[index].second;
-      [[+ typeclassModelName(typeclassName) +]].reset();
+[[~]]      const auto& baseName = ReflectedTypeclasses[index].first;
+      [[+ typeclassModelName(baseName) +]].reset();
 [[~]]
 [[~]]    } // endfor
 [[~]]  } // endscope
@@ -208,7 +218,8 @@ struct _tc_combined_t<[[~]] /* no newline */
 [[~]]    for(size_t index = 0; index < ReflectedTypeclassesSize; index++) {
 [[~]]      const auto typeclassName = typeclassNames.at(index);
 [[~]]      const auto& ReflectedBaseTypeclass = ReflectedTypeclasses[index].second;
-      create_model<[[+ ReflectedBaseTypeclass->name +]]>(std::forward<const std::decay_t<T>>(u));
+[[~]]      const auto& baseName = ReflectedTypeclasses[index].first;
+      create_model_[[+ baseName +]]<[[+ baseName +]]>(std::forward<const std::decay_t<T>>(u));
 [[~]]
 [[~]]    } // endfor
 [[~]]  } // endscope
@@ -219,15 +230,16 @@ struct _tc_combined_t<[[~]] /* no newline */
 [[~]]    for(size_t index = 0; index < ReflectedTypeclassesSize; index++) {
 [[~]]      const auto typeclassName = typeclassNames.at(index);
 [[~]]      const auto& ReflectedBaseTypeclass = ReflectedTypeclasses[index].second;
-  template<
+[[~]]      const auto& baseName = ReflectedTypeclasses[index].first;
+ template<
   typename T,
-  typename U,
-  typename std::enable_if<
-    std::is_same<[[+ ReflectedBaseTypeclass->name +]], T>::value>::type* = nullptr
+  typename U//,
+  //typename std::enable_if<
+  //  std::is_same<[[+ typeclassName +]], T>::value>::type* = nullptr
   >
-  void create_model(const U&& u) noexcept {
-    [[+ typeclassModelName(typeclassName) +]] = std::make_shared<
-      _tc_impl_t<U, [[+ ReflectedBaseTypeclass->name +]]>>
+  void create_model_[[+ baseName +]](const U&& u) noexcept {
+    [[+ typeclassModelName(baseName) +]] = std::make_shared<
+      _tc_impl_t<U, [[+ typeclassName +]]>>
         (std::forward<const std::decay_t<U>>(u));
     //puts("create_model{[[+ typeclassName +]]} called");
   }
@@ -239,13 +251,14 @@ struct _tc_combined_t<[[~]] /* no newline */
 [[~]]    for(size_t index = 0; index < ReflectedTypeclassesSize; index++) {
 [[~]]      const auto typeclassName = typeclassNames.at(index);
 [[~]]      const auto& ReflectedBaseTypeclass = ReflectedTypeclasses[index].second;
+[[~]]      const auto& baseName = ReflectedTypeclasses[index].first;
   template<
-  typename T,
-  typename std::enable_if<
-    std::is_same<[[+ ReflectedBaseTypeclass->name +]], T>::value>::type* = nullptr
+  typename T//,
+  //typename std::enable_if<
+  //  std::is_same<[[+ typeclassName +]], T>::value>::type* = nullptr
   >
-  bool has_model() const noexcept {
-    return (bool)[[+ typeclassModelName(typeclassName) +]];
+  bool has_model_[[+ baseName +]]() const noexcept {
+    return (bool)[[+ typeclassModelName(baseName) +]];
   }
 [[~]]
 [[~]]    } // endfor
@@ -255,19 +268,20 @@ struct _tc_combined_t<[[~]] /* no newline */
 [[~]]    for(size_t index = 0; index < ReflectedTypeclassesSize; index++) {
 [[~]]      const auto typeclassName = typeclassNames.at(index);
 [[~]]      const auto& ReflectedBaseTypeclass = ReflectedTypeclasses[index].second;
+[[~]]      const auto& baseName = ReflectedTypeclasses[index].first;
   template<
-  typename T,
-  typename std::enable_if<
-    std::is_same<[[+ ReflectedBaseTypeclass->name +]], T>::value>::type* = nullptr
+  typename T//,
+  //typename std::enable_if<
+  //  std::is_same<[[+ typeclassName +]], T>::value>::type* = nullptr
   >
   std::unique_ptr<
-    _tc_model_t<[[+ ReflectedBaseTypeclass->name +]]>>
-  clone_model() const noexcept {
-    if(![[+ typeclassModelName(typeclassName) +]]) {
+    _tc_model_t<[[+ typeclassName +]]>>
+  clone_model_[[+ baseName +]]() const noexcept {
+    if(![[+ typeclassModelName(baseName) +]]) {
       //throw std::runtime_error("[[+ typeclassModelName(typeclassName) +]] not set");
       std::terminate();
     }
-    return [[+ typeclassModelName(typeclassName) +]]
+    return [[+ typeclassModelName(baseName) +]]
       ->clone();
   }
 [[~]]
@@ -280,16 +294,17 @@ struct _tc_combined_t<[[~]] /* no newline */
 [[~]]    for(size_t index = 0; index < ReflectedTypeclassesSize; index++) {
 [[~]]      const auto typeclassName = typeclassNames.at(index);
 [[~]]      const auto& ReflectedBaseTypeclass = ReflectedTypeclasses[index].second;
+[[~]]      const auto& baseName = ReflectedTypeclasses[index].first;
   template<
-  typename T,
-  typename std::enable_if<
-    std::is_same<[[+ ReflectedBaseTypeclass->name +]], T>::value>::type* = nullptr
+  typename T//,
+  //typename std::enable_if<
+  //  std::is_same<[[+ typeclassName +]], T>::value>::type* = nullptr
   >
   std::shared_ptr<
-    _tc_model_t<[[+ ReflectedBaseTypeclass->name +]]>>
-  ref_model() const noexcept {
+    _tc_model_t<[[+ typeclassName +]]>>
+  ref_model_[[+ baseName +]]() const noexcept {
     /// \note may be nullptr
-    return [[+ typeclassModelName(typeclassName) +]];
+    return [[+ typeclassModelName(baseName) +]];
   }
 [[~]]
 [[~]]    } // endfor
@@ -299,15 +314,16 @@ struct _tc_combined_t<[[~]] /* no newline */
 [[~]]    for(size_t index = 0; index < ReflectedTypeclassesSize; index++) {
 [[~]]      const auto typeclassName = typeclassNames.at(index);
 [[~]]      const auto& ReflectedBaseTypeclass = ReflectedTypeclasses[index].second;
+[[~]]      const auto& baseName = ReflectedTypeclasses[index].first;
   template<
-  typename T,
-  typename std::enable_if<
-    std::is_same<[[+ ReflectedBaseTypeclass->name +]], T>::value>::type* = nullptr
+  typename T//,
+  //typename std::enable_if<
+  //  std::is_same<[[+ typeclassName +]], T>::value>::type* = nullptr
   >
-  void replace_model(
+  void replace_model_[[+ baseName +]](
     const std::shared_ptr<
-      _tc_model_t<[[+ ReflectedBaseTypeclass->name +]]>> rhs) noexcept {
-    [[+ typeclassModelName(typeclassName) +]]
+      _tc_model_t<[[+ typeclassName +]]>> rhs) noexcept {
+    [[+ typeclassModelName(baseName) +]]
       = rhs;
   }
 [[~]]
@@ -318,11 +334,12 @@ struct _tc_combined_t<[[~]] /* no newline */
 [[~]]    for(size_t index = 0; index < ReflectedTypeclassesSize; index++) {
 [[~]]      const auto typeclassName = typeclassNames.at(index);
 [[~]]      const auto& ReflectedBaseTypeclass = ReflectedTypeclasses[index].second;
+[[~]]      const auto& baseName = ReflectedTypeclasses[index].first;
   operator const _tc_combined_t<
-    [[+ ReflectedBaseTypeclass->name +]]>() const noexcept {
+    [[+ typeclassName +]]>() const noexcept {
       return _tc_combined_t<
-        [[+ ReflectedBaseTypeclass->name +]]>{
-          [[+ typeclassModelName(typeclassName) +]] };
+        [[+ typeclassName +]]>{
+          [[+ typeclassModelName(baseName) +]] };
   }
 [[~]]
 [[~]]    } // endfor
@@ -342,6 +359,7 @@ struct _tc_combined_t<[[~]] /* no newline */
 [[~]]  { // startscope
 [[~]]    const std::string TypeclassName = typeclassNames.at(index);
 [[~]]    const auto& ReflectedBaseTypeclass = ReflectedTypeclasses[index].second;
+[[~]]      const auto& baseName = ReflectedTypeclasses[index].first;
 [[~]]    for(const auto& method: ReflectedBaseTypeclass->methods) {
 [[~]]      const size_t methodParamsSize = method->params.size();
 [[~]]      const bool needPrint = !method->isImplicit
@@ -364,11 +382,11 @@ template< [[+ templateParamsFullDecls(method->tplParams) +]] >
 [[+ method->isConst ? "const " : "" +]][[~]] /* no newline */
 [[+ method->isNoExcept ? "noexcept " : "" +]][[~]] /* no newline */
   {
-    if(![[+ typeclassModelName(TypeclassName) +]]) {
+    if(![[+ typeclassModelName(baseName) +]]) {
       //throw std::runtime_error("model_ not set");
       std::terminate();
     }
-    return [[+ typeclassModelName(TypeclassName) +]]->
+    return [[+ typeclassModelName(baseName) +]]->
       __[[+ method->name +]]([[+ paramsCallDecls(method->params) +]]);
   }
 [[~ /* newline */ ~]]
@@ -380,8 +398,19 @@ template< [[+ templateParamsFullDecls(method->tplParams) +]] >
 
     // This is actually a unique_ptr to an impl type. We store a pointer to
     // the base type and rely on _tc_model_t's virtual dtor to free the object.
-private:
-    [[+ typeclassModelsDecls(typeclassNames) +]]
+
+[[~]]  { // startscope
+[[~]]    for(size_t index = 0; index < ReflectedTypeclassesSize; index++) {
+[[~]]      const auto typeclassName = typeclassNames.at(index);
+[[~]]      const auto& ReflectedBaseTypeclass = ReflectedTypeclasses[index].second;
+[[~]]      const auto& baseName = ReflectedTypeclasses[index].first;
+      std::shared_ptr<_tc_model_t<
+        [[+ typeclassName +]]
+      >> [[+ typeclassModelName(baseName) +]] ;
+[[~]]
+[[~]]    } // endfor
+[[~]]  } // endscope
+
 };
 
 [[~]]  { // startscope
@@ -391,20 +420,20 @@ private:
 [[~]]
 template <>
 bool _tc_combined_t<
-    [[+ typeclassComboDecls(typeclassNames) +]] >::
+    [[+ fullBaseType +]] >::
   can_convert<
-      [[+ ReflectedBaseTypeclass->name +]]>() const;
+      [[+ typeclassName +]]>() const;
 [[~]]
 [[~]]    } // endfor
 [[~]]  } // endscope
 
 [[~]] if(!targetTypeName.empty()) {
 // Type alias, alias template (since C++11)
-using [[+ targetTypeName +]] = _tc_combined_t<[[+ typeclassComboDecls(typeclassNames) +]]>;
+using [[+ targetTypeName +]] = _tc_combined_t<[[+ fullBaseType +]]>;
 
 // fullBaseType may be VERY long templated type,
 // but we can shorten it with #define
-#define DEFINE_[[+ targetTypeName +]] [[+ typeclassComboDecls(typeclassNames) +]]
+#define DEFINE_[[+ targetTypeName +]] [[+ fullBaseType +]]
 [[~]] } // if(!targetTypeName.empty())
 
 } // namespace cxxctp

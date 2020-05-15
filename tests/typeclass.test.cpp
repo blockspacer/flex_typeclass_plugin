@@ -442,14 +442,14 @@ TEST(Typeclass, TypeclassGeneration) {
     it.has_enough_mana("");
   }
 
-  std::vector<_tc_combined_t<SpellTraits, DEFINE_MagicItem>> spellmagicItems;
+  std::vector<LongMagicItemSpell> spellmagicItems;
   {
-    _tc_combined_t<SpellTraits, DEFINE_MagicItem> pushed{};
+    LongMagicItemSpell pushed{};
     pushed = magicItems.at(0); // copy
     spellmagicItems.push_back(std::move(pushed));
   }
   {
-    _tc_combined_t<SpellTraits, MagicItemTraits> pushed{};
+    LongMagicItemSpell pushed{};
     _tc_combined_t<SpellTraits> someTmpSpell{
       FireSpell{"someTmpSpell", "someTmpSpell"}};
     pushed = std::move(someTmpSpell); // move
@@ -460,11 +460,11 @@ TEST(Typeclass, TypeclassGeneration) {
   //  someFireSpell.ref_model()); // shared data
   //spellmagicItems.push_back(someFireSpell.clone_model());
 
-  for(const _tc_combined_t<SpellTraits, MagicItemTraits>& it : spellmagicItems) {
-    if(it.has_model<SpellTraits>()) {
+  for(const LongMagicItemSpell& it : spellmagicItems) {
+    if(it.has_model_Spell<SpellTraits>()) {
       it.cast("", 1, "");
     }
-    if(it.has_model<MagicItemTraits>()) {
+    if(it.has_model_MagicItem<MagicItemTraits>()) {
       it.has_enough_mana("");
     }
   }
@@ -473,31 +473,31 @@ TEST(Typeclass, TypeclassGeneration) {
       _tc_combined_t<Spell>{FireSpell{"someFireSpellTitle", "someFireSpelldescription1"}}
   };*/
 
-  _tc_combined_t<SpellTraits, MagicItemTraits> combined1 {
+  LongMagicItemSpell combined1 {
       FireSpell{"someFireSpellTitle", "someFireSpelldescription1"}
   };
 
-  if(combined1.has_model<DEFINE_MagicItem>()) {
+  if(combined1.has_model_MagicItem<DEFINE_MagicItem>()) {
     combined1.has_enough_mana("");
   }
 
   //combined1 = WaterSpell{"WaterSpell", "WaterSpell"};
 
-  if(combined1.has_model<MagicItemTraits>()) {
+  if(combined1.has_model_MagicItem<MagicItemTraits>()) {
     combined1.has_enough_mana("");
   }
 
-  if(combined1.has_model<DEFINE_Spell>()) {
+  if(combined1.has_model_Spell<DEFINE_Spell>()) {
     combined1.add_spell("");
   }
 
   combined1 = magicItems.at(0);
 
-  if(combined1.has_model<MagicItemTraits>()) {
+  if(combined1.has_model_MagicItem<MagicItemTraits>()) {
     combined1.has_enough_mana("");
   }
 
-  if(combined1.has_model<DEFINE_Spell>()) {
+  if(combined1.has_model_Spell<DEFINE_Spell>()) {
     combined1.add_spell("");
   }
 
@@ -519,11 +519,11 @@ TEST(Typeclass, TypeclassGeneration) {
   std::cout << "combined2: can_convert to int: "
     << combined2.can_convert<int>() << std::endl;
 
-  if(combined2.has_model<MagicItemTraits>()) {
+  if(combined2.has_model_MagicItem<MagicItemTraits>()) {
     combined1.has_enough_mana("");
   }
 
-  if(combined2.has_model<DEFINE_Spell>()) {
+  if(combined2.has_model_Spell<DEFINE_Spell>()) {
     combined1.add_spell("");
   }
 
@@ -559,31 +559,38 @@ TEST(Typeclass, TypeclassGeneration) {
 
   has_enough_mana<MagicItemTraits, FireSpell>(fs, "spellname");
 
-  _tc_combined_t<DEFINE_Spell, MagicItemTraits> combinedRef1 {
+  LongMagicItemSpell combinedRef1 {
       std::ref(fs)
   };
 
-  _tc_combined_t<DEFINE_Spell, MagicItemTraits> combinedRef2;
-  combinedRef2.create_model<DEFINE_Spell>
+  LongMagicItemSpell combinedRef2;
+
+  // MagicLongType mlt{
+  //     WaterSpell{"WaterSpell", "WaterSpell"}
+  // };
+  // combinedRef2.create_model_MagicLongType<DEFINE_MagicLongType>
+  //   (std::move(mlt));
+
+  combinedRef2.create_model_Spell<DEFINE_Spell>
     (std::ref(fs));
 
   fs.title = "NewSharedFireSpellRefTitle0";
-  if(combinedRef1.has_model<DEFINE_Spell>()) {
+  if(combinedRef1.has_model_Spell<DEFINE_Spell>()) {
     combinedRef1.cast("", 0, "");
   }
-  if(combinedRef2.has_model<DEFINE_Spell>()) {
+  if(combinedRef2.has_model_Spell<DEFINE_Spell>()) {
     combinedRef2.cast("", 0, "");
   }
 
   /// \note Uses std::shared_ptr
-  combinedRef2.ref_model<DEFINE_Spell>()
-    = combinedRef1.ref_model<DEFINE_Spell>();
+  combinedRef2.ref_model_Spell<DEFINE_Spell>()
+    = combinedRef1.ref_model_Spell<DEFINE_Spell>();
 
   fs.title = "NewSharedFireSpellRefTitle1";
-  if(combinedRef1.has_model<DEFINE_Spell>()) {
+  if(combinedRef1.has_model_Spell<DEFINE_Spell>()) {
     combinedRef1.cast("", 0, "");
   }
-  if(combinedRef2.has_model<DEFINE_Spell>()) {
+  if(combinedRef2.has_model_Spell<DEFINE_Spell>()) {
     combinedRef2.cast("", 0, "");
   }
 
@@ -591,10 +598,10 @@ TEST(Typeclass, TypeclassGeneration) {
   combinedRef2 = combinedRef1;
 
   fs.title = "New__NOT_SHARED__FireSpellRefTitle!!!";
-  if(combinedRef1.has_model<SpellTraits>()) {
+  if(combinedRef1.has_model_Spell<SpellTraits>()) {
     combinedRef1.cast("", 0, "");
   }
-  if(combinedRef2.has_model<DEFINE_Spell>()) {
+  if(combinedRef2.has_model_Spell<DEFINE_Spell>()) {
     combinedRef2.cast("", 0, "");
   }
 }

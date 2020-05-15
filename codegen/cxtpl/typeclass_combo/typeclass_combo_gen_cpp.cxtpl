@@ -33,9 +33,9 @@ namespace generated {
 [[~]]      const auto& ReflectedBaseTypeclass = ReflectedTypeclasses[index].second;
 template <>
 bool _tc_combined_t<
-    [[+ typeclassComboDecls(typeclassNames) +]] >::
+    [[+ fullBaseType +]] >::
   can_convert<
-      [[+ ReflectedBaseTypeclass->name +]]>() const {
+      [[+ typeclassName +]]>() const {
     return true;
   }
 [[~]]

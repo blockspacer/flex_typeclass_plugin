@@ -150,24 +150,6 @@ std::string typeclassModelName(const std::string& arg) {
   return "model_for_" + arg;
 }
 
-std::string typeclassModelsDecls(
-  const std::vector<std::string>& params)
-{
-    /*const std::string comboType =
-      typeclassComboDecls(params);*/
-    std::string out;
-    for(const auto& param: params) {
-      out += "\n"
-             "std::shared_ptr<_tc_model_t<";
-      out += param;
-      out += ">> ";
-      out += typeclassModelName(param);
-      out += ";"
-             "\n";
-    } // params endfor
-    return out;
-}
-
 std::string typeclassComboDecls(const std::vector<std::string>& params)
 {
     std::string out;
@@ -653,12 +635,13 @@ clang_utils::SourceTransformResult
         CHECK(false);
     }
 
+    std::string validTypeAlias = typeAlias;
     if(std::map<std::string, std::string>
         ::const_iterator it
           = traitToItsType_.find(typeclassBaseName)
        ; it != traitToItsType_.end())
     {
-      if(!typeAlias.empty()) {
+      if(!typeAlias.empty() && typeAlias != it->second) {
         LOG(ERROR)
           << "user provided invalid type "
           << typeAlias
@@ -668,7 +651,7 @@ clang_utils::SourceTransformResult
           << it->second;
        CHECK(false);
       }
-      typeAlias = it->second;
+      validTypeAlias = it->second;
     } else {
       LOG(ERROR)
         << "user not tegistered typeclass"
@@ -736,11 +719,12 @@ clang_utils::SourceTransformResult
         std::string& ImplTypeclassName
           = targetName;
 
+        DCHECK(!validTypeAlias.empty());
         std::string& BaseTypeclassName
           //= ReflectedBaseTypeclassRegistry->classInfoPtr_->name;
-          = typeAlias.empty()
+          = validTypeAlias.empty()
             ? typeclassBaseName
-            : typeAlias;
+            : validTypeAlias;
 
         reflection::ClassInfoPtr ReflectedBaseTypeclass
           = ReflectedBaseTypeclassRegistry->classInfoPtr_;
@@ -822,6 +806,11 @@ clang_utils::SourceTransformResult
   for(const auto& tit : typeclassBaseNames.as_vec_) {
     if(tit.name_ == "type") {
       typeAlias = tit.value_;
+      CHECK(false)
+        << "custom type for typeclass combo not supported: "
+        << tit.name_
+        << " "
+        << tit.value_;
       prepareTplArg(typeAlias);
     }
 
@@ -836,8 +825,13 @@ clang_utils::SourceTransformResult
 
   size_t titIndex = 0;
   size_t processedTimes = 0;
+  std::string fullBaseType;
+  //std::vector<std::string> validTypeAliases;
   for(const auto& tit : typeclassBaseNames.as_vec_) {
       if(tit.name_ == "type") {
+        continue;
+      }
+      if(tit.name_ == "name") {
         continue;
       }
 
@@ -870,12 +864,13 @@ clang_utils::SourceTransformResult
           return clang_utils::SourceTransformResult{""};
       }
 
+      std::string validTypeAlias = typeAlias;
       if(std::map<std::string, std::string>
           ::const_iterator it
             = traitToItsType_.find(typeclassBaseName)
          ; it != traitToItsType_.end())
       {
-        if(!typeAlias.empty()) {
+        if(!typeAlias.empty() && typeAlias != it->second) {
           LOG(ERROR)
             << "user provided invalid type "
             << typeAlias
@@ -885,7 +880,9 @@ clang_utils::SourceTransformResult
             << it->second;
          CHECK(false);
         }
-        typeAlias = it->second;
+        validTypeAlias = it->second;
+        fullBaseType += validTypeAlias;
+        fullBaseType += ",";
       } else {
         LOG(ERROR)
           << "user not tegistered typeclass"
@@ -904,12 +901,13 @@ clang_utils::SourceTransformResult
         //ReflectedBaseTypeclassRegistry->classInfoPtr_->name
         + (titIndex < (typeclassBaseNamesSize - 1) ? "_" : "");
 
+      DCHECK(!validTypeAlias.empty());
       typeclassNames.push_back(
         //typeclassBaseName
         //ReflectedBaseTypeclassRegistry->classInfoPtr_->name
-        typeAlias.empty()
+        validTypeAlias.empty()
         ? ReflectedBaseTypeclassRegistry->classInfoPtr_->name
-        : typeAlias
+        : validTypeAlias
       );
       generator_includes.push_back(
         wrapLocalInclude(
@@ -948,6 +946,10 @@ clang_utils::SourceTransformResult
       << "nothing to do with "
       << sourceTransformOptions.func_with_args.func_with_args_as_string_;
     CHECK(false);
+  }
+  // remove last comma
+  if (!fullBaseType.empty()) {
+    fullBaseType.pop_back();
   }
 
   if(typeclassNames.empty()) {
