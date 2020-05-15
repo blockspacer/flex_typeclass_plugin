@@ -32,7 +32,7 @@ namespace plugin {
 
 namespace {
 
-static const std::string kPluginDebugLogName = "(FlexMeta plugin)";
+static const std::string kPluginDebugLogName = "(FlexTypeclass plugin)";
 
 static const std::string kVersion = "v0.0.1";
 
@@ -87,7 +87,7 @@ void FlexTypeclassEventHandler::RegisterAnnotationMethods(
   DCHECK(clingInterpreter_);
 #endif // CLING_IS_ON
 
-  tooling_ = std::make_unique<Tooling>(
+  tooling_ = std::make_unique<TypeclassTooling>(
     event
 #if defined(CLING_IS_ON)
     , clingInterpreter_
@@ -108,7 +108,7 @@ void FlexTypeclassEventHandler::RegisterAnnotationMethods(
     CHECK(tooling_);
     sourceTransformRules["typeclass"] =
       base::BindRepeating(
-        &Tooling::typeclass
+        &TypeclassTooling::typeclass
         , base::Unretained(tooling_.get()));
   }
 
@@ -119,7 +119,7 @@ void FlexTypeclassEventHandler::RegisterAnnotationMethods(
     CHECK(tooling_);
     sourceTransformRules["typeclass_instance"] =
       base::BindRepeating(
-        &Tooling::typeclass_instance
+        &TypeclassTooling::typeclass_instance
         , base::Unretained(tooling_.get()));
   }
 
@@ -130,7 +130,7 @@ void FlexTypeclassEventHandler::RegisterAnnotationMethods(
     CHECK(tooling_);
     sourceTransformRules["typeclass_combo"] =
       base::BindRepeating(
-        &Tooling::typeclass_combo
+        &TypeclassTooling::typeclass_combo
         , base::Unretained(tooling_.get()));
   }
 }

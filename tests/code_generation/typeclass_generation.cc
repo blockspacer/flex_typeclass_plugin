@@ -4,31 +4,43 @@
 
 #include <example_datatypes.hpp>
 
+namespace only_for_code_generation {
+
 // like `trait`
-struct
-__attribute__((annotate("{gen};{funccall};typeclass(public MagicItemTraits, name = MagicItem)" )))
-GEN_UNIQUE_NAME(__gen_tmp__typeclass)
-: public MagicItemTraits
-{};
+$typeclass(
+  "name = MagicItem"
+  , public MagicItemTraits
+)
 
 // like `trait`
 /// \note example of merged typeclasses
 /// \note in most cases prefer combined typeclasses to merged
-struct
-__attribute__((annotate("{gen};{funccall};typeclass(public MagicTemplated<std::string, int>, public ParentTemplated_1<const char *>, public ParentTemplated_2<const int &>, name = MagicLongType)" )))
-GEN_UNIQUE_NAME(__gen_tmp__typeclass)
-: public MagicTemplated<std::string, int>
-  , public ParentTemplated_1<const char *>
-  , public ParentTemplated_2<const int &>
-{};
+/// \note Merged typeclass combines methods from all provided types.
+/// Ensure that inherited method names do not collide.
+/// Inherited methods are not optional,
+/// you must define them all.
+// like `trait`
+$typeclass(
+  "name = MagicLongType"
+  , public MagicTemplatedTraits<std::string, int>
+  , public ParentTemplatedTraits_1<const char *>
+  , public ParentTemplatedTraits_2<const int &>
+)
 
 // like `trait`
-$typeclass(public Printable)
+$typeclass(
+  "name = Printable"
+  , public PrintableTraits
+)
 
 
 // like `trait`
-$typeclass(public Spell)
+$typeclass(
+  "name = Spell"
+  , public SpellTraits
+)
 
+// generates FireSpell_MagicItem
 // like impl for trait
 // allow typeclass<Spell> to store FireSpell
 // allow typeclass<MagicItemTraits> to store FireSpell
@@ -38,18 +50,27 @@ $typeclass(public Spell)
 //)
 $generate(
   typeclass_instance(
-    target = "FireSpell"
-    , type = "MagicItemTraits"
-    , "MagicItem")
-)
-$generate(
-  typeclass_instance(target = "FireSpell", "Spell")
+    impl_target = "FireSpell"
+    , "MagicItem"
+  )
 )
 
+// generates FireSpell_Spell
+$generate(
+  typeclass_instance(
+    impl_target = "FireSpell"
+    , "Spell"
+  )
+)
+
+// generates FireSpell_Printable
 // like impl for trait
 // allow typeclass<Printable> to store FireSpell
 $generate(
-  typeclass_instance(target = "FireSpell", "Printable")
+  typeclass_instance(
+    impl_target = "FireSpell"
+    , "Printable"
+  )
 )
 
 // like impl for trait
@@ -62,11 +83,9 @@ $generate(
 // allow typeclass<MagicTemplated...long name> to store FireSpell
 $generate(
   typeclass_instance(
-    target = "FireSpell"
-    , type = "MagicTemplated<std::string, int>,"
-             "ParentTemplated_1<const char *>,"
-             "ParentTemplated_2<const int &>"
-    , "MagicLongType")
+    impl_target = "FireSpell"
+    , "MagicLongType"
+  )
 )
 
 // like impl for trait
@@ -76,15 +95,20 @@ $generate(
 // allow typeclass<Spell, MagicItemTraits> to store WaterSpell
 // allow typeclass<Printable> to store WaterSpell
 $generate(
-  typeclass_instance(target = "WaterSpell"
-    , "Spell")
+  typeclass_instance(
+    impl_target = "WaterSpell"
+    , "Spell"
+  )
   ;
-  typeclass_instance(target = "WaterSpell"
-    , type = "MagicItemTraits"
-    , "MagicItem")
+  typeclass_instance(
+    impl_target = "WaterSpell"
+    , "MagicItem"
+  )
   ;
-  typeclass_instance(target = "WaterSpell",
-    "Printable")
+  typeclass_instance(
+    impl_target = "WaterSpell"
+    , "Printable"
+  )
 )
 
 // like impl for trait
@@ -95,21 +119,11 @@ $generate(
 /// because combined typeclasses avoids problems releted to
 /// collision of function names
 // allow typeclass<MagicTemplated...long name> to store WaterSpell
-//$generate(
-//  typeclass_instance(
-//    target = "WaterSpell"
-//    , "MagicTemplated<std::string, int>,"
-//    "ParentTemplated_1<const char *>,"
-//    "ParentTemplated_2<const int &>")
-//)
-// \todo support for short alias
 $generate(
   typeclass_instance(
-    target = "WaterSpell"
-    , type = "MagicTemplated<std::string, int>,"
-             "ParentTemplated_1<const char *>,"
-             "ParentTemplated_2<const int &>"
-    , "MagicLongType")
+    impl_target = "WaterSpell"
+    , "MagicLongType"
+  )
 )
 
 // just wraps multiple `traits`, forwards calls
@@ -117,6 +131,12 @@ $generate(
 // allow typeclass_combo<Spell, MagicItemTraits)>
 // to store optional<Spell> and optional<MagicItemTraits>
 $generate(
-  typeclass_combo(Spell,
-    MagicItem)
+  typeclass_combo(
+    name = LongMagicItemSpell
+    , Spell
+    , MagicItem
+    , MagicLongType
+  )
 )
+
+} // namespace only_for_code_generation

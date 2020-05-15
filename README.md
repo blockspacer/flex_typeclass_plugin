@@ -89,7 +89,7 @@ cmake -E chdir build \
 
 ## How it works
 
-0. describe allowed interface
+0. declare interface what you want to implement
 
 ```cpp
 struct
@@ -98,7 +98,7 @@ MagicItemTraits {
 };
 ``
 
-we want to allow `FireSpell` to be used as `MagicItemTraits`
+we want to allow `FireSpell` to be used with `MagicItemTraits` as `MagicItem`
 
 ```cpp
 // like impl for trait
@@ -112,7 +112,9 @@ i.e. we want to do
 
 ```cpp
 FireSpell myFireSpell{};
-_tc_combined_t<MagicItemTraits> tcFireSpell {
+
+// using MagicItem = _tc_combined_t<MagicItemTraits>;
+MagicItem tcFireSpell {
   std::move(myFireSpell)
 };
 

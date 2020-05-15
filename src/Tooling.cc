@@ -301,7 +301,7 @@ static std::string wrapLocalInclude(const std::string& inStr) {
 
 } // namespace
 
-Tooling::Tooling(
+TypeclassTooling::TypeclassTooling(
   const ::plugin::ToolPlugin::Events::RegisterAnnotationMethods& event
 #if defined(CLING_IS_ON)
   , ::cling_utils::ClingInterpreter* clingInterpreter
@@ -322,13 +322,13 @@ Tooling::Tooling(
     = &sourceTransformPipeline.sourceTransformRules;
 }
 
-Tooling::~Tooling()
+TypeclassTooling::~TypeclassTooling()
 {
   DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
 }
 
 clang_utils::SourceTransformResult
-  Tooling::typeclass(
+  TypeclassTooling::typeclass(
     const clang_utils::SourceTransformOptions& sourceTransformOptions)
 {
   DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
@@ -349,6 +349,7 @@ clang_utils::SourceTransformResult
   if (!node1) {
     LOG(ERROR)
       << "CXXRecordDecl not found ";
+    CHECK(false);
     return clang_utils::SourceTransformResult{nullptr};
   }
 
@@ -415,6 +416,7 @@ clang_utils::SourceTransformResult
 
     if(nodes.empty() || structInfos.empty()
        || !structInfo) {
+      CHECK(false);
       return clang_utils::SourceTransformResult{""};
     }
 
@@ -436,7 +438,7 @@ clang_utils::SourceTransformResult
         ? fullBaseType
         : targetTypeName;
 
-      DLOG(INFO) << "ReflectionRegistry... for record " <<
+      VLOG(9) << "ReflectionRegistry... for record " <<
         registryTargetName;
 
       reflection::ReflectionRegistry::getInstance()->
@@ -445,9 +447,14 @@ clang_utils::SourceTransformResult
               reflection::ReflectionCXXRecordRegistry>(
                 registryTargetName, /*node,*/ structInfo);
 
-      DLOG(INFO) << "templateParams.size"
+      VLOG(9) << "registering type for trait...";
+
+      traitToItsType_[registryTargetName]
+        = fullBaseType;
+
+      VLOG(9) << "templateParams.size"
         << structInfo->templateParams.size();
-      DLOG(INFO) << "genericParts.size"
+      VLOG(9) << "genericParts.size"
         << structInfo->genericParts.size();
 
       std::string fileTargetName =
@@ -558,7 +565,7 @@ clang_utils::SourceTransformResult
 }
 
 clang_utils::SourceTransformResult
-  Tooling::typeclass_instance(
+  TypeclassTooling::typeclass_instance(
     const clang_utils::SourceTransformOptions& sourceTransformOptions)
 {
   DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
@@ -589,7 +596,7 @@ clang_utils::SourceTransformResult
   }
 
   for(const auto& tit : typeclassBaseNames.as_vec_) {
-    if(tit.name_ =="target") {
+    if(tit.name_ =="impl_target") {
       targetName = tit.value_;
       prepareTplArg(targetName);
     }
@@ -598,30 +605,33 @@ clang_utils::SourceTransformResult
   if (targetName.empty()) {
       LOG(ERROR)
         << "target for typeclass instance not found ";
+      CHECK(false);
       return clang_utils::SourceTransformResult{nullptr};
   }
 
   std::string typeAlias;
   for(const auto& tit : typeclassBaseNames.as_vec_) {
-    if(tit.name_ == "type") {
+    if(tit.name_ == "trait_type") {
       typeAlias = tit.value_;
       prepareTplArg(typeAlias);
     }
   }
 
   size_t processedTimes = 0;
+
+  /// \todo remove loop
   for(const auto& tit : typeclassBaseNames.as_vec_) {
     VLOG(9)
       << "arg name: "
       << tit.name_
-      << "arg value: "
+      << " arg value: "
       << tit.value_;
 
-    if(tit.name_ == "target") {
+    if(tit.name_ == "impl_target") {
       continue;
     }
 
-    if(tit.name_ == "type") {
+    if(tit.name_ == "trait_type") {
       continue;
     }
 
@@ -630,16 +640,41 @@ clang_utils::SourceTransformResult
     std::string typeclassBaseName = tit.value_;
     prepareTplArg(typeclassBaseName);
 
-    DLOG(INFO)
+    VLOG(9)
       << "typeclassBaseName = "
       << typeclassBaseName;
 
-    DLOG(INFO)
+    VLOG(9)
       << "target = "
       << targetName;
 
     if(typeclassBaseName.empty()) {
         return clang_utils::SourceTransformResult{""};
+        CHECK(false);
+    }
+
+    if(std::map<std::string, std::string>
+        ::const_iterator it
+          = traitToItsType_.find(typeclassBaseName)
+       ; it != traitToItsType_.end())
+    {
+      if(!typeAlias.empty()) {
+        LOG(ERROR)
+          << "user provided invalid type "
+          << typeAlias
+          << " for trait: "
+          << it->first
+          << " Valid type is: "
+          << it->second;
+       CHECK(false);
+      }
+      typeAlias = it->second;
+    } else {
+      LOG(ERROR)
+        << "user not tegistered typeclass"
+        << " for trait: "
+        << typeclassBaseName;
+       CHECK(false);
     }
 
     if(reflection::ReflectionRegistry::getInstance()->
@@ -651,6 +686,7 @@ clang_utils::SourceTransformResult
           << "ERROR: typeclassBaseName = "
           << typeclassBaseName
           << " not found!";
+        CHECK(false);
         return clang_utils::SourceTransformResult{""};
     }
 
@@ -670,7 +706,7 @@ clang_utils::SourceTransformResult
     std::string original_full_file_path
       = fileEntry->getName();
 
-    DLOG(INFO)
+    VLOG(9)
       << "original_full_file_path = "
       << original_full_file_path;
 
@@ -754,7 +790,7 @@ clang_utils::SourceTransformResult
 }
 
 clang_utils::SourceTransformResult
-  Tooling::typeclass_combo(
+  TypeclassTooling::typeclass_combo(
     const clang_utils::SourceTransformOptions& sourceTransformOptions)
 {
   DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
@@ -781,11 +817,17 @@ clang_utils::SourceTransformResult
     > ReflectedTypeclasses;
   std::vector<std::string> generator_includes;
 
+  std::string targetTypeName;
   std::string typeAlias;
   for(const auto& tit : typeclassBaseNames.as_vec_) {
     if(tit.name_ == "type") {
       typeAlias = tit.value_;
       prepareTplArg(typeAlias);
+    }
+
+    if(tit.name_ =="name") {
+      targetTypeName = tit.value_;
+      prepareTplArg(targetTypeName);
     }
   }
 
@@ -807,8 +849,11 @@ clang_utils::SourceTransformResult
       //    ? tit.value_
       //    : typeAlias;
 
-      DLOG(INFO) << "typeclassBaseName = " << typeclassBaseName;
+      VLOG(9)
+        << "typeclassBaseName = "
+        << typeclassBaseName;
       if(typeclassBaseName.empty()) {
+          CHECK(false);
           return clang_utils::SourceTransformResult{""};
       }
 
@@ -817,9 +862,36 @@ clang_utils::SourceTransformResult
           == reflection::ReflectionRegistry::getInstance()->
             reflectionCXXRecordRegistry.end())
       {
-          LOG(ERROR) << "typeclassBaseName = "
-            << typeclassBaseName << " not found!";
+          LOG(ERROR)
+            << "typeclassBaseName = "
+            << typeclassBaseName
+            << " not found!";
+          CHECK(false);
           return clang_utils::SourceTransformResult{""};
+      }
+
+      if(std::map<std::string, std::string>
+          ::const_iterator it
+            = traitToItsType_.find(typeclassBaseName)
+         ; it != traitToItsType_.end())
+      {
+        if(!typeAlias.empty()) {
+          LOG(ERROR)
+            << "user provided invalid type "
+            << typeAlias
+            << " for trait: "
+            << it->first
+            << " Valid type is: "
+            << it->second;
+         CHECK(false);
+        }
+        typeAlias = it->second;
+      } else {
+        LOG(ERROR)
+          << "user not tegistered typeclass"
+          << " for trait: "
+          << typeclassBaseName;
+         CHECK(false);
       }
 
       const reflection::ReflectionCXXRecordRegistry*
@@ -848,7 +920,8 @@ clang_utils::SourceTransformResult
       DLOG(INFO) << "typeclassBaseName = "
         << typeclassBaseName;*/
 
-      DLOG(INFO) << "ReflectedBaseTypeclass is record = "
+      VLOG(9)
+        << "ReflectedBaseTypeclass is record = "
         << ReflectedBaseTypeclassRegistry->classInfoPtr_->name;
 
       if(reflection::ReflectionRegistry::getInstance()->
@@ -856,8 +929,11 @@ clang_utils::SourceTransformResult
           == reflection::ReflectionRegistry::getInstance()->
             reflectionCXXRecordRegistry.end())
       {
-          LOG(ERROR) << "typeclassBaseName = "
-            << typeclassBaseName << " not found!";
+          LOG(ERROR)
+            << "typeclassBaseName = "
+            << typeclassBaseName
+            << " not found!";
+          CHECK(false);
           return clang_utils::SourceTransformResult{""};
       }
 
@@ -875,7 +951,9 @@ clang_utils::SourceTransformResult
   }
 
   if(typeclassNames.empty()) {
-    LOG(ERROR) << "typeclassNames = empty!";
+    LOG(ERROR)
+      << "typeclassNames = empty!";
+    CHECK(false);
     return clang_utils::SourceTransformResult{""};
   }
 
@@ -902,7 +980,10 @@ clang_utils::SourceTransformResult
     fs::path("generated")
     ///\todo
     ///ctp::Options::res_path
-    / (combinedTypeclassNames + ".typeclass_combo.generated.hpp"));
+    / ((targetTypeName.empty()
+        ? combinedTypeclassNames
+        : targetTypeName)
+        + ".typeclass_combo.generated.hpp"));
 
   generator_includes.push_back(
     wrapLocalInclude(R"raw(type_erasure_common.hpp)raw"));
@@ -945,7 +1026,10 @@ clang_utils::SourceTransformResult
       fs::path("generated")
       ///\todo
       ///ctp::Options::res_path
-      / (combinedTypeclassNames + ".typeclass_combo.generated.cpp"));
+      / ((targetTypeName.empty()
+          ? combinedTypeclassNames
+          : targetTypeName)
+          + ".typeclass_combo.generated.cpp"));
 
     std::map<std::string, std::any> cxtpl_params;;
 

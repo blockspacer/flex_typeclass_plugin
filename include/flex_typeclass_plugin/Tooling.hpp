@@ -11,16 +11,18 @@
 
 namespace plugin {
 
-class Tooling {
+/// \note class name must not collide with
+/// class names from other loaded plugins
+class TypeclassTooling {
 public:
-  Tooling(
+  TypeclassTooling(
     const ::plugin::ToolPlugin::Events::RegisterAnnotationMethods& event
 #if defined(CLING_IS_ON)
     , ::cling_utils::ClingInterpreter* clingInterpreter
 #endif // CLING_IS_ON
   );
 
-  ~Tooling();
+  ~TypeclassTooling();
 
   /**
    * EXAMPLE:
@@ -98,7 +100,24 @@ private:
 
   SEQUENCE_CHECKER(sequence_checker_);
 
-  DISALLOW_COPY_AND_ASSIGN(Tooling);
+  /**
+    * example:
+    $typeclass(
+      "name = MagicLongType"
+      , public MagicTemplatedTraits<std::string, int>
+      , public ParentTemplatedTraits_1<const char *>
+      , public ParentTemplatedTraits_2<const int &>
+    )
+
+    Its type is:
+      "MagicTemplatedTraits<std::string, int>,"
+      "ParentTemplatedTraits_1<const char *>,"
+      "ParentTemplatedTraits_2<const int &>"
+   **/
+  std::map<std::string, std::string>
+    traitToItsType_{};
+
+  DISALLOW_COPY_AND_ASSIGN(TypeclassTooling);
 };
 
 } // namespace plugin

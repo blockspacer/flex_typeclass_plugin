@@ -167,7 +167,7 @@ add_library( test_main_gtest OBJECT
 set(generated_typeclasses
   ${CMAKE_BINARY_DIR}/generated/MagicItem.typeclass.generated.cpp
   ${CMAKE_BINARY_DIR}/generated/Printable.typeclass.generated.cpp
-  ${CMAKE_BINARY_DIR}/generated/Spell_MagicItem.typeclass_combo.generated.cpp
+  ${CMAKE_BINARY_DIR}/generated/LongMagicItemSpell.typeclass_combo.generated.cpp
   ${CMAKE_BINARY_DIR}/generated/Spell.typeclass.generated.cpp
   ${CMAKE_BINARY_DIR}/generated/MagicLongType.typeclass.generated.cpp
 )

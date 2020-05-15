@@ -8,10 +8,10 @@
 
 // generates class that will have functions with same names
 // as in passed data type, forwards calls
-#define $typeclass(...) \
+#define $typeclass(settings, ...) \
   /* generate definition required to use __attribute__ */ \
   struct \
-  __attribute__((annotate("{gen};{funccall};typeclass" ))) \
+  __attribute__((annotate("{gen};{funccall};typeclass(" settings ")"))) \
   GEN_UNIQUE_NAME(__gen_tmp__typeclass) \
   : __VA_ARGS__ \
   {};
@@ -58,12 +58,12 @@ struct WaterSpell {
 };
 
 // like `trait`
-struct Printable {
+struct PrintableTraits {
   virtual void print() const noexcept = 0;
 };
 
 // like `trait`
-struct Spell {
+struct SpellTraits {
   virtual void cast(const char* spellname, const int spellpower,
                     const char* target) const noexcept = 0;
 
@@ -86,20 +86,20 @@ MagicItemTraits {
 // like `trait`
 template<typename T1>
 struct
-ParentTemplated_1 {
+ParentTemplatedTraits_1 {
   virtual void has_P1(T1 name1) const noexcept = 0;
 };
 
 // like `trait`
 template<typename T1>
 struct
-ParentTemplated_2 {
+ParentTemplatedTraits_2 {
   virtual void has_P2(T1 name1) const noexcept = 0;
 };
 
 // like `trait`
 template<typename T1, typename T2>
 struct
-MagicTemplated {
+MagicTemplatedTraits {
   virtual void has_T(const T1& name1, const T2& name2) const noexcept = 0;
 };

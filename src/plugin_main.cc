@@ -31,11 +31,13 @@
 
 namespace plugin {
 
-class FlexMeta
+/// \note class name must not collide with
+/// class names from other loaded plugins
+class FlexTypeclass
   final
   : public ::plugin::ToolPlugin {
  public:
-  explicit FlexMeta(
+  explicit FlexTypeclass(
     ::plugin::AbstractManager& manager
     , const std::string& plugin)
     : ::plugin::ToolPlugin{manager, plugin}
@@ -68,7 +70,7 @@ class FlexMeta
   {
     DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
     TRACE_EVENT0("toplevel",
-                 "plugin::FlexMeta::load()");
+                 "plugin::FlexTypeclass::load()");
 
     DLOG(INFO)
       << "loaded plugin with title = "
@@ -85,7 +87,7 @@ class FlexMeta
   {
     DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
     TRACE_EVENT0("toplevel",
-                 "plugin::FlexMeta::disconnect_dispatcher()");
+                 "plugin::FlexTypeclass::disconnect_dispatcher()");
 
     event_dispatcher.sink<
       ::plugin::ToolPlugin::Events::StringCommand>()
@@ -110,7 +112,7 @@ class FlexMeta
   {
     DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
     TRACE_EVENT0("toplevel",
-                 "plugin::FlexMeta::connect_to_dispatcher()");
+                 "plugin::FlexTypeclass::connect_to_dispatcher()");
 
     event_dispatcher.sink<
       ::plugin::ToolPlugin::Events::StringCommand>()
@@ -134,7 +136,7 @@ class FlexMeta
   {
     DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
     TRACE_EVENT0("toplevel",
-                 "plugin::FlexMeta::unload()");
+                 "plugin::FlexTypeclass::unload()");
 
     DLOG(INFO)
       << "unloaded plugin with title = "
@@ -149,12 +151,12 @@ class FlexMeta
 private:
   FlexTypeclassEventHandler eventHandler_{};
 
-  DISALLOW_COPY_AND_ASSIGN(FlexMeta);
+  DISALLOW_COPY_AND_ASSIGN(FlexTypeclass);
 };
 
 } // namespace plugin
 
-REGISTER_PLUGIN(/*name*/ FlexMeta
-    , /*className*/ plugin::FlexMeta
+REGISTER_PLUGIN(/*name*/ FlexTypeclass
+    , /*className*/ plugin::FlexTypeclass
     // plugin interface version checks to avoid unexpected behavior
     , /*interface*/ "backend.ToolPlugin/1.0")
