@@ -159,6 +159,8 @@
 
 #include "example_datatypes.hpp"
 
+#include "generated/Spell_MagicItem.typeclass_combo.generated.hpp"
+
 #include "generated/Spell.typeclass.generated.hpp"
 #include "generated/FireSpell_MagicItem.typeclass_instance.generated.hpp"
 
@@ -478,7 +480,6 @@ TEST(Typeclass, TypeclassGeneration) {
     }
   }
 
-#if 0
   /*_tc_combined_t<Spell, MagicItem> combined1 {
       _tc_combined_t<Spell>{FireSpell{"someFireSpellTitle", "someFireSpelldescription1"}}
   };*/
@@ -607,7 +608,6 @@ TEST(Typeclass, TypeclassGeneration) {
   if(combinedRef2.has_model<Spell>()) {
     combinedRef2.cast("", 0, "");
   }
-#endif //0
 }
 
 TEST(AnnotationParser, LinksWithClingLLVM) {

@@ -915,30 +915,26 @@ clang_utils::SourceTransformResult
     ///ctp::Options::res_path
     / (combinedTypeclassNames + ".typeclass_combo.generated.hpp"));
 
+  generator_includes.push_back(
+    wrapLocalInclude(R"raw(type_erasure_common.hpp)raw"));
+
   {
     std::string headerGuard = "";
 
-    std::string generator_path = TYPECLASS_TEMPLATE_CPP;
+    std::string generator_path = TYPECLASS_COMBO_TEMPLATE_CPP;
 
     const auto fileID = SM.getMainFileID();
     const auto fileEntry = SM.getFileEntryForID(
       SM.getMainFileID());
     std::string full_file_path = fileEntry->getName();
 
-    std::vector<std::string> generator_includes{
-         wrapLocalInclude(
-          gen_hpp_name),
-         wrapLocalInclude(
-          R"raw(type_erasure_common.hpp)raw")
-      };
-
     // squarets will generate code from template file
-    // and appende it after annotated variable
+    // and append it after annotated variable
     /// \note FILE_PATH defined by CMakeLists
     /// and passed to flextool via
     /// --extra-arg=-DFILE_PATH=...
     $squaretsFile(
-      TYPECLASS_COMBO_TEMPLATE_CPP
+      TYPECLASS_COMBO_TEMPLATE_HPP
     )
     std::string squarets_output = "";
 
@@ -1036,10 +1032,8 @@ clang_utils::SourceTransformResult
     std::string generator_path = TYPECLASS_COMBO_TEMPLATE_HPP;
 
     generator_includes.push_back(
-      wrapLocalInclude(R"raw(type_erasure_common.hpp)raw"));
-
-    generator_includes.push_back(
-      wrapLocalInclude(gen_hpp_name));
+         wrapLocalInclude(
+          gen_hpp_name));
 
     const auto fileID = SM.getMainFileID();
     const auto fileEntry = SM.getFileEntryForID(
@@ -1047,12 +1041,12 @@ clang_utils::SourceTransformResult
     std::string full_file_path = fileEntry->getName();
 
     // squarets will generate code from template file
-    // and appende it after annotated variable
+    // and append it after annotated variable
     /// \note FILE_PATH defined by CMakeLists
     /// and passed to flextool via
     /// --extra-arg=-DFILE_PATH=...
     $squaretsFile(
-      TYPECLASS_COMBO_TEMPLATE_HPP
+      TYPECLASS_COMBO_TEMPLATE_CPP
     )
     std::string squarets_output = "";
 

@@ -67,6 +67,10 @@ cmake -E chdir build \
   -DCONAN_AUTO_INSTALL=OFF \
   -DCMAKE_BUILD_TYPE=${build_type}
 
+# optional: remove generated files
+rm build/*generated*
+rm build/generated/ -rf
+
 # build code
 cmake -E chdir build \
   cmake -E time cmake --build . \
