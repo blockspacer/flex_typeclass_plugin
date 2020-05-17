@@ -137,10 +137,10 @@ if (CONAN_AUTO_INSTALL)
   )
 endif()
 
-if(EXISTS "${CMAKE_BINARY_DIR}/conanbuildinfo.cmake")
-  list(APPEND CMAKE_MODULE_PATH ${CMAKE_BINARY_DIR}/)
-  include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
-  include(${CMAKE_BINARY_DIR}/conan_paths.cmake OPTIONAL)
+if(EXISTS "${CMAKE_CURRENT_BINARY_DIR}/conanbuildinfo.cmake")
+  list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_BINARY_DIR}/)
+  include(${CMAKE_CURRENT_BINARY_DIR}/conanbuildinfo.cmake)
+  include(${CMAKE_CURRENT_BINARY_DIR}/conan_paths.cmake OPTIONAL)
   conan_basic_setup(
     # prevent conan_basic_setup from resetting cmake variables
     TARGETS
@@ -316,7 +316,7 @@ set(chromium_build_util_headers
   ${CONAN_CHROMIUM_BUILD_UTIL_ROOT}/include/chromium
 )
 message(STATUS "chromium_build_util_headers=${chromium_build_util_headers}")
-set(flextool_outdir ${CMAKE_BINARY_DIR})
+set(flextool_outdir ${CMAKE_CURRENT_BINARY_DIR})
 message(STATUS "flextool_outdir=${flextool_outdir}")
 
 set(TYPECLASS_TEMPLATE_CPP
