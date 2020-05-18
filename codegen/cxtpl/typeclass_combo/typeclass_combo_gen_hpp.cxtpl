@@ -1,5 +1,12 @@
 ﻿[[~ // parameters begin
 
+// name of private variable that conatains `model`
+// must have prefix
+auto typeclassModelName =
+  [](const std::string& arg) -> std::string {
+  return "model_for_" + arg;
+};
+
 const size_t ReflectedTypeclassesSize =
     ReflectedTypeclasses.size();
 
@@ -100,7 +107,6 @@ struct _tc_combined_t<[[~]] /* no newline */
 
     // Call clone for copy ctor/assign.
     explicit _tc_combined_t(const _tc_combined_t& rhs) noexcept {
-        //puts("_tc_combined_t<[[+ typeclassComboDecls(typeclassNames) +]]> copy ctor");
         if(rhs) {
 [[~]]  { // startscope
 [[~]]    for(size_t index = 0; index < ReflectedTypeclassesSize; index++) {
@@ -367,7 +373,7 @@ struct _tc_combined_t<[[~]] /* no newline */
 [[~]]          && !method->isCtor
 [[~]]          && !method->isDtor;
 [[~]]      if(method->isTemplate()) {
-template< [[+ templateParamsFullDecls(method->tplParams) +]] >
+template< [[+ expandTemplateParameters(method->tplParams) +]] >
 [[~]]      } // method->isTemplate
 [[~]]      if(needPrint) {
 [[+ method->isExplicitCtor ? "explicit " : "" +]][[~]] /* no newline */
@@ -387,7 +393,7 @@ template< [[+ templateParamsFullDecls(method->tplParams) +]] >
       std::terminate();
     }
     return [[+ typeclassModelName(baseName) +]]->
-      __[[+ method->name +]]([[+ paramsCallDecls(method->params) +]]);
+      __[[+ method->name +]]([[+ expandMethodParameters(method->params) +]]);
   }
 [[~ /* newline */ ~]]
 [[~]]      } // needPrint

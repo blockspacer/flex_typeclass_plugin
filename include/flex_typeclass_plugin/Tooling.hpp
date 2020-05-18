@@ -1,5 +1,7 @@
 ﻿#pragma once
 
+#include "flex_typeclass_plugin/CodeGenerator.hpp"
+
 #include <flexlib/clangUtils.hpp>
 #include <flexlib/ToolPlugin.hpp>
 #if defined(CLING_IS_ON)
@@ -8,6 +10,16 @@
 
 #include <base/logging.h>
 #include <base/sequenced_task_runner.h>
+
+namespace flex_typeclass_plugin {
+
+// Declaration must match plugin version.
+struct Settings {
+  // output directory for generated files
+  std::string outDir;
+};
+
+} // namespace flex_typeclass_plugin
 
 namespace plugin {
 
@@ -116,6 +128,14 @@ private:
    **/
   std::map<std::string, std::string>
     traitToItsType_{};
+
+  base::FilePath outDir_;
+
+  base::FilePath dir_exe_;
+
+  TypeclassCodeGenerator typeclassCodeGenerator_{};
+
+  flex_typeclass_plugin::Settings settings_{};
 
   DISALLOW_COPY_AND_ASSIGN(TypeclassTooling);
 };

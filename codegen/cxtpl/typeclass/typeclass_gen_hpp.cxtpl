@@ -95,7 +95,7 @@ struct _tc_model_t<[[+ fullBaseType +]]> {
 [[~]]          && !method->isCtor
 [[~]]          && !method->isDtor;
 [[~]]      if(method->isTemplate()) {
-template< [[+ templateParamsFullDecls(method->tplParams) +]] >
+template< [[+ expandTemplateParameters(method->tplParams) +]] >
 [[~]]      } // method->isTemplate
 [[~]]      if(needPrint) {
 [[+ method->isExplicitCtor ? "explicit " : "" +]][[~]] /* no newline */
@@ -248,7 +248,7 @@ struct _tc_combined_t<[[+ fullBaseType +]]> {
 [[~]]          && !method->isCtor
 [[~]]          && !method->isDtor;
 [[~]]      if(method->isTemplate()) {
-template< [[+ templateParamsFullDecls(method->tplParams) +]] >
+template< [[+ expandTemplateParameters(method->tplParams) +]] >
 [[~]]      } // method->isTemplate
 [[~]]      if(needPrint) {
 [[+ method->isExplicitCtor ? "explicit " : "" +]][[~]] /* no newline */
@@ -266,7 +266,7 @@ template< [[+ templateParamsFullDecls(method->tplParams) +]] >
     if(!model_) {
         std::terminate();
     }
-    model_->__[[+ method->name +]]([[+ paramsCallDecls(method->params) +]]);
+    model_->__[[+ method->name +]]([[+ expandMethodParameters(method->params) +]]);
   }
 [[~ /* newline */ ~]]
 [[~]]      } // needPrint

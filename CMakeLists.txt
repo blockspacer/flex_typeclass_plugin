@@ -19,20 +19,27 @@ option(ENABLE_TESTS "Enable tests" OFF)
 # NOTE: don't forget to set ENABLE_TESTS in IDE settings
 # and build type to Debug
 set(GENERATED_FOLDER_FOR_IDE
+  # default must be same as ${flextool_outdir}
   "${CMAKE_CURRENT_BINARY_DIR}"
   CACHE
   STRING "GENERATED_FOLDER_FOR_IDE" )
 
-set(BUILD_SHARED_LIBS
+# Hack to depend NOT on CONAN_PKG::libname, but on libname directly
+# See for details
+# https://docs.conan.io/en/latest/developing_packages/workspaces.html
+set(LOCAL_BUILD FALSE CACHE BOOL "LOCAL_BUILD")
+message(STATUS "LOCAL_BUILD=${LOCAL_BUILD}")
+
+set(${PROJECT_NAME}_BUILD_SHARED_LIBS
   TRUE CACHE BOOL
   "Use .so/.dll")
 
-if(BUILD_SHARED_LIBS)
+if(${PROJECT_NAME}_BUILD_SHARED_LIBS)
   set(CORE_LIB_TYPE SHARED)
 else()
   set(CORE_LIB_TYPE STATIC)
   message(FATAL_ERROR "ONLY SHARED PLUGINS SUPPORTED FOR NOW")
-endif(BUILD_SHARED_LIBS)
+endif(${PROJECT_NAME}_BUILD_SHARED_LIBS)
 
 set(ENABLE_CLING TRUE CACHE BOOL "ENABLE_CLING")
 message(STATUS "ENABLE_CLING=${ENABLE_CLING}")
@@ -118,8 +125,7 @@ message(STATUS "${FetchContent_conan_auto_install}_SOURCE_DIR = ${${FetchContent
 message(STATUS "${FetchContent_conan_auto_install}_BINARY_DIR = ${${FetchContent_conan_auto_install}_BINARY_DIR}")
 include(${${FetchContent_conan_auto_install}_SOURCE_DIR}/conan-auto-install.cmake)
 option(CONAN_AUTO_INSTALL "Let CMake call conan install automatically"
-  #OFF # disable by default cause llvm requires long build with CONAN_LLVM_SINGLE_THREAD_BUILD=1
-  ON
+  OFF
 )
 if (CONAN_AUTO_INSTALL)
   set(CONAN_PROFILE
@@ -261,21 +267,61 @@ macro(add_relative_include_dir TARGET VISIBILITY_BUILD VISIBILITY_INSTALL NEW_EL
     ${CMAKE_CURRENT_SOURCE_DIR}/${NEW_ELEM} )
 endmacro(add_relative_include_dir)
 
+#if(NOT TARGET CONAN_PKG::flexlib)
+#  message(FATAL_ERROR "Use flexlib from conan")
+#endif()
+#set(flexlib CONAN_PKG::flexlib)
+#if(LOCAL_BUILD)
+#  set(flexlib flexlib)
+#  get_property(flexlib_file
+#    TARGET ${flexlib}
+#    PROPERTY LOCATION)
+#else()
+#  set(flexlib_file
+#    ${CONAN_FLEXLIB_ROOT}/lib/flexlib${CMAKE_STATIC_LIBRARY_SUFFIX}
+#  )
+#endif()
+#message(STATUS "flexlib_file == ${flexlib_file}")
+
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules")
 
 list(APPEND CMAKE_PROGRAM_PATH ${CONAN_BIN_DIRS})
 # TODO: make better: link lib dirs
 link_directories(${CONAN_LIB_DIRS})
-include(HelperFlextool) # requires list(APPEND CMAKE_PROGRAM_PATH ${CONAN_BIN_DIRS})
-set(flex_reflect_plugin
-  ${CONAN_FLEX_REFLECT_PLUGIN_ROOT}/lib/flex_reflect_plugin${CMAKE_SHARED_LIBRARY_SUFFIX}
-)
-message(STATUS "flex_reflect_plugin=${flex_reflect_plugin}")
-set(flex_squarets_plugin
-  ${CONAN_FLEX_SQUARETS_PLUGIN_ROOT}/lib/flex_squarets_plugin${CMAKE_SHARED_LIBRARY_SUFFIX}
-)
-message(STATUS "flex_squarets_plugin=${flex_squarets_plugin}")
+#
+if(NOT TARGET CONAN_PKG::flextool)
+  message(FATAL_ERROR "Use flextool from conan")
+endif()
+include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/HelperFlextool.cmake)
+if(NOT flextool OR ${flextool} STREQUAL "")
+  message(FATAL_ERROR "flextool not found ${flextool}")
+endif()
+#
+if(LOCAL_BUILD)
+  get_property(flex_reflect_plugin_location TARGET flex_reflect_plugin PROPERTY LIBRARY_OUTPUT_DIRECTORY)
+  message (STATUS "flex_reflect_plugin_location == ${flex_reflect_plugin_location}")
+  set(flex_reflect_plugin
+    ${flex_reflect_plugin_location}/flex_reflect_plugin${CMAKE_SHARED_LIBRARY_SUFFIX}
+  )
+else()
+  set(flex_reflect_plugin
+    ${CONAN_FLEX_REFLECT_PLUGIN_ROOT}/lib/flex_reflect_plugin${CMAKE_SHARED_LIBRARY_SUFFIX}
+  )
+endif()
+#
+if(LOCAL_BUILD)
+  get_property(flex_squarets_plugin_location TARGET flex_squarets_plugin PROPERTY LIBRARY_OUTPUT_DIRECTORY)
+  message (STATUS "flex_squarets_plugin_location == ${flex_squarets_plugin_location}")
+  set(flex_squarets_plugin
+    ${flex_squarets_plugin_location}/flex_squarets_plugin${CMAKE_SHARED_LIBRARY_SUFFIX}
+  )
+else()
+  set(flex_squarets_plugin
+    ${CONAN_FLEX_SQUARETS_PLUGIN_ROOT}/lib/flex_squarets_plugin${CMAKE_SHARED_LIBRARY_SUFFIX}
+  )
+endif()
+#
 #set(flex_meta_plugin
 #  ${CONAN_FLEX_META_PLUGIN_ROOT}/lib/flex_meta_plugin${CMAKE_SHARED_LIBRARY_SUFFIX}
 #)
@@ -321,31 +367,32 @@ message(STATUS "flextool_outdir=${flextool_outdir}")
 
 set(TYPECLASS_TEMPLATE_CPP
   # usage: --extra-arg=-DTEST_PATH="${TEST_PATH}"
-  ${CMAKE_SOURCE_DIR}/codegen/cxtpl/typeclass/typeclass_gen_cpp.cxtpl
+  ${CMAKE_CURRENT_SOURCE_DIR}/codegen/cxtpl/typeclass/typeclass_gen_cpp.cxtpl
 )
 
 set(TYPECLASS_TEMPLATE_HPP
   # usage: --extra-arg=-DTEST_PATH="${TEST_PATH}"
-  ${CMAKE_SOURCE_DIR}/codegen/cxtpl/typeclass/typeclass_gen_hpp.cxtpl
+  ${CMAKE_CURRENT_SOURCE_DIR}/codegen/cxtpl/typeclass/typeclass_gen_hpp.cxtpl
 )
 
 set(TYPECLASS_INSTANCE_TEMPLATE_CPP
   # usage: --extra-arg=-DTEST_PATH="${TEST_PATH}"
-  ${CMAKE_SOURCE_DIR}/codegen/cxtpl/typeclass_instance/typeclass_instance_gen_hpp.cxtpl
+  ${CMAKE_CURRENT_SOURCE_DIR}/codegen/cxtpl/typeclass_instance/typeclass_instance_gen_hpp.cxtpl
 )
 
 set(TYPECLASS_COMBO_TEMPLATE_CPP
   # usage: --extra-arg=-DTEST_PATH="${TEST_PATH}"
-  ${CMAKE_SOURCE_DIR}/codegen/cxtpl/typeclass_combo/typeclass_combo_gen_cpp.cxtpl
+  ${CMAKE_CURRENT_SOURCE_DIR}/codegen/cxtpl/typeclass_combo/typeclass_combo_gen_cpp.cxtpl
 )
 
 set(TYPECLASS_COMBO_TEMPLATE_HPP
   # usage: --extra-arg=-DTEST_PATH="${TEST_PATH}"
-  ${CMAKE_SOURCE_DIR}/codegen/cxtpl/typeclass_combo/typeclass_combo_gen_hpp.cxtpl
+  ${CMAKE_CURRENT_SOURCE_DIR}/codegen/cxtpl/typeclass_combo/typeclass_combo_gen_hpp.cxtpl
 )
 
 set(generated_sources
   ${CMAKE_CURRENT_BINARY_DIR}/Tooling.cc.generated.cc
+  ${CMAKE_CURRENT_BINARY_DIR}/CodeGenerator.cc.generated.cc
 )
 
 # generated files
@@ -353,6 +400,22 @@ set_source_files_properties(
   ${generated_sources}
   PROPERTIES GENERATED 1)
 
+# Configured file will be loaded by Cling C++ interpreter.
+# Loaded by Cling file can change global variables via `extern`,
+# for example, it can change global settings map.
+# We can use ${flextool_outdir} to change
+# output directory for files generated by plugin.
+configure_file(
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/flex_typeclass_plugin_settings.cc.in
+  ${CMAKE_CURRENT_BINARY_DIR}/flex_typeclass_plugin_settings.cc
+)
+set(flex_typeclass_plugin_settings
+  ${CMAKE_CURRENT_BINARY_DIR}/flex_typeclass_plugin_settings.cc
+)
+
+# link with library via --extra-arg=-l
+#--extra-arg=-l${flexlib_file}
+message(STATUS "flextool=${flextool}")
 add_custom_command(
     OUTPUT ${generated_sources}
     COMMAND ${CMAKE_COMMAND} -E echo " Removing ${generated_sources}."
@@ -389,7 +452,9 @@ add_custom_command(
           --extra-arg=-DTYPECLASS_COMBO_TEMPLATE_HPP="${TYPECLASS_COMBO_TEMPLATE_HPP}"
           ${flextool_extra_args}
           ${flex_typeclass_plugin_src_DIR}/Tooling.cc
+          ${flex_typeclass_plugin_src_DIR}/CodeGenerator.cc
           --cling_scripts=${flex_support_headers}
+          --cling_scripts=${flex_typeclass_plugin_settings}
     COMMENT "running ${flextool}"
     VERBATIM # to support \t for example
     #DEPENDS generator someInputFile.cpp.in
@@ -418,9 +483,13 @@ list(APPEND USED_3DPARTY_LIBS
 if(NOT TARGET CONAN_PKG::flexlib)
   message(FATAL_ERROR "Use flexlib from conan")
 endif()
+set(flexlib CONAN_PKG::flexlib)
+if(LOCAL_BUILD)
+  set(flexlib flexlib)
+endif(LOCAL_BUILD)
 
 list(APPEND USED_3DPARTY_LIBS
-  CONAN_PKG::flexlib
+  ${flexlib}
   CONAN_PKG::basis
   CONAN_PKG::clang_folly_conan
   CONAN_PKG::boost
@@ -474,6 +543,10 @@ set(USED_SYSTEM_LIBS
 target_link_libraries(${LIB_NAME} PUBLIC#PRIVATE
   ${USED_3DPARTY_LIBS}
   ${USED_SYSTEM_LIBS}
+)
+
+target_link_libraries(${LIB_NAME} PRIVATE
+  CONAN_PKG::entt
 )
 
 set(DEBUG_LIBRARY_SUFFIX "")
@@ -558,14 +631,24 @@ target_compile_definitions(${LIB_NAME} PUBLIC
 # install and export steps
 include(cmake/Exports)
 
-if(ENABLE_TESTS)
-  # allows to run tests without `cmake install` step
-  # copies files required to start test executable
+if(LOCAL_BUILD)
+  # for builds with conan workspace
   execute_process(
     COMMAND ${CMAKE_COMMAND} -E copy_if_different
-            ${CMAKE_SOURCE_DIR}/conf/${LIB_NAME}.conf
+            ${CMAKE_CURRENT_SOURCE_DIR}/conf/${LIB_NAME}.conf
             ${CMAKE_BINARY_DIR}/${LIB_NAME}.conf
   )
+endif(LOCAL_BUILD)
 
+# for builds without conan
+# allows to run tests without `cmake install` step
+# copies files required to start test executable
+execute_process(
+  COMMAND ${CMAKE_COMMAND} -E copy_if_different
+          ${CMAKE_CURRENT_SOURCE_DIR}/conf/${LIB_NAME}.conf
+          ${CMAKE_CURRENT_BINARY_DIR}/${LIB_NAME}.conf
+)
+
+if(ENABLE_TESTS)
   add_subdirectory( tests )
 endif()

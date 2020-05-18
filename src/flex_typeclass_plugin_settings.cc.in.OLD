@@ -1,0 +1,75 @@
+// C++ file configures plugin settings.
+//
+// That file will be loaded by Cling C++ interpreter.
+// Loaded by Cling file can change global variables via `extern`,
+// for example, it can change global settings map.
+
+#include <flexlib/per_plugin_settings.hpp>
+
+namespace {
+
+// name of plugin used in settings KV map
+static const char kSettingsPluginName[] = "flex_typeclass_plugin";
+
+// output directory for generated files
+static const char kOutDirOption[] = "out_dir";
+
+} // namespace
+
+#if 0
+namespace plugin {
+
+using PluginName = std::string;
+using OptionName = std::string;
+using OptionValue = std::string;
+
+// defined by flextool
+// both plugins (.so/.dll) and Cling scripts can use `extern`
+// to modify |plugin_settings|
+extern std::map<
+         PluginName
+         , std::map<OptionName, OptionValue> // plugin KV settings
+       > plugin_settings;
+
+} // namespace plugin
+#endif // 0
+
+namespace flex_typeclass_plugin {
+
+class InitSettings {
+public:
+  InitSettings();
+};
+
+InitSettings::InitSettings()
+{
+  VLOG(9)
+    << "started initialization of settings for plugin: "
+    << kSettingsPluginName;
+
+  // create new settings for plugin
+  flexlib::PerPluginSettings::OptionKV settings;
+
+  // output directory for generated files
+  settings[kOutDirOption] = "${flextool_outdir}";
+
+  flexlib::PerPluginSettings* perPluginSettings
+    = flexlib::PerPluginSettings::getInstance();
+
+  // move settings created for plugin into global settings
+  perPluginSettings->setPluginSettings(
+    kSettingsPluginName
+    , std::move(settings));
+
+#if 0
+  // move settings created for plugin into global settings
+  plugin::plugin_settings[kSettingsPluginName]
+    = std::move(settings);
+#endif // 0
+}
+
+// calls constructor that can be used
+// to create new settings for plugin
+static InitSettings initSettings;
+
+} // namespace flex_typeclass_plugin

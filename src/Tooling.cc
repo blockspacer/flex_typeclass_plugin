@@ -1,5 +1,7 @@
-#include <flex_typeclass_plugin/Tooling.hpp> // IWYU pragma: associated
+#include "flex_typeclass_plugin/Tooling.hpp" // IWYU pragma: associated
+#include "flex_typeclass_plugin/flex_typeclass_plugin_settings.hpp"
 
+#include <flexlib/per_plugin_settings.hpp>
 #include <flexlib/reflect/ReflTypes.hpp>
 #include <flexlib/reflect/ReflectAST.hpp>
 #include <flexlib/reflect/ReflectionCache.hpp>
@@ -34,6 +36,8 @@
 #include <base/strings/string_util.h>
 #include <base/trace_event/trace_event.h>
 #include <base/logging.h>
+#include <base/files/file_util.h>
+#include <base/path_service.h>
 
 #include <any>
 #include <string>
@@ -42,160 +46,208 @@
 #include <iostream>
 #include <fstream>
 
-// provide template code in __VA_ARGS__
-/// \note you can use \n to add newline
-/// \note does not support #define, #include in __VA_ARGS__
-#define $squarets(...) \
-  __attribute__((annotate("{gen};{squarets};CXTPL;" #__VA_ARGS__ )))
+//namespace flex_typeclass_plugin {
+//
+//static std::string outdir;
+//
+//void setOutdir(
+//  const char outdirRaw[])
+//{
+//  outdir = outdirRaw;
+//
+//  VLOG(9)
+//    << "called setOutdir: "
+//    << outdir;
+//}
+//
+//} // namespace flex_typeclass_plugin
 
-// squaretsString
-/// \note may use `#include` e.t.c.
-// example:
-//   $squaretsString("#include <cling/Interpreter/Interpreter.h>")
-#define $squaretsString(...) \
-  __attribute__((annotate("{gen};{squarets};CXTPL;" __VA_ARGS__)))
+#if 0
+namespace plugin {
 
-// example:
-//   $squaretsFile("file/path/here")
-/// \note FILE_PATH can be defined by CMakeLists
-/// and passed to flextool via
-/// --extra-arg=-DFILE_PATH=...
-#define $squaretsFile(...) \
-  __attribute__((annotate("{gen};{squaretsFile};CXTPL;" __VA_ARGS__)))
+using PluginName = std::string;
+using OptionName = std::string;
+using OptionValue = std::string;
 
-// uses Cling to execute arbitrary code at compile-time
-// and run squarets on result returned by executed code
-#define $squaretsCodeAndReplace(...) \
-  /* generate definition required to use __attribute__ */ \
-  __attribute__((annotate("{gen};{squaretsCodeAndReplace};CXTPL;" #__VA_ARGS__)))
+// defined by flextool
+// both plugins (.so/.dll) and Cling scripts can use `extern`
+// to modify |plugin_settings|
+extern std::map<
+         PluginName
+         , std::map<OptionName, OptionValue> // plugin KV settings
+       > plugin_settings;
+
+} // namespace plugin
+#endif // 0
+
+namespace reflection {
+
+typedef std::string reflectionID;
+
+/*class ReflectionCXXMethodRegistry {
+    //reflectionID id_;
+};*/
+
+class ReflectionCXXRecordRegistry {
+public:
+    ReflectionCXXRecordRegistry(const reflectionID& id,
+                                //clang::CXXRecordDecl const *node,
+                                ClassInfoPtr classInfoPtr);
+    reflectionID id_;
+    //clang::CXXRecordDecl const *node_;
+    ClassInfoPtr classInfoPtr_;
+};
+
+class ReflectionRegistry {
+public:
+    static ReflectionRegistry *instance;
+public:
+    static ReflectionRegistry *getInstance();
+    std::map<reflectionID, std::unique_ptr<ReflectionCXXRecordRegistry>> reflectionCXXRecordRegistry;
+};
+
+} // namespace reflection
+
+namespace reflection {
+
+ReflectionRegistry *ReflectionRegistry::instance;
+
+ReflectionRegistry *ReflectionRegistry::getInstance() {
+    if (!instance)
+        instance = new ReflectionRegistry;
+    return instance;
+}
+
+ReflectionCXXRecordRegistry::ReflectionCXXRecordRegistry(const reflectionID &id/*, const CXXRecordDecl *node*/, ClassInfoPtr classInfoPtr)
+    : id_(id)/*, node_(node)*/, classInfoPtr_(classInfoPtr) {
+}
+
+} // namespace reflection
 
 namespace plugin {
 
 namespace {
 
+// input: vector<a, b, c>
+// output: "a, b, c"
 std::string typenameParamsFullDecls(
   const std::vector<reflection::MethodParamInfo>& params)
 {
-    std::string out;
-    size_t paramIter = 0;
-    const size_t methodParamsSize = params.size();
-    for(const auto& param: params) {
-      paramIter++;
-      if(param.type->getAsTemplateParamType()) {
-        out += "typename ";
-        //out += param.type->getPrintedName();
-        out += param.type
-          ->getAsTemplateParamType()->decl->getName();
-        if(paramIter != methodParamsSize) {
-            out += ", ";
-        } // paramIter != methodParamsSize
-      }
-    } // params endfor
-    return out;
+  std::string out;
+  size_t paramIter = 0;
+  const size_t methodParamsSize = params.size();
+  for(const auto& param: params) {
+    paramIter++;
+    if(param.type->getAsTemplateParamType()) {
+      out += "typename ";
+      //out += param.type->getPrintedName();
+      out += param.type
+        ->getAsTemplateParamType()->decl->getName();
+      if(paramIter != methodParamsSize) {
+        out += ", ";
+      } // paramIter != methodParamsSize
+    }
+  } // params endfor
+  return out;
 }
 
+// input: vector<a, b, c>
+// output: "a, b, c"
 std::string paramsFullDecls(
   const std::vector<reflection::MethodParamInfo>& params)
 {
-    std::string out;
-    size_t paramIter = 0;
-    const size_t methodParamsSize = params.size();
-    for(const auto& param: params) {
-      out += param.fullDecl;
-      /*if(param.type->getAsTemplate()
-        || param.type->getAsTemplateParamType()) {
-        out += " typename ";
-      }*/
-      paramIter++;
-      if(paramIter != methodParamsSize) {
-          out += ", ";
-      } // paramIter != methodParamsSize
-    } // params endfor
-    return out;
+  std::string out;
+  size_t paramIter = 0;
+  const size_t methodParamsSize = params.size();
+  for(const auto& param: params) {
+    out += param.fullDecl;
+    paramIter++;
+    if(paramIter != methodParamsSize) {
+      out += ", ";
+    } // paramIter != methodParamsSize
+  } // params endfor
+  return out;
 }
 
-std::string paramsCallDecls(
+// input: vector<a, b, c>
+// output: "a, b, c"
+std::string expandMethodParameters(
   const std::vector<reflection::MethodParamInfo>& params)
 {
-    std::string out;
-    size_t paramIter = 0;
-    const size_t methodParamsSize = params.size();
-    for(const auto& param: params) {
-        out += param.name;
-        paramIter++;
-        if(paramIter != methodParamsSize) {
-            out += ", ";
-        } // paramIter != methodParamsSize
-    } // params endfor
-    return out;
+  std::string out;
+  size_t paramIter = 0;
+  const size_t methodParamsSize = params.size();
+  for(const auto& param: params) {
+    out += param.name;
+    paramIter++;
+    if(paramIter != methodParamsSize) {
+      out += ", ";
+    } // paramIter != methodParamsSize
+  } // params endfor
+  return out;
 }
 
-std::string templateParamsFullDecls(
+// input: vector<a, b, c>
+// output: "a, b, c"
+std::string expandTemplateParameters(
   const std::vector<reflection::TemplateParamInfo>& params)
 {
-    std::string out;
-    size_t paramIter = 0;
-    const size_t methodParamsSize = params.size();
-    for(const auto& param: params) {
-        out += param.tplDeclName;
-        paramIter++;
-        if(paramIter != methodParamsSize) {
-            out += ", ";
-        } // paramIter != methodParamsSize
-    } // params endfor
-    return out;
+  std::string out;
+  size_t paramIter = 0;
+  const size_t methodParamsSize = params.size();
+  for(const auto& param: params) {
+    out += param.tplDeclName;
+    paramIter++;
+    if(paramIter != methodParamsSize) {
+      out += ", ";
+    } // paramIter != methodParamsSize
+  } // params endfor
+  return out;
 }
 
-std::string typeclassModelName(const std::string& arg) {
-  return "model_for_" + arg;
-}
-
-std::string typeclassComboDecls(const std::vector<std::string>& params)
+static std::string startHeaderGuard(
+  const std::string& guardName)
 {
-    std::string out;
-    size_t paramIter = 0;
-    const size_t methodParamsSize = params.size();
-    for(const auto& param: params) {
-        out += param;
-        paramIter++;
-        if(paramIter != methodParamsSize) {
-            out += ", ";
-        } // paramIter != methodParamsSize
-    } // params endfor
-    return out;
+  if(!guardName.empty()) {
+    // squarets will generate code from string
+    // and append it after annotated variable
+    _squaretsString(
+R"raw(
+#if !defined([[+ guardName +]])
+#define [[+ guardName +]]
+)raw"
+    )
+    std::string squarets_output = "";
+    return squarets_output;
+  } else {
+    return "#pragma once\n";
+  } // !guardName.empty()
+  return "";
 }
 
-static std::string startHeaderGuard(const std::string& guardName) {
-    std::string out;
-    if(!guardName.empty()) {
-        out += "#ifndef ";
-        out += guardName;
-        out += "\n";
-        out += "#define ";
-        out += guardName;
-        out += "\n";
-    } else {
-        out += "#pragma once\n";
-    } // !guardName.empty()
-    return out;
-}
+std::string endHeaderGuard(const std::string& guardName)
+{
+  if(!guardName.empty()) {
+    // squarets will generate code from string
+    // and append it after annotated variable
+    _squaretsString(
+R"raw(
+#endif // [[+ guardName +]]
 
-std::string endHeaderGuard(const std::string& guardName) {
-    std::string out;
-    if(!guardName.empty()) {
-        out += "#endif // ";
-        out += guardName;
-        out += "\n";
-    }
-    return out;
+)raw"
+    )
+    std::string squarets_output = "";
+    return squarets_output;
+  }
+  return "";
 }
 
 // we want to generate file names based on parsed C++ types.
-// cause file names can not contain spaces ( )
+// cause file names can not contain spaces ( \n\r)
 // and punctuations (,.:') we want to
 // replace special characters in filename to '_'
 // BEFORE:
-//   $typeclass_impl(
+//   _typeclass_impl(
 //     typeclass_instance(
 //       target = "FireSpell",
 //       "MagicTemplated<std::string, int>,"
@@ -210,39 +262,42 @@ static void normalizeFileName(std::string &in)
   std::replace_if(in.begin(), in.end(), ::isspace, '_');
 }
 
-static bool startsWith(const std::string_view& in,
-    const std::string& prefix) {
-  return !in.compare(0, prefix.size(), prefix);
-}
-
-static std::string_view removePrefix(const std::string_view& from,
-    const std::string& prefix) {
-  return from.substr( prefix.size(), from.size() - prefix.size());
-}
+static const char kStructPrefix[] = "struct ";
+static const char kRecordPrefix[] = "record ";
 
 // exatracts `SomeType` out of:
 // struct SomeType{};
 // OR
 // class SomeType{};
 // Note that `class` in clang LibTooling is `record`
-static void prepareTypeName(std::string &in)
+static std::string exatractTypeName(const std::string &in)
 {
   {
-    const std::string prefix = "struct ";
-    if(startsWith(in, prefix)) {
-      in = removePrefix(in, prefix);
+    DCHECK(base::size(kStructPrefix));
+    if(base::StartsWith(in, kStructPrefix
+         , base::CompareCase::INSENSITIVE_ASCII))
+    {
+      return in.substr(base::size(kStructPrefix) - 1
+                     , std::string::npos);
     }
   }
+
   {
+    DCHECK(base::size(kRecordPrefix));
     const std::string prefix = "record ";
-    if(startsWith(in, prefix)) {
-      in = removePrefix(in, prefix);
+    if(base::StartsWith(in, kRecordPrefix
+         , base::CompareCase::INSENSITIVE_ASCII))
+    {
+      return in.substr(base::size(kRecordPrefix) - 1
+                     , std::string::npos);
     }
   }
+
+  return in;
 }
 
 // EXAMPLE:
-// $typeclass_impl(
+// _typeclass_impl(
 //   typeclass_instance(target = "FireSpell", "Printable")
 // )
 // Note quotes around "FireSpell":
@@ -256,30 +311,24 @@ static void prepareTplArg(std::string &in)
     in.end());
 }
 
-static void writeToFile(const std::string& str, const std::string& file_path) {
-  fs::create_directories(fs::path(file_path).parent_path());
-
-  std::ofstream ofs(file_path);
-  if(!ofs) {
-    // TODO: better error reporting
-    printf("ERROR: can`t write to file %s\n", file_path.c_str());
-    return;
-  }
-  ofs << str;
-  ofs.close();
-  if(!ofs)    //bad() function will check for badbit
-  {
-    printf("ERROR: writing to file failed %s\n", file_path.c_str());
-    return;
-  }
+static std::string buildIncludeDirective(
+  const std::string& inStr
+  , const std::string& quote = R"raw(")raw")
+{
+  // squarets will generate code from string
+  // and append it after annotated variable
+  _squaretsString(
+R"raw(#include [[+ quote +]][[+ inStr +]][[+ quote +]])raw"
+  )
+  std::string squarets_output = "";
+  return squarets_output;
 }
 
-static std::string wrapLocalInclude(const std::string& inStr) {
-    std::string result = R"raw(#include ")raw";
-    result += inStr;
-    result += R"raw(")raw";
-    return result;
-}
+// name of plugin used in settings KV map
+static const char kSettingsPluginName[] = "flex_typeclass_plugin";
+
+// output directory for generated files
+static const char kOutDirOption[] = "out_dir";
 
 } // namespace
 
@@ -293,6 +342,53 @@ TypeclassTooling::TypeclassTooling(
   DCHECK(clingInterpreter_)
     << "clingInterpreter_";
 
+  // load settings from C++ script interpreted by Cling
+  /// \note skip on fail of settings loading,
+  /// fallback to defaults
+  {
+    cling::Value clingResult;
+    /**
+     * EXAMPLE Cling script:
+       namespace flex_typeclass_plugin {
+         // Declaration must match plugin version.
+         struct Settings {
+           // output directory for generated files
+           std::string outDir;
+         };
+         void loadSettings(Settings& settings)
+         {
+           settings.outDir
+             = "${flextool_outdir}";
+         }
+       } // namespace flex_typeclass_plugin
+     */
+    cling::Interpreter::CompilationResult compilationResult
+      = clingInterpreter_->callFunctionByName(
+          // function name
+          "flex_typeclass_plugin::loadSettings"
+          // argument as void
+          , static_cast<void*>(&settings_)
+          // code to cast argument from void
+          , "*(flex_typeclass_plugin::Settings*)"
+          , clingResult);
+    if(compilationResult
+        != cling::Interpreter::Interpreter::kSuccess) {
+      DCHECK(settings_.outDir.empty());
+      DVLOG(9)
+        << "failed to execute Cling script, "
+           "skipping...";
+    } else {
+      DVLOG(9)
+        << "settings_.outDir: "
+        << settings_.outDir;
+    }
+    DCHECK(clingResult.hasValue()
+      // we expect |void| as result of function call
+      ? clingResult.isValid() && clingResult.isVoid()
+      // skip on fail of settings loading
+      : true);
+  }
+
   DETACH_FROM_SEQUENCE(sequence_checker_);
 
   DCHECK(event.sourceTransformPipeline)
@@ -302,6 +398,171 @@ TypeclassTooling::TypeclassTooling(
 
   sourceTransformRules_
     = &sourceTransformPipeline.sourceTransformRules;
+
+  if (!base::PathService::Get(base::DIR_EXE, &dir_exe_)) {
+    NOTREACHED();
+  }
+  DCHECK(!dir_exe_.empty());
+
+  outDir_ = dir_exe_.Append("generated");
+
+#if 0
+  const std::map<std::string, std::string>::const_iterator it
+    = flex_typeclass_plugin::settings.find("outdir");
+  if(it != flex_typeclass_plugin::settings.end())
+  {
+    VLOG(9)
+      << "flex_typeclass_plugin::settings["
+      << it->first
+      << "] = "
+      << it->second;
+    CHECK(!it->second.empty())
+      << "settings must be not empty";
+    outDir_ = base::FilePath{it->second};
+  }
+#endif
+
+#if 0
+  if(!flex_typeclass_plugin::outdir.empty())
+  {
+    VLOG(9)
+      << "flex_typeclass_plugin::settings["
+      << "outdir"
+      << "] = "
+      << flex_typeclass_plugin::outdir;
+    outDir_ = base::FilePath{flex_typeclass_plugin::outdir};
+  } else {
+    LOG(WARNING)
+      << "flex_typeclass_plugin:"
+         " settings must be not empty";
+  }
+#endif // 0
+
+#if 0
+  const std::map<
+      std::string
+      , std::map<std::string, std::string>
+    >::const_iterator it
+      = plugin::plugin_settings.find(kSettingsPluginName);
+  if(it != plugin::plugin_settings.end())
+  {
+    const std::string& pluginName = it->first;
+    const std::map<std::string, std::string>& settingsKV
+      = it->second;
+    CHECK(!settingsKV.empty())
+      << "flex_typeclass_plugin: settings must be not empty";
+    VLOG(9)
+      << "found plugin::plugin_settings["
+      << pluginName
+      << "]";
+    for(const auto& setting: settingsKV) {
+      const std::string& optionName = setting.first;
+      const std::string& optionValue = setting.second;
+      VLOG(9)
+        << "plugin::plugin_settings["
+        << pluginName
+        << "] = "
+        << "("
+        << optionName
+        << ", "
+        << optionValue
+        << ")";
+      if(setting.first == kOutDirOption)
+      {
+        outDir_ = base::FilePath{optionValue};
+      } else {
+        LOG(WARNING)
+          << "flex_typeclass_plugin: "
+          << "unknown setting: "
+          << pluginName
+          << " = "
+          << "("
+          << optionName
+          << ", "
+          << optionValue
+          << ")";
+      }
+    }
+  }
+#endif // 0
+
+#if 0
+  flexlib::PerPluginSettings* perPluginSettings
+    = flexlib::PerPluginSettings::getInstance();
+  if(perPluginSettings->hasPluginOptions(kSettingsPluginName)) {
+    const flexlib::PerPluginSettings::OptionKV& optionKV
+      = perPluginSettings->getAllPluginOptions(kSettingsPluginName);
+    CHECK(!optionKV.empty())
+      << "flex_typeclass_plugin: settings must be not empty";
+    VLOG(9)
+      << "found plugin::plugin_settings["
+      << kSettingsPluginName
+      << "]";
+    for(const auto& setting: optionKV) {
+      const std::string& optionName = setting.first;
+      const std::string& optionValue = setting.second;
+      VLOG(9)
+        << "plugin::plugin_settings["
+        << kSettingsPluginName
+        << "] = "
+        << "("
+        << optionName
+        << ", "
+        << optionValue
+        << ")";
+      if(setting.first == kOutDirOption)
+      {
+        outDir_ = base::FilePath{optionValue};
+      } else {
+        // invalid configuration format
+        LOG(WARNING)
+          << "for plugin: "
+          << kSettingsPluginName
+          << " found unregistered setting: "
+          << "("
+          << optionName
+          << ", "
+          << optionValue
+          << ")";
+      }
+    }
+  } else {
+    DVLOG(9)
+      << "unable to find options for plugin: "
+      << kSettingsPluginName;
+  }
+#endif // 0
+
+  if(!settings_.outDir.empty()) {
+     outDir_ = base::FilePath{settings_.outDir};
+  }
+
+  if(!base::PathExists(outDir_)) {
+    base::File::Error dirError = base::File::FILE_OK;
+    // Returns 'true' on successful creation,
+    // or if the directory already exists
+    const bool dirCreated
+      = base::CreateDirectoryAndGetError(outDir_, &dirError);
+    if (!dirCreated) {
+      LOG(ERROR)
+        << "failed to create directory: "
+        << outDir_
+        << " with error code "
+        << dirError
+        << " with error string "
+        << base::File::ErrorToString(dirError);
+    }
+  }
+
+  {
+    // Returns an empty path on error.
+    // On POSIX, this function fails if the path does not exist.
+    outDir_ = base::MakeAbsoluteFilePath(outDir_);
+    DCHECK(!outDir_.empty());
+    VLOG(9)
+      << "outDir_= "
+      << outDir_;
+  }
 }
 
 TypeclassTooling::~TypeclassTooling()
@@ -379,8 +640,8 @@ clang_utils::SourceTransformResult
 
         std::string preparedFullBaseType
           = it.getType().getAsString();
-        prepareTypeName(
-          preparedFullBaseType);
+        preparedFullBaseType
+          = exatractTypeName(preparedFullBaseType);
 
         structInfo->compoundId.push_back(
           preparedFullBaseType);
@@ -446,17 +707,11 @@ clang_utils::SourceTransformResult
 
       normalizeFileName(fileTargetName);
 
-      fs::path gen_hpp_name = fs::absolute(
-          fs::path("generated")
-          ///\todo
-          ///ctp::Options::res_path
-        / (fileTargetName + ".typeclass.generated.hpp"));
+      base::FilePath gen_hpp_name
+        = outDir_.Append(fileTargetName + ".typeclass.generated.hpp");
 
-      fs::path gen_cpp_name = fs::absolute(
-          fs::path("generated")
-          ///\todo
-          ///ctp::Options::res_path
-        / (fileTargetName + ".typeclass.generated.cpp"));
+      base::FilePath gen_cpp_name
+        = outDir_.Append(fileTargetName + ".typeclass.generated.cpp");
 
       {
         std::string headerGuard = "";
@@ -473,9 +728,9 @@ clang_utils::SourceTransformResult
         std::string full_file_path = fileEntry->getName();
 
         std::vector<std::string> generator_includes{
-             wrapLocalInclude(
+             buildIncludeDirective(
               full_file_path),
-             wrapLocalInclude(
+             buildIncludeDirective(
               R"raw(type_erasure_common.hpp)raw")
           };
 
@@ -483,20 +738,33 @@ clang_utils::SourceTransformResult
           = structInfo;
 
         // squarets will generate code from template file
-        // and appende it after annotated variable
+        // and append it after annotated variable
         /// \note FILE_PATH defined by CMakeLists
         /// and passed to flextool via
         /// --extra-arg=-DFILE_PATH=...
-        $squaretsFile(
+        _squaretsFile(
           TYPECLASS_TEMPLATE_HPP
         )
         std::string squarets_output = "";
 
-        writeToFile(squarets_output, gen_hpp_name);
+        {
+          DCHECK(squarets_output.size());
+          const int writeResult = base::WriteFile(
+            gen_hpp_name
+            , squarets_output.c_str()
+            , squarets_output.size());
+          // Returns the number of bytes written, or -1 on error.
+          if(writeResult == -1) {
+            LOG(ERROR)
+              << "Unable to write file: "
+              << gen_hpp_name;
+          } else {
+            LOG(INFO)
+              << "saved file: "
+              << gen_hpp_name;
+          }
+        }
 
-        LOG(INFO)
-          << "saved file: "
-          << gen_hpp_name;
       }
 
       {
@@ -517,27 +785,41 @@ clang_utils::SourceTransformResult
         std::string full_file_path = fileEntry->getName();
 
         std::vector<std::string> generator_includes{
-             wrapLocalInclude(
-              gen_hpp_name),
-             wrapLocalInclude(
+             buildIncludeDirective(
+              /// \todo utf8 support
+              gen_hpp_name.AsUTF8Unsafe()),
+             buildIncludeDirective(
               R"raw(type_erasure_common.hpp)raw")
           };
 
         // squarets will generate code from template file
-        // and appende it after annotated variable
+        // and append it after annotated variable
         /// \note FILE_PATH defined by CMakeLists
         /// and passed to flextool via
         /// --extra-arg=-DFILE_PATH=...
-        $squaretsFile(
+        _squaretsFile(
           TYPECLASS_TEMPLATE_CPP
         )
         std::string squarets_output = "";
 
-        writeToFile(squarets_output, gen_cpp_name);
+        {
+          DCHECK(squarets_output.size());
+          const int writeResult = base::WriteFile(
+            gen_cpp_name
+            , squarets_output.c_str()
+            , squarets_output.size());
+          // Returns the number of bytes written, or -1 on error.
+          if(writeResult == -1) {
+            LOG(ERROR)
+              << "Unable to write file: "
+              << gen_cpp_name;
+          } else {
+            LOG(INFO)
+              << "saved file: "
+              << gen_cpp_name;
+          }
+        }
 
-        LOG(INFO)
-          << "saved file: "
-          << gen_cpp_name;
       }
 
     }
@@ -556,7 +838,7 @@ clang_utils::SourceTransformResult
     << "typeclass_instance called...";
 
   // EXAMPLE:
-  // $typeclass_impl(
+  // _typeclass_impl(
   //   typeclass_instance(target = "FireSpell", "Printable")
   // )
   // Here |typeclassBaseNames| will contain:
@@ -697,20 +979,13 @@ clang_utils::SourceTransformResult
         std::string fileTypeclassBaseName = typeclassBaseName;
         normalizeFileName(fileTypeclassBaseName);
 
-        fs::path gen_hpp_name = fs::absolute(
-          fs::path("generated")
-          ///\todo
-          ///ctp::Options::res_path
-          / (targetName + "_" + fileTypeclassBaseName
-            + ".typeclass_instance.generated.hpp"));
+        base::FilePath gen_hpp_name
+          = outDir_.Append(targetName + "_" + fileTypeclassBaseName
+            + ".typeclass_instance.generated.hpp");
 
-        fs::path gen_base_typeclass_hpp_name =
-          fs::absolute(
-            fs::path("generated")
-            ///\todo
-            ///ctp::Options::res_path
-            / (fileTypeclassBaseName
-              + ".typeclass.generated.hpp"));
+        base::FilePath gen_base_typeclass_hpp_name
+          = outDir_.Append(fileTypeclassBaseName
+              + ".typeclass.generated.hpp");
 
         /*
          * Used by:
@@ -738,29 +1013,43 @@ clang_utils::SourceTransformResult
           << "generator_path.empty()";
 
         std::vector<std::string> generator_includes{
-             wrapLocalInclude(
-              gen_base_typeclass_hpp_name),
-             wrapLocalInclude(
+             buildIncludeDirective(
+              /// \todo utf8 support
+              gen_base_typeclass_hpp_name.AsUTF8Unsafe()),
+             buildIncludeDirective(
               original_full_file_path),
-             wrapLocalInclude(
+             buildIncludeDirective(
               R"raw(type_erasure_common.hpp)raw")
           };
 
         // squarets will generate code from template file
-        // and appende it after annotated variable
+        // and append it after annotated variable
         /// \note FILE_PATH defined by CMakeLists
         /// and passed to flextool via
         /// --extra-arg=-DFILE_PATH=...
-        $squaretsFile(
+        _squaretsFile(
           TYPECLASS_INSTANCE_TEMPLATE_CPP
         )
         std::string squarets_output = "";
 
-        writeToFile(squarets_output, gen_hpp_name);
+        {
+          DCHECK(squarets_output.size());
+          const int writeResult = base::WriteFile(
+            gen_hpp_name
+            , squarets_output.c_str()
+            , squarets_output.size());
+          // Returns the number of bytes written, or -1 on error.
+          if(writeResult == -1) {
+            LOG(ERROR)
+              << "Unable to write file: "
+              << gen_hpp_name;
+          } else {
+            LOG(INFO)
+              << "saved file: "
+              << gen_hpp_name;
+          }
+        }
 
-        LOG(INFO)
-          << "saved file: "
-          << gen_hpp_name;
     }
   }
   if(processedTimes <= 0) {
@@ -783,7 +1072,7 @@ clang_utils::SourceTransformResult
     << "typeclass_combo called...";
 
   // EXAMPLE:
-  // $typeclass_impl(
+  // _typeclass_impl(
   //   typeclass_instance(target = "FireSpell", "Printable")
   // )
   // Here |typeclassBaseNames| will contain:
@@ -910,7 +1199,7 @@ clang_utils::SourceTransformResult
         : validTypeAlias
       );
       generator_includes.push_back(
-        wrapLocalInclude(
+        buildIncludeDirective(
           typeclassBaseName + R"raw(.typeclass.generated.hpp)raw"));
 
       /*DLOG(INFO) << "ReflectedBaseTypeclass->classInfoPtr_->name = "
@@ -978,17 +1267,15 @@ clang_utils::SourceTransformResult
     = std::regex_replace(OriginalTypeclassBaseCode,
         std::regex("\\$apply([^(]*)\\([^)]*\\)(.*)"), "$1$2");*/
 
-  fs::path gen_hpp_name = fs::absolute(
-    fs::path("generated")
-    ///\todo
-    ///ctp::Options::res_path
-    / ((targetTypeName.empty()
+  base::FilePath gen_hpp_name
+    = outDir_.Append(
+        (targetTypeName.empty()
         ? combinedTypeclassNames
         : targetTypeName)
-        + ".typeclass_combo.generated.hpp"));
+        + ".typeclass_combo.generated.hpp");
 
   generator_includes.push_back(
-    wrapLocalInclude(R"raw(type_erasure_common.hpp)raw"));
+    buildIncludeDirective(R"raw(type_erasure_common.hpp)raw"));
 
   {
     std::string headerGuard = "";
@@ -1009,29 +1296,40 @@ clang_utils::SourceTransformResult
     /// \note FILE_PATH defined by CMakeLists
     /// and passed to flextool via
     /// --extra-arg=-DFILE_PATH=...
-    $squaretsFile(
+    _squaretsFile(
       TYPECLASS_COMBO_TEMPLATE_HPP
     )
     std::string squarets_output = "";
 
-    writeToFile(squarets_output, gen_hpp_name);
+    {
+      DCHECK(squarets_output.size());
+      const int writeResult = base::WriteFile(
+        gen_hpp_name
+        , squarets_output.c_str()
+        , squarets_output.size());
+      // Returns the number of bytes written, or -1 on error.
+      if(writeResult == -1) {
+        LOG(ERROR)
+          << "Unable to write file: "
+          << gen_hpp_name;
+      } else {
+        LOG(INFO)
+          << "saved file: "
+          << gen_hpp_name;
+      }
+    }
 
-    LOG(INFO)
-      << "saved file: "
-      << gen_hpp_name;
   }
 
   {
     std::string headerGuard = "";
 
-    fs::path gen_cpp_name = fs::absolute(
-      fs::path("generated")
-      ///\todo
-      ///ctp::Options::res_path
-      / ((targetTypeName.empty()
+  base::FilePath gen_cpp_name
+    = outDir_.Append(
+        (targetTypeName.empty()
           ? combinedTypeclassNames
           : targetTypeName)
-          + ".typeclass_combo.generated.cpp"));
+          + ".typeclass_combo.generated.cpp");
 
     std::map<std::string, std::any> cxtpl_params;;
 
@@ -1042,8 +1340,9 @@ clang_utils::SourceTransformResult
       << TYPECLASS_COMBO_TEMPLATE_HPP;
 
     generator_includes.push_back(
-         wrapLocalInclude(
-          gen_hpp_name));
+         buildIncludeDirective(
+          /// \todo utf8 support
+          gen_hpp_name.AsUTF8Unsafe()));
 
     const auto fileID = SM.getMainFileID();
     const auto fileEntry = SM.getFileEntryForID(
@@ -1055,16 +1354,29 @@ clang_utils::SourceTransformResult
     /// \note FILE_PATH defined by CMakeLists
     /// and passed to flextool via
     /// --extra-arg=-DFILE_PATH=...
-    $squaretsFile(
+    _squaretsFile(
       TYPECLASS_COMBO_TEMPLATE_CPP
     )
     std::string squarets_output = "";
 
-    writeToFile(squarets_output, gen_cpp_name);
+    {
+      DCHECK(squarets_output.size());
+      const int writeResult = base::WriteFile(
+        gen_cpp_name
+        , squarets_output.c_str()
+        , squarets_output.size());
+      // Returns the number of bytes written, or -1 on error.
+      if(writeResult == -1) {
+        LOG(ERROR)
+          << "Unable to write file: "
+          << gen_cpp_name;
+      } else {
+        LOG(INFO)
+          << "saved file: "
+          << gen_cpp_name;
+      }
+    }
 
-    LOG(INFO)
-      << "saved file: "
-      << gen_cpp_name;
   }
 
   return clang_utils::SourceTransformResult{nullptr};

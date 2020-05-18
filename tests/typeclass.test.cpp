@@ -88,8 +88,8 @@
 #include <base/observer_list.h>
 #include <base/synchronization/lock.h>
 #include <base/threading/thread.h>
-#include "base/files/file_path.h"
-#include "base/strings/string_util.h"
+#include <base/files/file_path.h>
+#include <base/strings/string_util.h>
 #include <base/timer/timer.h>
 #include <base/callback.h>
 #include <base/bind.h>
@@ -159,22 +159,22 @@
 
 #include "example_datatypes.hpp"
 
-#include "generated/LongMagicItemSpell.typeclass_combo.generated.hpp"
+#include "LongMagicItemSpell.typeclass_combo.generated.hpp"
 
-#include "generated/Spell.typeclass.generated.hpp"
-#include "generated/FireSpell_MagicItem.typeclass_instance.generated.hpp"
+#include "Spell.typeclass.generated.hpp"
+#include "FireSpell_MagicItem.typeclass_instance.generated.hpp"
 
-#include "generated/Spell.typeclass.generated.hpp"
-#include "generated/WaterSpell_MagicItem.typeclass_instance.generated.hpp"
+#include "Spell.typeclass.generated.hpp"
+#include "WaterSpell_MagicItem.typeclass_instance.generated.hpp"
 
-#include "generated/MagicLongType.typeclass.generated.hpp"
+#include "MagicLongType.typeclass.generated.hpp"
 
-#include "generated/FireSpell_MagicLongType.typeclass_instance.generated.hpp"
+#include "FireSpell_MagicLongType.typeclass_instance.generated.hpp"
 
-#include "generated/WaterSpell_MagicLongType.typeclass_instance.generated.hpp"
+#include "WaterSpell_MagicLongType.typeclass_instance.generated.hpp"
 
-#include "generated/Printable.typeclass.generated.hpp"
-#include "generated/FireSpell_Printable.typeclass_instance.generated.hpp"
+#include "Printable.typeclass.generated.hpp"
+#include "FireSpell_Printable.typeclass_instance.generated.hpp"
 
 namespace cxxctp {
 namespace generated {
@@ -294,8 +294,8 @@ void print<PrintableTraits, FireSpell>
 } // namespace cxxctp
 } // namespace generated
 
-#include "generated/Printable.typeclass.generated.hpp"
-#include "generated/WaterSpell_Printable.typeclass_instance.generated.hpp"
+#include "Printable.typeclass.generated.hpp"
+#include "WaterSpell_Printable.typeclass_instance.generated.hpp"
 
 namespace cxxctp {
 namespace generated {
@@ -310,8 +310,8 @@ void print<DEFINE_Printable, WaterSpell>
 } // namespace cxxctp
 } // namespace generated
 
-#include "generated/Spell.typeclass.generated.hpp"
-#include "generated/FireSpell_Spell.typeclass_instance.generated.hpp"
+#include "Spell.typeclass.generated.hpp"
+#include "FireSpell_Spell.typeclass_instance.generated.hpp"
 
 namespace cxxctp {
 namespace generated {
@@ -354,8 +354,8 @@ void set_spell_power<SpellTraits, FireSpell>
 } // namespace cxxctp
 } // namespace generated
 
-#include "generated/Spell.typeclass.generated.hpp"
-#include "generated/WaterSpell_Spell.typeclass_instance.generated.hpp"
+#include "Spell.typeclass.generated.hpp"
+#include "WaterSpell_Spell.typeclass_instance.generated.hpp"
 
 namespace cxxctp {
 namespace generated {

@@ -2,11 +2,17 @@
 
 Plugin for [https://github.com/blockspacer/flextool](https://github.com/blockspacer/flextool)
 
-Plugin provides support for typeclasses.
+Plugin provides support for typeclasses (or Rust-like traits or "TEPS" - "Type Erasure Parent Style" or virtual concepts).
 
 If you don`t know why to use C++ typeclasses see https://www.youtube.com/watch?v=OtU51Ytfe04
 
 See for details [https://blockspacer.github.io/flex_docs/](https://blockspacer.github.io/flex_docs/)
+
+See for more details about typeclasses and `Polymorphic Ducks`:
+
+- https://mropert.github.io/2017/11/30/polymorphic_ducks/
+- https://mropert.github.io/2017/12/17/better_polymorphic_ducks/
+- https://mropert.github.io/2017/12/23/undefined_ducks/
 
 ## Before installation
 
@@ -194,7 +200,7 @@ tcFireSpell->has_enough_mana("...");
 1. generete typeclass
 
 ```cpp
-$typeclass(public MagicItemTraits, name = MagicItem)
+_typeclass(public MagicItemTraits, name = MagicItem)
 ```
 
 generates class `_tc_combined_t<MagicItemTraits>`
@@ -214,7 +220,7 @@ also `name` parameter controls name of generated `.hpp` and `.cpp` files.
 2. generete typeclass instance
 
 ```cpp
-$apply(
+_apply(
   typeclass_instance(target = "FireSpell", "MagicItemTraits")
 )
 ```

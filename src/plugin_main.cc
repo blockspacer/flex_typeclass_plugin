@@ -29,6 +29,10 @@
 #include <base/strings/string_util.h>
 #include <base/trace_event/trace_event.h>
 
+#if !defined(CORRADE_DYNAMIC_PLUGIN)
+#error "plugin must be shared library with CORRADE_DYNAMIC_PLUGIN=1"
+#endif  // CORRADE_DYNAMIC_PLUGIN
+
 namespace plugin {
 
 /// \note class name must not collide with
@@ -90,6 +94,11 @@ class FlexTypeclass
                  "plugin::FlexTypeclass::disconnect_dispatcher()");
 
     event_dispatcher.sink<
+      ::plugin::ToolPlugin::Events::Init>()
+        .disconnect<
+          &FlexTypeclassEventHandler::Init>(&eventHandler_);
+
+    event_dispatcher.sink<
       ::plugin::ToolPlugin::Events::StringCommand>()
         .disconnect<
           &FlexTypeclassEventHandler::StringCommand>(&eventHandler_);
@@ -113,6 +122,11 @@ class FlexTypeclass
     DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
     TRACE_EVENT0("toplevel",
                  "plugin::FlexTypeclass::connect_to_dispatcher()");
+
+    event_dispatcher.sink<
+      ::plugin::ToolPlugin::Events::Init>()
+        .connect<
+          &FlexTypeclassEventHandler::Init>(&eventHandler_);
 
     event_dispatcher.sink<
       ::plugin::ToolPlugin::Events::StringCommand>()

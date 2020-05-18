@@ -1,6 +1,6 @@
 ﻿#pragma once
 
-#include <flex_typeclass_plugin/Tooling.hpp>
+#include "flex_typeclass_plugin/Tooling.hpp"
 
 #include <flexlib/ToolPlugin.hpp>
 #if defined(CLING_IS_ON)
@@ -19,6 +19,9 @@ public:
   FlexTypeclassEventHandler();
 
   ~FlexTypeclassEventHandler();
+
+  void Init(
+    const ::plugin::ToolPlugin::Events::Init& event);
 
   void StringCommand(
     const ::plugin::ToolPlugin::Events::StringCommand& event);

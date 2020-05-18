@@ -140,7 +140,7 @@ class flex_typeclass_plugin_conan_project(conan_build_helper.CMakePackage):
                        "scripts/*", "tools/*", "codegen/*", "assets/*", "conf/*",
                        "docs/*", "licenses/*", "patches/*", "resources/*",
                        "submodules/*", "thirdparty/*", "third-party/*",
-                       "third_party/*", "base/*", "build/*", "flex_typeclass_plugin/*")
+                       "third_party/*", "flex_typeclass_plugin/*")
 
     #settings = "os", "compiler", "build_type", "arch"
     settings = "os_build", "os", "arch", "compiler", "build_type", "arch_build"
@@ -202,10 +202,10 @@ class flex_typeclass_plugin_conan_project(conan_build_helper.CMakePackage):
 
         self.output.info(self.options)
         if self.options.shared:
-          self.output.info('Enabled BUILD_SHARED_LIBS')
-          cmake.definitions["BUILD_SHARED_LIBS"] = "ON"
+          self.output.info('Enabled flex_typeclass_plugin_BUILD_SHARED_LIBS')
+          cmake.definitions["flex_typeclass_plugin_BUILD_SHARED_LIBS"] = "ON"
         else:
-          self.output.error('Disabled BUILD_SHARED_LIBS')
+          self.output.error('Disabled flex_typeclass_plugin_BUILD_SHARED_LIBS')
 
         self.add_cmake_option(cmake, "ENABLE_TESTS", self._is_tests_enabled())
 

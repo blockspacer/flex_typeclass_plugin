@@ -135,6 +135,17 @@ void FlexTypeclassEventHandler::RegisterAnnotationMethods(
   }
 }
 
+void FlexTypeclassEventHandler::Init(
+  const ::plugin::ToolPlugin::Events::Init& event)
+{
+  DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
+  TRACE_EVENT0("toplevel",
+               "plugin::FlexTypeclassEventHandler::handle_event(Init)");
+  DVLOG(9)
+    << "event.argc: "
+    << event.argc;
+}
+
 #if defined(CLING_IS_ON)
 void FlexTypeclassEventHandler::RegisterClingInterpreter(
   const ::plugin::ToolPlugin::Events::RegisterClingInterpreter& event)

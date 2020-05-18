@@ -74,7 +74,7 @@ struct _tc_impl_t<
 [[~]]          && !method->isCtor
 [[~]]          && !method->isDtor;
 [[~]]      if(method->isTemplate()) {
-template< [[+ templateParamsFullDecls(method->tplParams) +]] >
+template< [[+ expandTemplateParameters(method->tplParams) +]] >
 [[~]]      } // method->isTemplate
 [[~]]      if(needPrint) {
 [[+ method->isExplicitCtor ? "explicit " : "" +]][[~]] /* no newline */
@@ -96,7 +96,7 @@ override final
 ([[~]] /* no newline */
 concrete[[~]] /* no newline */
 [[+ methodParamsSize ? ", " : "" +]][[~]] /* no newline */
-[[+ paramsCallDecls(method->params) +]][[~]] /* no newline */
+[[+ expandMethodParameters(method->params) +]][[~]] /* no newline */
 );
   }
 [[~ /* newline */ ~]]
@@ -166,7 +166,7 @@ struct _tc_impl_t<
 [[~]]          && !method->isCtor
 [[~]]          && !method->isDtor;
 [[~]]      if(method->isTemplate()) {
-template< [[+ templateParamsFullDecls(method->tplParams) +]] >
+template< [[+ expandTemplateParameters(method->tplParams) +]] >
 [[~]]      } // method->isTemplate
 [[~]]      if(needPrint) {
 [[+ method->isExplicitCtor ? "explicit " : "" +]][[~]] /* no newline */
@@ -188,7 +188,7 @@ override final
 ([[~]] /* no newline */
 concrete.get()[[~]] /* no newline */
 [[+ methodParamsSize ? ", " : "" +]][[~]] /* no newline */
-[[+ paramsCallDecls(method->params) +]][[~]] /* no newline */
+[[+ expandMethodParameters(method->params) +]][[~]] /* no newline */
 );
   }
 [[~ /* newline */ ~]]
