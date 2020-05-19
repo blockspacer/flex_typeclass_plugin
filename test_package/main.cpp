@@ -176,7 +176,7 @@ $typeclass_combo(
 #include "generated/Spell.typeclass.generated.hpp"
 #include "generated/FireSpell_MagicItem.typeclass_instance.generated.hpp"
 
-namespace cxxctp {
+namespace poly {
 namespace generated {
 
 template<>
@@ -187,13 +187,13 @@ void has_enough_mana<MagicItem, FireSpell>
       << data.title << " " << spellname << std::endl;
 }
 
-} // namespace cxxctp
+} // namespace poly
 } // namespace generated
 
 #include "generated/Spell.typeclass.generated.hpp"
 #include "generated/WaterSpell_MagicItem.typeclass_instance.generated.hpp"
 
-namespace cxxctp {
+namespace poly {
 namespace generated {
 
 template<>
@@ -204,14 +204,14 @@ void has_enough_mana<MagicItem, WaterSpell>
       << data.title << " " << spellname << std::endl;
 }
 
-} // namespace cxxctp
+} // namespace poly
 } // namespace generated
 
 #include "generated/MagicTemplated_std__string__int__ParentTemplated_1_const_char____ParentTemplated_2_const_int___.typeclass.generated.hpp"
 
 #include "generated/FireSpell_MagicTemplated_std__string__int__ParentTemplated_1_const_char____ParentTemplated_2_const_int___.typeclass_instance.generated.hpp"
 
-namespace cxxctp {
+namespace poly {
 namespace generated {
 
 template<>
@@ -251,14 +251,14 @@ void has_P2<
               << std::endl;
 }
 
-} // namespace cxxctp
+} // namespace poly
 } // namespace generated
 
 #include "generated/MagicTemplated_std__string__int__ParentTemplated_1_const_char____ParentTemplated_2_const_int___.typeclass.generated.hpp"
 
 #include "generated/WaterSpell_MagicTemplated_std__string__int__ParentTemplated_1_const_char____ParentTemplated_2_const_int___.typeclass_instance.generated.hpp"
 
-namespace cxxctp {
+namespace poly {
 namespace generated {
 
 template<>
@@ -298,13 +298,13 @@ void has_P2<
               << std::endl;
 }
 
-} // namespace cxxctp
+} // namespace poly
 } // namespace generated
 
 #include "generated/Printable.typeclass.generated.hpp"
 #include "generated/FireSpell_Printable.typeclass_instance.generated.hpp"
 
-namespace cxxctp {
+namespace poly {
 namespace generated {
 
 template<>
@@ -314,13 +314,13 @@ void print<Printable, FireSpell>
       << data.title << " " << data.description << std::endl;
 }
 
-} // namespace cxxctp
+} // namespace poly
 } // namespace generated
 
 #include "generated/Printable.typeclass.generated.hpp"
 #include "generated/WaterSpell_Printable.typeclass_instance.generated.hpp"
 
-namespace cxxctp {
+namespace poly {
 namespace generated {
 
 template<>
@@ -330,13 +330,13 @@ void print<Printable, WaterSpell>
       << data.title << " " << data.description << std::endl;
 }
 
-} // namespace cxxctp
+} // namespace poly
 } // namespace generated
 
 #include "generated/Spell.typeclass.generated.hpp"
 #include "generated/FireSpell_Spell.typeclass_instance.generated.hpp"
 
-namespace cxxctp {
+namespace poly {
 namespace generated {
 
 template<>
@@ -374,13 +374,13 @@ void set_spell_power<Spell, FireSpell>
               << " with " << spellpower << std::endl;
 }
 
-} // namespace cxxctp
+} // namespace poly
 } // namespace generated
 
 #include "generated/Spell.typeclass.generated.hpp"
 #include "generated/WaterSpell_Spell.typeclass_instance.generated.hpp"
 
-namespace cxxctp {
+namespace poly {
 namespace generated {
 
 template<>
@@ -418,12 +418,12 @@ void set_spell_power<Spell, WaterSpell>
               << " with " << spellpower << std::endl;
 }
 
-} // namespace cxxctp
+} // namespace poly
 } // namespace generated
 
 int main(int argc, char** argv)
 {
-  using namespace cxxctp::generated;
+  using namespace poly::generated;
 
   // TODO: better example https://blog.rust-lang.org/2015/05/11/traits.html
 

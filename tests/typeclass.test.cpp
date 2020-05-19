@@ -159,7 +159,7 @@
 
 #include "example_datatypes.hpp"
 
-#include "LongMagicItemSpell.typeclass_combo.generated.hpp"
+//#include "LongMagicItemSpell.typeclass_combo.generated.hpp"
 
 #include "Spell.typeclass.generated.hpp"
 #include "FireSpell_MagicItem.typeclass_instance.generated.hpp"
@@ -176,231 +176,385 @@
 #include "Printable.typeclass.generated.hpp"
 #include "FireSpell_Printable.typeclass_instance.generated.hpp"
 
-namespace cxxctp {
+namespace poly {
 namespace generated {
 
 // allow FireSpell to be used as MagicItemTraits
 // MagicItemTraits is base class (typeclass)
 template<>
 void has_enough_mana<DEFINE_MagicItem, FireSpell>
-    (const FireSpell& data, const char* spellname) noexcept {
-    /// \note don`t use get_concrete<type> here, it may be get_concrete<ref_type>
-    std::cout << "(lib1) has_enough_mana " << " by "
-      << data.title << " " << spellname << std::endl;
+  (const FireSpell& data, const char* spellname) noexcept
+{
+  /// \note don`t use get_concrete<type> here, it may be get_concrete<ref_type>
+  LOG(WARNING) << "(lib1) has_enough_mana " << " by "
+    << data.title << " " << spellname;
 }
 
-} // namespace cxxctp
+} // namespace poly
 } // namespace generated
 
-namespace cxxctp {
+namespace poly {
 namespace generated {
 
 // allow WaterSpell to be used as MagicItemTraits
 // MagicItemTraits is base class (typeclass)
 template<>
 void has_enough_mana<DEFINE_MagicItem, WaterSpell>
-    (const WaterSpell& data, const char* spellname) noexcept {
-    /// \note don`t use get_concrete<type> here, it may be get_concrete<ref_type>
-    std::cout << "(lib1) has_enough_mana " << " by "
-      << data.title << " " << spellname << std::endl;
+  (const WaterSpell& data, const char* spellname) noexcept
+{
+  /// \note don`t use get_concrete<type> here, it may be get_concrete<ref_type>
+  LOG(WARNING) << "(lib1) has_enough_mana " << " by "
+    << data.title << " " << spellname;
 }
 
-} // namespace cxxctp
+} // namespace poly
 } // namespace generated
 
-namespace cxxctp {
+namespace poly {
 namespace generated {
 
 template<>
 void has_T<
-  DEFINE_MagicLongType>
-(const FireSpell& data, const std::string &name1, const int &name2) noexcept {
-    /// \note don`t use get_concrete<type> here, it may be get_concrete<ref_type>
-    std::cout << "(Fire) has_T on " << name1
-              << " by " << name2 << " "
-              << std::endl;
+    DEFINE_MagicLongType
+  >(const FireSpell& data
+  , const std::string &name1
+  , const int &name2) noexcept
+{
+  /// \note don`t use get_concrete<type> here, it may be get_concrete<ref_type>
+  LOG(WARNING) << "(Fire) has_T on " << name1
+            << " by " << name2 << " ";
 }
 
 template<>
 void has_P1<
-  DEFINE_MagicLongType
-  , FireSpell >
-(const FireSpell& data, const char *name1) noexcept {
-    /// \note don`t use get_concrete<type> here, it may be get_concrete<ref_type>
-    std::cout << "(FireSpell) has_P1 on " << name1
-              << std::endl;
+    DEFINE_MagicLongType
+    , FireSpell
+  >(const FireSpell& data, const char *name1) noexcept
+{
+  /// \note don`t use get_concrete<type> here, it may be get_concrete<ref_type>
+  LOG(WARNING) << "(FireSpell) has_P1 on " << name1;
 }
 
 template<>
 void has_P2<
-  DEFINE_MagicLongType
-  , FireSpell >
-(const FireSpell& data, const int& name1) noexcept {
-    /// \note don`t use get_concrete<type> here, it may be get_concrete<ref_type>
-    std::cout << "(FireSpell) has_P2 on " << name1
-              << std::endl;
+    DEFINE_MagicLongType
+    , FireSpell
+  >(const FireSpell& data, const int& name1) noexcept
+{
+  /// \note don`t use get_concrete<type> here, it may be get_concrete<ref_type>
+  LOG(WARNING) << "(FireSpell) has_P2 on " << name1;
 }
 
-} // namespace cxxctp
+} // namespace poly
 } // namespace generated
 
-namespace cxxctp {
+namespace poly {
 namespace generated {
 
 template<>
 void has_T<
-  DEFINE_MagicLongType
-  , WaterSpell >
-(const WaterSpell& data, const std::string &name1, const int &name2) noexcept {
-    /// \note don`t use get_concrete<type> here, it may be get_concrete<ref_type>
-    std::cout << "(WaterSpell) has_T on " << name1
-              << " by " << name2 << " "
-              << std::endl;
+    DEFINE_MagicLongType
+    , WaterSpell
+  >(const WaterSpell& data
+  , const std::string &name1
+  , const int &name2) noexcept
+{
+  /// \note don`t use get_concrete<type> here, it may be get_concrete<ref_type>
+  LOG(WARNING)
+    << "(WaterSpell) has_T on "
+    << name1
+    << " by "
+    << name2
+    << " ";
 }
 
 template<>
 void has_P1<
-  DEFINE_MagicLongType
-  , WaterSpell >
-(const WaterSpell& data, const char *name1) noexcept {
-    /// \note don`t use get_concrete<type> here, it may be get_concrete<ref_type>
-    std::cout << "(WaterSpell) has_P1 on " << name1
-              << std::endl;
+    DEFINE_MagicLongType
+    , WaterSpell
+  >(const WaterSpell& data, const char *name1) noexcept
+{
+  /// \note don`t use get_concrete<type> here, it may be get_concrete<ref_type>
+  LOG(WARNING)
+    << "(WaterSpell) has_P1 on " << name1;
 }
 
 template<>
 void has_P2<
-  DEFINE_MagicLongType
-  , WaterSpell >
-(const WaterSpell& data, const int& name1) noexcept {
-    /// \note don`t use get_concrete<type> here, it may be get_concrete<ref_type>
-    std::cout << "(WaterSpell) has_P2 on " << name1
-              << std::endl;
+    DEFINE_MagicLongType
+    , WaterSpell
+  >(const WaterSpell& data, const int& name1) noexcept
+{
+  /// \note don`t use get_concrete<type> here, it may be get_concrete<ref_type>
+  LOG(WARNING)
+    << "(WaterSpell) has_P2 on " << name1;
 }
 
-} // namespace cxxctp
+} // namespace poly
 } // namespace generated
 
-namespace cxxctp {
+namespace poly {
 namespace generated {
 
 template<>
 void print<PrintableTraits, FireSpell>
-    (const FireSpell& data) noexcept {
-    std::cout << "(lib1) print for FireSpell "
-      << data.title << " " << data.description << std::endl;
+  (const FireSpell& data) noexcept
+{
+  LOG(WARNING)
+    << "(lib1) print for FireSpell "
+    << data.title << " " << data.description;
 }
 
-} // namespace cxxctp
+} // namespace poly
 } // namespace generated
 
 #include "Printable.typeclass.generated.hpp"
 #include "WaterSpell_Printable.typeclass_instance.generated.hpp"
 
-namespace cxxctp {
+namespace poly {
 namespace generated {
 
 template<>
 void print<DEFINE_Printable, WaterSpell>
-    (const WaterSpell& data) noexcept {
-    std::cout << "(lib1) print for WaterSpell "
-      << data.title << " " << data.description << std::endl;
+  (const WaterSpell& data) noexcept
+{
+  LOG(WARNING)
+    << "(lib1) print for WaterSpell "
+    << data.title << " " << data.description;
 }
 
-} // namespace cxxctp
+} // namespace poly
 } // namespace generated
 
 #include "Spell.typeclass.generated.hpp"
 #include "FireSpell_Spell.typeclass_instance.generated.hpp"
 
-namespace cxxctp {
+namespace poly {
 namespace generated {
 
 template<>
 void cast<SpellTraits, FireSpell>
-    (const FireSpell& data, const char* spellname, const int spellpower,
-     const char* target) noexcept {
-    /// \note don`t use get_concrete<type> here, it may be get_concrete<ref_type>
-    std::cout << "(lib1) cast on " << target << " by " << data.title << " " << spellname
-              << " with " << spellpower << std::endl;
+  (const FireSpell& data, const char* spellname, const int spellpower,
+   const char* target) noexcept
+{
+  /// \note don`t use get_concrete<type> here, it may be get_concrete<ref_type>
+  LOG(WARNING)
+    << "(lib1) cast on " << target
+    << " by " << data.title << " " << spellname
+    << " with " << spellpower;
 }
 
 template<>
-void has_spell<SpellTraits, FireSpell>(const FireSpell& data, const char *spellname ) noexcept {
-    std::cout << "(lib1) has_spell by " << data.title << " " << spellname
-              << " with " << spellname << std::endl;
+void has_spell<SpellTraits, FireSpell>(
+  const FireSpell& data, const char *spellname ) noexcept
+{
+  LOG(WARNING)
+    << "(lib1) has_spell by "
+    << data.title << " " << spellname
+    << " with " << spellname;
 }
 
 template<>
-void add_spell<DEFINE_Spell, FireSpell>(const FireSpell& data, const char *spellname ) noexcept {
-    std::cout << "(lib1) add_spell by " << data.title << " " << spellname
-              << " with " << spellname << std::endl;
+void add_spell<DEFINE_Spell, FireSpell>(
+  const FireSpell& data
+  , const char *spellname ) noexcept
+{
+  LOG(WARNING)
+    << "(lib1) add_spell by " << data.title << " " << spellname
+    << " with " << spellname;
 }
 
 template<>
-void remove_spell<SpellTraits, FireSpell>(const FireSpell& data, const char *spellname ) noexcept {
-    std::cout << "(lib1) remove_spell by " << data.title << " " << spellname
-              << " with " << spellname << std::endl;
+void remove_spell<SpellTraits, FireSpell>(
+  const FireSpell& data
+  , const char *spellname ) noexcept
+{
+  LOG(WARNING)
+    << "(lib1) remove_spell by " << data.title << " " << spellname
+    << " with " << spellname;
 }
 
 template<>
 void set_spell_power<SpellTraits, FireSpell>
-    (const FireSpell& data, const char *spellname, const int spellpower) noexcept {
-    /// \note don`t use get_concrete<type> here, it may be get_concrete<ref_type>
-    std::cout << "(lib1) set_spell_power by " << data.title << " " << spellname
-              << " with " << spellpower << std::endl;
+    (const FireSpell& data
+    , const char *spellname
+    , const int spellpower) noexcept
+{
+  /// \note don`t use get_concrete<type> here, it may be get_concrete<ref_type>
+  LOG(WARNING)
+    << "(lib1) set_spell_power by " << data.title << " " << spellname
+    << " with " << spellpower;
 }
 
-} // namespace cxxctp
+} // namespace poly
 } // namespace generated
 
 #include "Spell.typeclass.generated.hpp"
 #include "WaterSpell_Spell.typeclass_instance.generated.hpp"
 
-namespace cxxctp {
+namespace poly {
 namespace generated {
 
 template<>
 void cast<SpellTraits, WaterSpell>
-    (const WaterSpell& data, const char* spellname, const int spellpower,
-     const char* target) noexcept {
-    /// \note don`t use get_concrete<type> here, it may be get_concrete<ref_type>
-    std::cout << "(lib1) cast on " << target << " by " << data.title << " " << spellname
-              << " with " << spellpower << std::endl;
+  (const WaterSpell& data
+  , const char* spellname
+  , const int spellpower,
+   const char* target) noexcept
+{
+  /// \note don`t use get_concrete<type> here, it may be get_concrete<ref_type>
+  LOG(WARNING)
+    << "(lib1) cast on " << target
+    << " by " << data.title << " " << spellname
+    << " with " << spellpower;
 }
 
 template<>
-void has_spell<DEFINE_Spell, WaterSpell>(const WaterSpell& data, const char *spellname ) noexcept {
-    std::cout << "(lib1) has_spell by " << data.title << " " << spellname
-              << " with " << spellname << std::endl;
+void has_spell<DEFINE_Spell, WaterSpell>(
+  const WaterSpell& data, const char *spellname ) noexcept
+{
+  LOG(WARNING)
+    << "(lib1) has_spell by "
+    << data.title << " " << spellname
+    << " with " << spellname;
 }
 
 template<>
-void add_spell<DEFINE_Spell, WaterSpell>(const WaterSpell& data, const char *spellname ) noexcept {
-    std::cout << "(lib1) add_spell by " << data.title << " " << spellname
-              << " with " << spellname << std::endl;
+void add_spell<DEFINE_Spell, WaterSpell>(
+  const WaterSpell& data, const char *spellname ) noexcept
+{
+  LOG(WARNING)
+    << "(lib1) add_spell by " << data.title << " " << spellname
+    << " with " << spellname;
 }
 
 template<>
-void remove_spell<DEFINE_Spell, WaterSpell>(const WaterSpell& data, const char *spellname ) noexcept {
-    std::cout << "(lib1) remove_spell by " << data.title << " " << spellname
-              << " with " << spellname << std::endl;
+void remove_spell<DEFINE_Spell, WaterSpell>(
+  const WaterSpell& data, const char *spellname ) noexcept
+{
+  LOG(WARNING)
+    << "(lib1) remove_spell by " << data.title << " " << spellname
+    << " with " << spellname;
 }
 
 template<>
 void set_spell_power<DEFINE_Spell, WaterSpell>
-    (const WaterSpell& data, const char *spellname, const int spellpower) noexcept {
-    /// \note don`t use get_concrete<type> here, it may be get_concrete<ref_type>
-    std::cout << "(lib1) set_spell_power by " << data.title << " " << spellname
-              << " with " << spellpower << std::endl;
+  (const WaterSpell& data
+  , const char *spellname
+  , const int spellpower) noexcept
+{
+  /// \note don`t use get_concrete<type> here, it may be get_concrete<ref_type>
+  LOG(WARNING)
+    << "(lib1) set_spell_power by " << data.title << " " << spellname
+    << " with " << spellpower;
 }
 
-} // namespace cxxctp
+} // namespace poly
 } // namespace generated
 
 TEST(Typeclass, TypeclassGeneration) {
-  using namespace cxxctp::generated;
+  using namespace poly::generated;
 
+  {
+    Typeclass<SpellTraits> myspell{
+      FireSpell{"title1", "description1"}};
+
+    myspell.set_spell_power(
+      /*spellname*/ "spellname1"
+      , /*spellpower*/ 3);
+
+    myspell.cast(
+      /*spellname*/ "spellname1"
+      , /*spellpower*/ 3
+      , /*target*/ "target1");
+  }
+
+  {
+    Spell myspell{FireSpell{"title2", "description2"}};
+
+    Spell myspell_copy = myspell; // copy Spell
+
+    myspell_copy.set_spell_power(
+      /*spellname*/ "spellname2"
+      , /*spellpower*/ 33);
+
+    myspell_copy.cast(
+      /*spellname*/ "spellname2"
+      , /*spellpower*/ 33
+      , /*target*/ "target2");
+  }
+
+  {
+    FireSpell spell {"title3", "description3"};
+    Spell myspell{std::move(spell)};
+
+    Spell myspell_copy{myspell}; // copy Spell
+
+    myspell_copy.set_spell_power(
+      /*spellname*/ "spellname3"
+      , /*spellpower*/ 333);
+
+    myspell_copy.cast(
+      /*spellname*/ "spellname3"
+      , /*spellpower*/ 333
+      , /*target*/ "target3");
+  }
+
+  {
+    FireSpell spell {"title4", "description4"};
+    Spell myspell = std::move(spell);
+
+    Spell myspell_move{std::move(myspell)}; // move Spell
+
+    myspell_move.set_spell_power(
+      /*spellname*/ "spellname4"
+      , /*spellpower*/ 444);
+
+    myspell_move.cast(
+      /*spellname*/ "spellname4"
+      , /*spellpower*/ 444
+      , /*target*/ "target4");
+  }
+
+  {
+    FireSpell spell {"title5", "description5"};
+
+    {
+      Spell myspell = spell;
+
+      Spell myspell_move = std::move(myspell); // move Spell
+
+      myspell_move.set_spell_power(
+        /*spellname*/ "spellname5"
+        , /*spellpower*/ 555);
+
+      myspell_move.cast(
+        /*spellname*/ "spellname5"
+        , /*spellpower*/ 555
+        , /*target*/ "target5");
+    }
+
+    {
+      Spell somespell{spell};
+
+      Spell myspell{std::move(somespell)};
+
+      Spell myspell_move = std::move(myspell); // move Spell
+
+      myspell_move.set_spell_power(
+        /*spellname*/ "spellname7"
+        , /*spellpower*/ 777);
+
+      myspell_move.cast(
+        /*spellname*/ "spellname7"
+        , /*spellpower*/ 777
+        , /*target*/ "target7");
+    }
+  }
+
+  DCHECK(false);
+
+#if 0
   // TODO: better example https://blog.rust-lang.org/2015/05/11/traits.html
 
   _tc_combined_t<SpellTraits> myspell{FireSpell{"title1", "description1"}};
@@ -429,8 +583,8 @@ TEST(Typeclass, TypeclassGeneration) {
   for(const _tc_combined_t<DEFINE_Spell>& it : spells) {
     it.cast("", 1, "");
 #if defined(ENABLE_TYPECLASS_GUID)
-    std::cout << "spells: get_GUID "
-      << it.get_GUID() << std::endl;
+    LOG(WARNING) << "spells: get_GUID "
+      << it.get_GUID();
 #endif // ENABLE_TYPECLASS_GUID
   }
 
@@ -510,14 +664,14 @@ TEST(Typeclass, TypeclassGeneration) {
       FireSpell{"someFireSpellTitle", "someFireSpelldescription1"}
   };
 
-  std::cout << "combined2: can_convert to MagicItemTraits: "
-    << combined2.can_convert<DEFINE_Spell>() << std::endl;
+  LOG(WARNING) << "combined2: can_convert to MagicItemTraits: "
+    << combined2.can_convert<DEFINE_Spell>();
 
-  std::cout << "combined2: can_convert to MagicItemTraits: "
-    << combined2.can_convert<MagicItemTraits>() << std::endl;
+  LOG(WARNING) << "combined2: can_convert to MagicItemTraits: "
+    << combined2.can_convert<MagicItemTraits>();
 
-  std::cout << "combined2: can_convert to int: "
-    << combined2.can_convert<int>() << std::endl;
+  LOG(WARNING) << "combined2: can_convert to int: "
+    << combined2.can_convert<int>();
 
   if(combined2.has_model_MagicItem<MagicItemTraits>()) {
     combined1.has_enough_mana("");
@@ -549,8 +703,8 @@ TEST(Typeclass, TypeclassGeneration) {
     it.has_P1("name~");
     it.has_P2(idx);
 #if defined(ENABLE_TYPECLASS_GUID)
-    std::cout << "tpls: get_GUID "
-      << it.get_GUID() << std::endl;
+    LOG(WARNING) << "tpls: get_GUID "
+      << it.get_GUID();
 #endif // ENABLE_TYPECLASS_GUID
   }
 
@@ -604,4 +758,5 @@ TEST(Typeclass, TypeclassGeneration) {
   if(combinedRef2.has_model_Spell<DEFINE_Spell>()) {
     combinedRef2.cast("", 0, "");
   }
+#endif // 0
 }

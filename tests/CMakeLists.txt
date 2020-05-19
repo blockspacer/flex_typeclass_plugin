@@ -44,72 +44,65 @@ list(APPEND TESTS_3DPARTY_LIBS
 
 include( testRunner ) # start tests as CMake targets
 
-# TODO: bug only for LOCAL_BUILD
-# PluginManager::Manager::load():
-# cannot get version of plugin flex_typeclass_plugin:
-# flex_typeclass_plugin.so: undefined symbol: pluginVersion
-# (file too short)
-if(NOT LOCAL_BUILD)
-  # generated files
-  set(generated_typeclasses
-    ${flextool_outdir}/MagicItem.typeclass.generated.cpp
-    ${flextool_outdir}/Printable.typeclass.generated.cpp
-    ${flextool_outdir}/LongMagicItemSpell.typeclass_combo.generated.cpp
-    ${flextool_outdir}/Spell.typeclass.generated.cpp
-    ${flextool_outdir}/MagicLongType.typeclass.generated.cpp
-  )
+# generated files
+set(generated_typeclasses
+  ${flextool_outdir}/MagicItem.typeclass.generated.cpp
+  ${flextool_outdir}/Printable.typeclass.generated.cpp
+  #${flextool_outdir}/LongMagicItemSpell.typeclass_combo.generated.cpp
+  ${flextool_outdir}/Spell.typeclass.generated.cpp
+  ${flextool_outdir}/MagicLongType.typeclass.generated.cpp
+)
 
-  # generated files
-  set_source_files_properties(
-    ${generated_typeclasses}
-    PROPERTIES GENERATED 1)
+# generated files
+set_source_files_properties(
+  ${generated_typeclasses}
+  PROPERTIES GENERATED 1)
 
-  set(flextool_input_files
-    ${CMAKE_CURRENT_SOURCE_DIR}/code_generation/typeclass_generation.cc
-  )
+set(flextool_input_files
+  ${CMAKE_CURRENT_SOURCE_DIR}/code_generation/typeclass_generation.cc
+)
 
-  get_property(${LIB_NAME}_location TARGET "${LIB_NAME}" PROPERTY LIBRARY_OUTPUT_DIRECTORY)
-  set(${LIB_NAME}_file "${${LIB_NAME}_location}/${LIB_NAME}${CMAKE_SHARED_LIBRARY_SUFFIX}")
-  message(STATUS "${LIB_NAME} file == ${${LIB_NAME}_file}")
+get_property(${LIB_NAME}_location TARGET "${LIB_NAME}" PROPERTY LIBRARY_OUTPUT_DIRECTORY)
+set(${LIB_NAME}_file "${${LIB_NAME}_location}/${LIB_NAME}${CMAKE_SHARED_LIBRARY_SUFFIX}")
+message(STATUS "${LIB_NAME} file == ${${LIB_NAME}_file}")
 
-  # link with library via --extra-arg=-l
-  #--extra-arg=-l${flexlib_file}
-  add_custom_command(
-      #TARGET ${LIB_NAME}
-      #POST_BUILD
-      OUTPUT ${generated_typeclasses}
-      COMMAND ${flextool}
-            --vmodule=*=200 --enable-logging=stderr --log-level=100
-            --indir=${CMAKE_SOURCE_DIR}
-            --outdir=${flextool_outdir}
-            --load_plugin=${flex_squarets_plugin}
-            #--load_plugin=${flex_meta_plugin}
-            --load_plugin=${flex_reflect_plugin}
-            --load_plugin=${${LIB_NAME}_file}
-            --extra-arg=-I${cling_includes}
-            --extra-arg=-I${clang_includes}
-            --extra-arg=-I${corrade_includes}
-            --extra-arg=-I${entt_includes}
-            # NOTE: Cling does not support compile_commands.json
-            # so we must add headers used by `flex_support_headers` package
-            # place into `flex_support_headers` includes that can be used by Cling
-            --extra-arg=-I${chromium_base_headers}
-            --extra-arg=-I${chromium_build_util_headers}
-            --extra-arg=-I${basis_headers}
-            --extra-arg=-I${flexlib_headers}
-            --extra-arg=-DCLING_IS_ON=1
-            # path to tests/example_datatypes.hpp
-            --extra-arg=-I${CMAKE_CURRENT_SOURCE_DIR}
-            --extra-arg=-Wno-undefined-inline
-            ${flextool_extra_args}
-            ${flextool_input_files}
-            --cling_scripts=${flex_support_headers}
-            --cling_scripts=${flex_typeclass_plugin_settings}
-      DEPENDS ${LIB_NAME} ${ROOT_PROJECT_LIB} ${${LIB_NAME}_file}
-      COMMENT "running ${flextool}"
-      VERBATIM # to support \t for example
-  )
-endif(NOT LOCAL_BUILD)
+# link with library via --extra-arg=-l
+#--extra-arg=-l${flexlib_file}
+add_custom_command(
+    #TARGET ${LIB_NAME}
+    #POST_BUILD
+    OUTPUT ${generated_typeclasses}
+    COMMAND ${flextool}
+          --vmodule=*=200 --enable-logging=stderr --log-level=100
+          --indir=${CMAKE_SOURCE_DIR}
+          --outdir=${flextool_outdir}
+          --load_plugin=${flex_squarets_plugin}
+          #--load_plugin=${flex_meta_plugin}
+          --load_plugin=${flex_reflect_plugin}
+          --load_plugin=${${LIB_NAME}_file}
+          --extra-arg=-I${cling_includes}
+          --extra-arg=-I${clang_includes}
+          --extra-arg=-I${corrade_includes}
+          --extra-arg=-I${entt_includes}
+          # NOTE: Cling does not support compile_commands.json
+          # so we must add headers used by `flex_support_headers` package
+          # place into `flex_support_headers` includes that can be used by Cling
+          --extra-arg=-I${chromium_base_headers}
+          --extra-arg=-I${chromium_build_util_headers}
+          --extra-arg=-I${basis_headers}
+          --extra-arg=-I${flexlib_headers}
+          --extra-arg=-DCLING_IS_ON=1
+          # path to tests/example_datatypes.hpp
+          --extra-arg=-I${CMAKE_CURRENT_SOURCE_DIR}
+          --extra-arg=-Wno-undefined-inline
+          ${flextool_extra_args}
+          ${flextool_input_files}
+          --cling_scripts=${flex_support_headers}
+          --cling_scripts=${flex_typeclass_plugin_settings}
+    DEPENDS ${LIB_NAME} ${ROOT_PROJECT_LIB} ${${LIB_NAME}_file}
+    COMMENT "running ${flextool}"
+    VERBATIM # to support \t for example
+)
 
 #findPackageCrossPlatform( Sanitizers ) # see https://github.com/arsenm/sanitizers-cmake
 # sanitizer_add_blacklist_file("blacklist.txt") # https://github.com/arsenm/sanitizers-cmake#build-targets-with-sanitizer-support
@@ -233,12 +226,10 @@ add_library( ${test_main_gtest} OBJECT
   testsCommon.h # include in IDE
 )
 
-if(NOT LOCAL_BUILD)
-  # generated files
-  target_sources(${test_main_gtest} PRIVATE
-    ${generated_typeclasses}
-  )
-endif(NOT LOCAL_BUILD)
+# generated files
+target_sources(${test_main_gtest} PRIVATE
+  ${generated_typeclasses}
+)
 
 set_property(TARGET ${test_main_gtest} PROPERTY CXX_STANDARD 17)
 
@@ -297,13 +288,11 @@ if(${ROOT_PROJECT_NAME}_BUILD_TESTS)
   tests_add_executable(${ROOT_PROJECT_NAME}-pimpl
     "${pimpl_deps}" "${CATCH2_TEST_ARGS}" "${test_main_catch}")
 
-  if(NOT LOCAL_BUILD)
     set ( typeclass_deps
       typeclass.test.cpp
     )
     tests_add_executable(${ROOT_PROJECT_NAME}-typeclass
       "${typeclass_deps}" "${GTEST_TEST_ARGS}" "${test_main_gtest}")
-  endif(NOT LOCAL_BUILD)
 
   set ( fakeit_deps
     fakeit.test.cpp

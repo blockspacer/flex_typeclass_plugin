@@ -33,7 +33,6 @@ _typeclass(
   , public PrintableTraits
 )
 
-
 // like `trait`
 _typeclass(
   "name = Spell"
@@ -42,12 +41,7 @@ _typeclass(
 
 // generates FireSpell_MagicItem
 // like impl for trait
-// allow typeclass<Spell> to store FireSpell
 // allow typeclass<MagicItemTraits> to store FireSpell
-// same as:
-//_apply(
-//  typeclass_instance(target = "FireSpell", "Spell", "MagicItemTraits")
-//)
 _generate(
   typeclass_instance(
     impl_target = "FireSpell"
@@ -56,6 +50,8 @@ _generate(
 )
 
 // generates FireSpell_Spell
+// like impl for trait
+// allow typeclass<SpellTraits> to store FireSpell
 _generate(
   typeclass_instance(
     impl_target = "FireSpell"
@@ -65,7 +61,7 @@ _generate(
 
 // generates FireSpell_Printable
 // like impl for trait
-// allow typeclass<Printable> to store FireSpell
+// allow typeclass<PrintableTraits> to store FireSpell
 _generate(
   typeclass_instance(
     impl_target = "FireSpell"
@@ -91,9 +87,6 @@ _generate(
 // like impl for trait
 /// \note you can list multiple functions in same _apply
 /// with ';' as delimiter,
-/// it is same as multiple _apply calls
-// allow typeclass<Spell, MagicItemTraits> to store WaterSpell
-// allow typeclass<Printable> to store WaterSpell
 _generate(
   typeclass_instance(
     impl_target = "WaterSpell"
@@ -130,13 +123,13 @@ _generate(
 /// \note example of combined typeclasses
 // allow typeclass_combo<Spell, MagicItemTraits)>
 // to store optional<Spell> and optional<MagicItemTraits>
-_generate(
-  typeclass_combo(
-    name = LongMagicItemSpell
-    , Spell
-    , MagicItem
-    , MagicLongType
-  )
-)
+//_generate(
+//  typeclass_combo(
+//    name = LongMagicItemSpell
+//    , Spell
+//    , MagicItem
+//    , MagicLongType
+//  )
+//)
 
 } // namespace only_for_code_generation

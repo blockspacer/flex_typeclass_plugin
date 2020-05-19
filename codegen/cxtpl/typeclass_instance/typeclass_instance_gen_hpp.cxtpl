@@ -15,9 +15,15 @@
 #include <functional>
 #include <memory>
 
-namespace cxxctp {
+namespace poly {
 namespace generated {
 
+[[~]] /**
+[[~]] EXAMPLE:
+[[~]]   template<>
+[[~]]   void print< Printable, WaterSpell >
+[[~]]     (const WaterSpell& data) noexcept ;
+[[~]] **/
 [[~]]  { // startscope
 [[~]]    for(const auto& method: ReflectedBaseTypeclass->methods) {
 [[~]]      const size_t methodParamsSize = method->params.size();
@@ -47,25 +53,46 @@ namespace generated {
 [[~]]    } // methods endfor
 [[~]]  } // endscope
 
-/*template <>
-[[+ ImplTypeclassName +]]& _tc_model_t<[[+ BaseTypeclassName +]]>::ref_concrete<[[+ ImplTypeclassName +]]>() noexcept;
-*/
-
+[[~]] // where `BaseTypeclassName` is trait like `Printable`
 template<>
-struct _tc_impl_t<
-      [[+ ImplTypeclassName +]],
-      [[+ BaseTypeclassName +]]
-    >
-    : public _tc_model_t<[[+ BaseTypeclassName +]]> {
-    typedef [[+ ImplTypeclassName +]] val_type_t;
+struct
+  TypeclassImpl<
+    [[+ ImplTypeclassName +]],
+    [[+ BaseTypeclassName +]]
+  >
+  : public TypeclassImplBase<[[+ BaseTypeclassName +]]>
+{
+  typedef [[+ ImplTypeclassName +]] type;
 
-    // Construct the embedded concrete type.
-    template<typename... args_t>
-    _tc_impl_t(args_t&&... args) noexcept : concrete(std::forward<args_t>(args)...) { }
+  TypeclassImpl(
+    const [[+ ImplTypeclassName +]]& arg)
+    : concreteData_(arg)
+  {}
 
-    explicit _tc_impl_t(const [[+ ImplTypeclassName +]]& concrete_arg) noexcept
-      : concrete(concrete_arg) {}
+  TypeclassImpl(
+    [[+ ImplTypeclassName +]]&& arg)
+    : concreteData_(std::move(arg))
+  {}
 
+  // Construct the embedded concrete type from multiple arguments.
+  template<typename... args_t>
+  TypeclassImpl(args_t&&... args)
+    : concreteData_(std::forward<args_t>(args)...)
+  {}
+
+  // Construct the embedded concrete type from multiple arguments.
+  template<typename... args_t>
+  TypeclassImpl(const args_t&... args)
+    : concreteData_(std::forward<args_t>(args)...)
+  {}
+
+[[~]] /**
+[[~]] EXAMPLE:
+[[~]] void __print() const noexcept override final
+[[~]] {
+[[~]]   return print< Printable >(concrete);
+[[~]] }
+[[~]] **/
 [[~]]  { // startscope
 [[~]]    for(const auto& method: ReflectedBaseTypeclass->methods) {
 [[~]]      const size_t methodParamsSize = method->params.size();
@@ -90,11 +117,11 @@ template< [[+ expandTemplateParameters(method->tplParams) +]] >
 [[+ method->isNoExcept ? "noexcept " : "" +]][[~]] /* no newline */
 override final
   {
-    /// \note passes data, not ref
+[[~]] /// \note passes data, not ref
     return [[+ method->name +]][[~]] /* no newline */
 < [[+ BaseTypeclassName +]] >[[~]] /* no newline */
 ([[~]] /* no newline */
-concrete[[~]] /* no newline */
+concreteData_[[~]] /* no newline */
 [[+ methodParamsSize ? ", " : "" +]][[~]] /* no newline */
 [[+ expandMethodParameters(method->params) +]][[~]] /* no newline */
 );
@@ -104,141 +131,35 @@ concrete[[~]] /* no newline */
 [[~]]    } // methods endfor
 [[~]]  } // endscope
 
-    std::unique_ptr<
-        _tc_model_t<[[+ BaseTypeclassName +]]>>
-    clone() noexcept override final {
-        // Copy-construct a new instance of _tc_impl_t on the heap.
-        return std::make_unique<_tc_impl_t<
-          [[+ ImplTypeclassName +]],
-          [[+ BaseTypeclassName +]]
-        >>(concrete);
-    }
-
-    std::unique_ptr<
-        _tc_model_t<[[+ BaseTypeclassName +]]>>
-    move_clone() noexcept override final {
-        return std::make_unique<_tc_impl_t<
-          [[+ ImplTypeclassName +]],
-          [[+ BaseTypeclassName +]]
-        >>(std::move(concrete));
-    }
-
-#if defined(ENABLE_TYPECLASS_GUID)
-    std::string
-      get_GUID() const noexcept override final
-    {
-      return "[[+ ImplTypeclassName +]], "
-             "[[+ BaseTypeclassName +]]";
-    }
-#endif // ENABLE_TYPECLASS_GUID
-
-    [[+ ImplTypeclassName +]]* operator->() {
-        return &concrete;
-    }
-
-  // Our actual data.
-  [[+ ImplTypeclassName +]] concrete;
-};
-
-/// \note same as above, but uses reference_wrapper
-template<>
-struct _tc_impl_t<
-      std::reference_wrapper<[[+ ImplTypeclassName +]]>,
-      [[+ BaseTypeclassName +]]
-    >
-    : public _tc_model_t<[[+ BaseTypeclassName +]]> {
-    typedef std::reference_wrapper<[[+ ImplTypeclassName +]]> val_type_t;
-
-    // Construct the embedded concrete type.
-    template<typename... args_t>
-    _tc_impl_t(args_t&&... args) noexcept
-      : concrete(std::forward<args_t>(args)...)
-    {}
-
-    explicit _tc_impl_t(const std::reference_wrapper<[[+ ImplTypeclassName +]]>& concrete_arg) noexcept
-      : concrete(concrete_arg) {}
-
-[[~]]  { // startscope
-[[~]]    for(const auto& method: ReflectedBaseTypeclass->methods) {
-[[~]]      const size_t methodParamsSize = method->params.size();
-[[~]]      const bool needPrint = !method->isImplicit
-[[~]]          && !method->isOperator
-[[~]]          && !method->isCtor
-[[~]]          && !method->isDtor;
-[[~]]      if(method->isTemplate()) {
-template< [[+ expandTemplateParameters(method->tplParams) +]] >
-[[~]]      } // method->isTemplate
-[[~]]      if(needPrint) {
-[[+ method->isExplicitCtor ? "explicit " : "" +]][[~]] /* no newline */
-[[+ method->isConstexpr ? "constexpr " : "" +]][[~]] /* no newline */
-[[+ method->isStatic ? "static " : "" +]][[~]] /* no newline */
-[[+ method->returnType->getPrintedName() +]][[~]] /* no newline */
-[[+ " __" +]][[~]] /* no newline */
-[[+ method->name +]][[~]] /* no newline */
-(
-[[+ paramsFullDecls(method->params) +]][[~]] /* no newline */
-) [[~]] /* no newline */
-[[+ method->isConst ? "const " : "" +]][[~]] /* no newline */
-[[+ method->isNoExcept ? "noexcept " : "" +]][[~]] /* no newline */
-override final
+  std::unique_ptr<
+      TypeclassImplBase<[[+ BaseTypeclassName +]]>>
+  clone() override final
   {
-    /// \note passes data, not ref
-    return [[+ method->name +]][[~]] /* no newline */
-< [[+ BaseTypeclassName +]] >[[~]] /* no newline */
-([[~]] /* no newline */
-concrete.get()[[~]] /* no newline */
-[[+ methodParamsSize ? ", " : "" +]][[~]] /* no newline */
-[[+ expandMethodParameters(method->params) +]][[~]] /* no newline */
-);
+      // Copy-construct a new instance of TypeclassImpl on the heap.
+      return std::make_unique<TypeclassImpl<
+        [[+ ImplTypeclassName +]],
+        [[+ BaseTypeclassName +]]
+      >>(concreteData_);
   }
-[[~ /* newline */ ~]]
-[[~]]      } // needPrint
-[[~]]    } // methods endfor
-[[~]]  } // endscope
 
-    std::unique_ptr<
-        _tc_model_t<[[+ BaseTypeclassName +]]>>
-    clone() noexcept override final {
-        // Copy-construct a new instance of _tc_impl_t on the heap.
-        return std::make_unique<_tc_impl_t<
-            ///\note removed reference_wrapper
-            [[+ ImplTypeclassName +]],
-            [[+ BaseTypeclassName +]]
-          >>(
-          [[+ ImplTypeclassName +]] {
-            concrete.get()
-          }
-        );
-    }
+  std::unique_ptr<
+      TypeclassImplBase<[[+ BaseTypeclassName +]]>>
+  move_clone() override final
+  {
+      // Copy-construct a new instance of TypeclassImpl on the heap.
+      return std::make_unique<TypeclassImpl<
+        [[+ ImplTypeclassName +]],
+        [[+ BaseTypeclassName +]]
+      >>(std::move(concreteData_));
+  }
 
-    std::unique_ptr<
-        _tc_model_t<[[+ BaseTypeclassName +]]>>
-    move_clone() noexcept override final {
-        return std::make_unique<_tc_impl_t<
-          ///\note removed reference_wrapper
-          [[+ ImplTypeclassName +]],
-          [[+ BaseTypeclassName +]]
-        >>(std::move(concrete.get()));
-    }
-
-#if defined(ENABLE_TYPECLASS_GUID)
-    std::string
-      get_GUID() const noexcept override final
-    {
-      return "[[+ ImplTypeclassName +]], "
-             "[[+ BaseTypeclassName +]]";
-    }
-#endif // ENABLE_TYPECLASS_GUID
-
-    [[+ ImplTypeclassName +]]* operator->() {
-        return &concrete.get();
-    }
-
-  // Our actual data.
-  std::reference_wrapper<[[+ ImplTypeclassName +]]> concrete;
+  // Our actual data
+  // that can implement `BaseTypeclassName`
+  // (where `BaseTypeclassName` is trait like `Printable`)
+  [[+ ImplTypeclassName +]] concreteData_;
 };
 
-} // namespace cxxctp
+} // namespace poly
 } // namespace generated
 
 [[+ endHeaderGuard(headerGuard) /* no newline */ +]][[~]]

@@ -248,11 +248,11 @@ list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/)
 set(flex_typeclass_plugin_include_DIR "${CMAKE_CURRENT_SOURCE_DIR}/include/flex_typeclass_plugin")
 set(flex_typeclass_plugin_src_DIR "${CMAKE_CURRENT_SOURCE_DIR}/src")
 
-include(cmake/PlatformChecks)
+include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/PlatformChecks.cmake)
 
-include(cmake/CommonOptions)
+include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/CommonOptions.cmake)
 
-include(cmake/ProjectFiles)
+include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/ProjectFiles.cmake)
 
 add_library(${LIB_NAME}-test-includes INTERFACE)
 
@@ -390,14 +390,14 @@ set(TYPECLASS_COMBO_TEMPLATE_HPP
   ${CMAKE_CURRENT_SOURCE_DIR}/codegen/cxtpl/typeclass_combo/typeclass_combo_gen_hpp.cxtpl
 )
 
-set(generated_sources
+set(flex_typeclass_plugin_generated_sources
   ${CMAKE_CURRENT_BINARY_DIR}/Tooling.cc.generated.cc
   ${CMAKE_CURRENT_BINARY_DIR}/CodeGenerator.cc.generated.cc
 )
 
 # generated files
 set_source_files_properties(
-  ${generated_sources}
+  ${flex_typeclass_plugin_generated_sources}
   PROPERTIES GENERATED 1)
 
 # Configured file will be loaded by Cling C++ interpreter.
@@ -417,10 +417,10 @@ set(flex_typeclass_plugin_settings
 #--extra-arg=-l${flexlib_file}
 message(STATUS "flextool=${flextool}")
 add_custom_command(
-    OUTPUT ${generated_sources}
-    COMMAND ${CMAKE_COMMAND} -E echo " Removing ${generated_sources}."
-    COMMAND ${CMAKE_COMMAND} -E remove ${generated_sources}
-    COMMAND ${CMAKE_COMMAND} -E echo " Creating ${generated_sources}."
+    OUTPUT ${flex_typeclass_plugin_generated_sources}
+    COMMAND ${CMAKE_COMMAND} -E echo " Removing ${flex_typeclass_plugin_generated_sources}."
+    COMMAND ${CMAKE_COMMAND} -E remove ${flex_typeclass_plugin_generated_sources}
+    COMMAND ${CMAKE_COMMAND} -E echo " Creating ${flex_typeclass_plugin_generated_sources}."
     COMMAND ${flextool}
           --vmodule=*=200 --enable-logging=stderr --log-level=100
           --indir=${CMAKE_CURRENT_SOURCE_DIR}
@@ -460,12 +460,13 @@ add_custom_command(
     #DEPENDS generator someInputFile.cpp.in
 )
 
+message(STATUS "flex_typeclass_plugin_SOURCES=${flex_typeclass_plugin_SOURCES}")
 # NOTE: cling does not support static libs, so we use SHARED
 # https://github.com/root-project/cling/issues/280
 # https://gitlab.kitware.com/cmake/cmake/issues/16473
 add_library(${LIB_NAME} ${CORE_LIB_TYPE}
   ${flex_typeclass_plugin_SOURCES}
-  ${generated_sources}
+  ${flex_typeclass_plugin_generated_sources}
 )
 
 add_relative_include_dir(${LIB_NAME} PUBLIC PUBLIC "include")
@@ -612,8 +613,6 @@ target_compile_definitions(${LIB_NAME} PRIVATE
   ${flex_typeclass_plugin_PRIVATE_DEFINES}
   # https://stackoverflow.com/a/30877725
   BOOST_SYSTEM_NO_DEPRECATED BOOST_ERROR_CODE_HEADER_ONLY
-  # see https://github.com/mosra/corrade/blob/af9d4216f07307a2dff471664eed1e50e180568b/modules/UseCorrade.cmake#L568
-  CORRADE_DYNAMIC_PLUGIN=1
   # fixes IDE support and allows
   # to print paths to TEMPLATE files in executable
   TYPECLASS_TEMPLATE_CPP="${TYPECLASS_TEMPLATE_CPP}"
@@ -621,6 +620,8 @@ target_compile_definitions(${LIB_NAME} PRIVATE
   TYPECLASS_INSTANCE_TEMPLATE_CPP="${TYPECLASS_INSTANCE_TEMPLATE_CPP}"
   TYPECLASS_COMBO_TEMPLATE_CPP="${TYPECLASS_COMBO_TEMPLATE_CPP}"
   TYPECLASS_COMBO_TEMPLATE_HPP="${TYPECLASS_COMBO_TEMPLATE_HPP}"
+  # see https://github.com/mosra/corrade/blob/af9d4216f07307a2dff471664eed1e50e180568b/modules/UseCorrade.cmake#L568
+  CORRADE_DYNAMIC_PLUGIN=1
 )
 
 target_compile_definitions(${LIB_NAME} PUBLIC
@@ -629,7 +630,7 @@ target_compile_definitions(${LIB_NAME} PUBLIC
 )
 
 # install and export steps
-include(cmake/Exports)
+include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/Exports.cmake)
 
 if(LOCAL_BUILD)
   # for builds with conan workspace

@@ -13,22 +13,8 @@
 #include <cstring>
 #include <type_traits>
 
-namespace cxxctp {
+namespace poly {
 namespace generated {
 
-template <>
-bool _tc_combined_t<
-    [[+ fullBaseType +]]
-  >::
-  can_convert<
-    [[+ fullBaseType +]]
-  >() const
-{
-  return true;
-}
-
-// TODO
-//{{GeneratedTypeclassName}}
-
-} // namespace cxxctp
+} // namespace poly
 } // namespace generated

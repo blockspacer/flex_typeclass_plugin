@@ -236,7 +236,7 @@ generates class `_tc_impl_t<FireSpell,MagicItemTraits>`
 ```cpp
 #include "generated/FireSpell_MagicItemTraits.typeclass_instance.generated.hpp"
 
-namespace cxxctp {
+namespace poly {
 namespace generated {
 
 // allow FireSpell to be used as MagicItemTraits
@@ -249,7 +249,7 @@ void has_enough_mana<MagicItemTraits, FireSpell>
       << data.title << " " << spellname << std::endl;
 }
 
-} // namespace cxxctp
+} // namespace poly
 } // namespace generated
 ```
 

@@ -695,6 +695,9 @@ clang_utils::SourceTransformResult
       traitToItsType_[registryTargetName]
         = fullBaseType;
 
+      /// \todo
+      DCHECK(!structInfo->templateParams.size());
+
       VLOG(9) << "templateParams.size"
         << structInfo->templateParams.size();
       VLOG(9) << "genericParts.size"

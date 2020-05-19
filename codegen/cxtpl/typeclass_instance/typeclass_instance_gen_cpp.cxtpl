@@ -13,11 +13,8 @@
 #include <cstring>
 #include <type_traits>
 
-namespace cxxctp {
+namespace poly {
 namespace generated {
 
-// TODO
-//{{GeneratedTypeclassName}}
-
-} // namespace cxxctp
+} // namespace poly
 } // namespace generated
