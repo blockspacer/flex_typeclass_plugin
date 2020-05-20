@@ -30,24 +30,6 @@
     GEN_UNIQUE_NAME(__gen_tmp__apply) \
     ;
 
-/// \todo remove
-// combination of multiple typeclasses
-// each stored typeclass is optional
-// EXAMPLE:
-// _tc_combined_t<Spell, MagicItemTraits> tcCombo {
-//     FireSpell{"someFireSpellTitle", "someFireSpelldescription1"}
-// };
-// tcCombo.can_convert<Spell>() // true
-// tcCombo.can_convert<MagicItemTraits>() // true
-// tcCombo.has_model<Spell>() // true
-// tcCombo.has_model<MagicItemTraits>() // false
-// #define _typeclass_combo(...) \
-//   /* generate definition required to use __attribute__ */ \
-//   struct \
-//     __attribute__((annotate("{gen};{funccall};typeclass_combo" #__VA_ARGS__))) \
-//     GEN_UNIQUE_NAME(__gen_tmp__typeclass_combo) \
-//     ;
-
 struct FireSpell {
   std::string title = "FireSpell";
   std::string description = "FireSpell";
@@ -61,6 +43,9 @@ struct WaterSpell {
 // like `trait`
 struct PrintableTraits {
   virtual void print() const noexcept = 0;
+
+  virtual void some_test_func_proxy
+    (const char* arg1) const noexcept = 0;
 };
 
 // like `trait`

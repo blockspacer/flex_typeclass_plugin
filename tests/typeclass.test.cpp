@@ -404,6 +404,9 @@ void set_spell_power<Spell::typeclass>
 #include "Spell.typeclass.generated.hpp"
 #include "WaterSpell_Spell.typeclass_instance.generated.hpp"
 
+void some_test_func
+  (WaterSpell& data, const char* arg1) noexcept;
+
 namespace poly {
 namespace generated {
 
@@ -461,11 +464,52 @@ void set_spell_power<Spell::typeclass>
     << " with " << spellpower;
 }
 
+template<>
+void some_test_func_proxy<Printable::typeclass>
+  (const WaterSpell& data, const char* arg1) noexcept
+{
+  some_test_func(
+    /// \todo type erasure without const_cast
+    //data
+    const_cast<WaterSpell&>(data)
+    , arg1);
+}
+
+/// \note optional
+//template<>
+//void some_test_func_proxy<Printable::typeclass>
+//  (const FireSpell& data, const char* arg1) noexcept
+//{
+//  LOG(WARNING)
+//    << "(lib1) print for FireSpell "
+//    << data.title << " " << data.description;
+//}
+
 } // namespace poly
 } // namespace generated
 
+void some_test_func
+  (WaterSpell& data, const char* arg1) noexcept
+{
+  data.title = "changed title";
+
+  /// \note don`t use get_concrete<type> here, it may be get_concrete<ref_type>
+  LOG(WARNING)
+    << "some_test_func "
+    << " by "
+    << data.title
+    << " "
+    << arg1;
+}
+
 TEST(Typeclass, TypeclassGeneration) {
   using namespace poly::generated;
+
+  {
+    Printable printable{
+      WaterSpell{"printableWaterSpell1", "printableWaterSpell2"}};
+    printable.some_test_func_proxy("arg1");
+  }
 
   /// \note not init-ed will crash
   //{
@@ -660,210 +704,4 @@ TEST(Typeclass, TypeclassGeneration) {
       it.has_enough_mana("");
     }
   }
-
-#if 0
-  // TODO: better example https://blog.rust-lang.org/2015/05/11/traits.html
-
-  _tc_combined_t<SpellTraits> myspell{FireSpell{"title1", "description1"}};
-
-  myspell.set_spell_power(/*spellname*/ "spellname1", /*spellpower*/ 3);
-  myspell.cast(/*spellname*/ "spellname1", /*spellpower*/ 3, /*target*/ "target1");
-
-  _tc_combined_t<DEFINE_Spell> myspellcopy = myspell;
-
-  //_tc_impl_t<FireSpell, Spell> someFireSpell{FireSpell{"title1", "description1"}};
-
-  //_tc_combined_t<Spell> someFireSpellmove = std::move(someFireSpell);
-
-  //FireSpell& data = myspell.ref_model()->ref_concrete<FireSpell>();
-  //FireSpell a = data;
-
-  /*_tc_impl_t<FireSpell, Spell> myFireSpell{FireSpell{"title1", "description1"}};
-  _tc_combined_t<Spell> myFireSpellref = std::ref(myFireSpell);*/
-
-  _tc_combined_t<SpellTraits> someFireSpell{FireSpell{"someFireSpellTitle", "someFireSpelldescription1"}};
-
-  std::vector<_tc_combined_t<SpellTraits>> spells;
-  spells.push_back(myspell);
-  spells.push_back(someFireSpell);
-
-  for(const _tc_combined_t<DEFINE_Spell>& it : spells) {
-    it.cast("", 1, "");
-#if defined(ENABLE_TYPECLASS_GUID)
-    LOG(WARNING) << "spells: get_GUID "
-      << it.get_GUID();
-#endif // ENABLE_TYPECLASS_GUID
-  }
-
-  std::vector<MagicItem> magicItems;
-  magicItems.push_back(FireSpell{"FireSpelltitle1", "description1"});
-  magicItems.push_back(WaterSpell{"WaterSpelltitle1", "description1"});
-
-  for(const _tc_combined_t<DEFINE_MagicItem>& it : magicItems) {
-    it.has_enough_mana("");
-  }
-
-  std::vector<LongMagicItemSpell> spellmagicItems;
-  {
-    LongMagicItemSpell pushed{};
-    pushed = magicItems.at(0); // copy
-    spellmagicItems.push_back(std::move(pushed));
-  }
-  {
-    LongMagicItemSpell pushed{};
-    _tc_combined_t<SpellTraits> someTmpSpell{
-      FireSpell{"someTmpSpell", "someTmpSpell"}};
-    pushed = std::move(someTmpSpell); // move
-    spellmagicItems.push_back(std::move(pushed));
-  }
-  //spellmagicItems.push_back(someFireSpell.raw_model());
-  //spellmagicItems.push_back(
-  //  someFireSpell.ref_model()); // shared data
-  //spellmagicItems.push_back(someFireSpell.clone_model());
-
-  for(const LongMagicItemSpell& it : spellmagicItems) {
-    if(it.has_model_Spell<SpellTraits>()) {
-      it.cast("", 1, "");
-    }
-    if(it.has_model_MagicItem<MagicItemTraits>()) {
-      it.has_enough_mana("");
-    }
-  }
-
-  /*_tc_combined_t<Spell, MagicItemTraits> combined1 {
-      _tc_combined_t<Spell>{FireSpell{"someFireSpellTitle", "someFireSpelldescription1"}}
-  };*/
-
-  LongMagicItemSpell combined1 {
-      FireSpell{"someFireSpellTitle", "someFireSpelldescription1"}
-  };
-
-  if(combined1.has_model_MagicItem<DEFINE_MagicItem>()) {
-    combined1.has_enough_mana("");
-  }
-
-  //combined1 = WaterSpell{"WaterSpell", "WaterSpell"};
-
-  if(combined1.has_model_MagicItem<MagicItemTraits>()) {
-    combined1.has_enough_mana("");
-  }
-
-  if(combined1.has_model_Spell<DEFINE_Spell>()) {
-    combined1.add_spell("");
-  }
-
-  combined1 = magicItems.at(0);
-
-  if(combined1.has_model_MagicItem<MagicItemTraits>()) {
-    combined1.has_enough_mana("");
-  }
-
-  if(combined1.has_model_Spell<DEFINE_Spell>()) {
-    combined1.add_spell("");
-  }
-
-  /*combined1 = _tc_combined_t<Spell>{
-    FireSpell{"someFireSpellTitle", "someFireSpelldescription1"}
-  };*/
-
-  // using LongMagicItemSpell - _tc_combined_t<DEFINE_Spell, DEFINE_MagicItem>;
-  LongMagicItemSpell combined2 {
-      FireSpell{"someFireSpellTitle", "someFireSpelldescription1"}
-  };
-
-  LOG(WARNING) << "combined2: can_convert to MagicItemTraits: "
-    << combined2.can_convert<DEFINE_Spell>();
-
-  LOG(WARNING) << "combined2: can_convert to MagicItemTraits: "
-    << combined2.can_convert<MagicItemTraits>();
-
-  LOG(WARNING) << "combined2: can_convert to int: "
-    << combined2.can_convert<int>();
-
-  if(combined2.has_model_MagicItem<MagicItemTraits>()) {
-    combined1.has_enough_mana("");
-  }
-
-  if(combined2.has_model_Spell<DEFINE_Spell>()) {
-    combined1.add_spell("");
-  }
-
-  std::vector<_tc_combined_t<DEFINE_Printable>> printables;
-  printables.push_back(FireSpell{"someFireSpellTitle", "someFireSpelldescription1"});
-  printables.push_back(WaterSpell{"WaterSpell", "WaterSpell"});
-
-  for(const _tc_combined_t<DEFINE_Printable>& it : printables) {
-    it.print();
-  }
-
-  std::vector<MagicLongType> tpls;
-  tpls.push_back({
-      WaterSpell{"WaterSpell", "WaterSpell"}
-  });
-  tpls.push_back({
-      FireSpell{"FireSpell", "FireSpell"}
-  });
-
-  int idx = 0;
-  for(const _tc_combined_t<DEFINE_MagicLongType>& it : tpls) {
-    it.has_T("name1", idx++);
-    it.has_P1("name~");
-    it.has_P2(idx);
-#if defined(ENABLE_TYPECLASS_GUID)
-    LOG(WARNING) << "tpls: get_GUID "
-      << it.get_GUID();
-#endif // ENABLE_TYPECLASS_GUID
-  }
-
-  /// \note Uses std::reference_wrapper
-  FireSpell fs{"FireSpellRef", "FireSpellRef!"};
-
-  has_enough_mana<MagicItemTraits, FireSpell>(fs, "spellname");
-
-  LongMagicItemSpell combinedRef1 {
-      std::ref(fs)
-  };
-
-  LongMagicItemSpell combinedRef2;
-
-  // MagicLongType mlt{
-  //     WaterSpell{"WaterSpell", "WaterSpell"}
-  // };
-  // combinedRef2.create_model_MagicLongType<DEFINE_MagicLongType>
-  //   (std::move(mlt));
-
-  combinedRef2.create_model_Spell<DEFINE_Spell>
-    (std::ref(fs));
-
-  fs.title = "NewSharedFireSpellRefTitle0";
-  if(combinedRef1.has_model_Spell<DEFINE_Spell>()) {
-    combinedRef1.cast("", 0, "");
-  }
-  if(combinedRef2.has_model_Spell<DEFINE_Spell>()) {
-    combinedRef2.cast("", 0, "");
-  }
-
-  /// \note Uses std::shared_ptr
-  combinedRef2.ref_model_Spell<DEFINE_Spell>()
-    = combinedRef1.ref_model_Spell<DEFINE_Spell>();
-
-  fs.title = "NewSharedFireSpellRefTitle1";
-  if(combinedRef1.has_model_Spell<DEFINE_Spell>()) {
-    combinedRef1.cast("", 0, "");
-  }
-  if(combinedRef2.has_model_Spell<DEFINE_Spell>()) {
-    combinedRef2.cast("", 0, "");
-  }
-
-  /// \note Uses std::unique_ptr, data copyed!
-  combinedRef2 = combinedRef1;
-
-  fs.title = "New__NOT_SHARED__FireSpellRefTitle!!!";
-  if(combinedRef1.has_model_Spell<SpellTraits>()) {
-    combinedRef1.cast("", 0, "");
-  }
-  if(combinedRef2.has_model_Spell<DEFINE_Spell>()) {
-    combinedRef2.cast("", 0, "");
-  }
-#endif // 0
 }
