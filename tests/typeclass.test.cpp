@@ -182,7 +182,7 @@ namespace generated {
 // allow FireSpell to be used as MagicItemTraits
 // MagicItemTraits is base class (typeclass)
 template<>
-void has_enough_mana<DEFINE_MagicItem, FireSpell>
+void has_enough_mana<MagicItem>
   (const FireSpell& data, const char* spellname) noexcept
 {
   /// \note don`t use get_concrete<type> here, it may be get_concrete<ref_type>
@@ -199,7 +199,7 @@ namespace generated {
 // allow WaterSpell to be used as MagicItemTraits
 // MagicItemTraits is base class (typeclass)
 template<>
-void has_enough_mana<DEFINE_MagicItem, WaterSpell>
+void has_enough_mana<MagicItem>
   (const WaterSpell& data, const char* spellname) noexcept
 {
   /// \note don`t use get_concrete<type> here, it may be get_concrete<ref_type>
@@ -215,7 +215,7 @@ namespace generated {
 
 template<>
 void has_T<
-    DEFINE_MagicLongType
+    MagicLongType
   >(const FireSpell& data
   , const std::string &name1
   , const int &name2) noexcept
@@ -227,8 +227,7 @@ void has_T<
 
 template<>
 void has_P1<
-    DEFINE_MagicLongType
-    , FireSpell
+    MagicLongType
   >(const FireSpell& data, const char *name1) noexcept
 {
   /// \note don`t use get_concrete<type> here, it may be get_concrete<ref_type>
@@ -237,8 +236,7 @@ void has_P1<
 
 template<>
 void has_P2<
-    DEFINE_MagicLongType
-    , FireSpell
+    MagicLongType
   >(const FireSpell& data, const int& name1) noexcept
 {
   /// \note don`t use get_concrete<type> here, it may be get_concrete<ref_type>
@@ -253,8 +251,7 @@ namespace generated {
 
 template<>
 void has_T<
-    DEFINE_MagicLongType
-    , WaterSpell
+    MagicLongType
   >(const WaterSpell& data
   , const std::string &name1
   , const int &name2) noexcept
@@ -270,8 +267,7 @@ void has_T<
 
 template<>
 void has_P1<
-    DEFINE_MagicLongType
-    , WaterSpell
+    MagicLongType
   >(const WaterSpell& data, const char *name1) noexcept
 {
   /// \note don`t use get_concrete<type> here, it may be get_concrete<ref_type>
@@ -281,8 +277,7 @@ void has_P1<
 
 template<>
 void has_P2<
-    DEFINE_MagicLongType
-    , WaterSpell
+    MagicLongType
   >(const WaterSpell& data, const int& name1) noexcept
 {
   /// \note don`t use get_concrete<type> here, it may be get_concrete<ref_type>
@@ -297,7 +292,7 @@ namespace poly {
 namespace generated {
 
 template<>
-void print<PrintableTraits, FireSpell>
+void print<Printable>
   (const FireSpell& data) noexcept
 {
   LOG(WARNING)
@@ -315,7 +310,7 @@ namespace poly {
 namespace generated {
 
 template<>
-void print<DEFINE_Printable, WaterSpell>
+void print<Printable>
   (const WaterSpell& data) noexcept
 {
   LOG(WARNING)
@@ -333,7 +328,7 @@ namespace poly {
 namespace generated {
 
 template<>
-void cast<SpellTraits, FireSpell>
+void cast<Spell>
   (const FireSpell& data, const char* spellname, const int spellpower,
    const char* target) noexcept
 {
@@ -345,7 +340,7 @@ void cast<SpellTraits, FireSpell>
 }
 
 template<>
-void has_spell<SpellTraits, FireSpell>(
+void has_spell<Spell>(
   const FireSpell& data, const char *spellname ) noexcept
 {
   LOG(WARNING)
@@ -355,7 +350,7 @@ void has_spell<SpellTraits, FireSpell>(
 }
 
 template<>
-void add_spell<DEFINE_Spell, FireSpell>(
+void add_spell<Spell>(
   const FireSpell& data
   , const char *spellname ) noexcept
 {
@@ -365,7 +360,7 @@ void add_spell<DEFINE_Spell, FireSpell>(
 }
 
 template<>
-void remove_spell<SpellTraits, FireSpell>(
+void remove_spell<Spell>(
   const FireSpell& data
   , const char *spellname ) noexcept
 {
@@ -375,7 +370,7 @@ void remove_spell<SpellTraits, FireSpell>(
 }
 
 template<>
-void set_spell_power<SpellTraits, FireSpell>
+void set_spell_power<Spell>
     (const FireSpell& data
     , const char *spellname
     , const int spellpower) noexcept
@@ -396,7 +391,7 @@ namespace poly {
 namespace generated {
 
 template<>
-void cast<SpellTraits, WaterSpell>
+void cast<Spell>
   (const WaterSpell& data
   , const char* spellname
   , const int spellpower,
@@ -410,7 +405,7 @@ void cast<SpellTraits, WaterSpell>
 }
 
 template<>
-void has_spell<DEFINE_Spell, WaterSpell>(
+void has_spell<Spell>(
   const WaterSpell& data, const char *spellname ) noexcept
 {
   LOG(WARNING)
@@ -420,7 +415,7 @@ void has_spell<DEFINE_Spell, WaterSpell>(
 }
 
 template<>
-void add_spell<DEFINE_Spell, WaterSpell>(
+void add_spell<Spell>(
   const WaterSpell& data, const char *spellname ) noexcept
 {
   LOG(WARNING)
@@ -429,7 +424,7 @@ void add_spell<DEFINE_Spell, WaterSpell>(
 }
 
 template<>
-void remove_spell<DEFINE_Spell, WaterSpell>(
+void remove_spell<Spell>(
   const WaterSpell& data, const char *spellname ) noexcept
 {
   LOG(WARNING)
@@ -438,7 +433,7 @@ void remove_spell<DEFINE_Spell, WaterSpell>(
 }
 
 template<>
-void set_spell_power<DEFINE_Spell, WaterSpell>
+void set_spell_power<Spell>
   (const WaterSpell& data
   , const char *spellname
   , const int spellpower) noexcept

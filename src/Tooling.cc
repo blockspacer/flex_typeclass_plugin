@@ -46,291 +46,7 @@
 #include <iostream>
 #include <fstream>
 
-//namespace flex_typeclass_plugin {
-//
-//static std::string outdir;
-//
-//void setOutdir(
-//  const char outdirRaw[])
-//{
-//  outdir = outdirRaw;
-//
-//  VLOG(9)
-//    << "called setOutdir: "
-//    << outdir;
-//}
-//
-//} // namespace flex_typeclass_plugin
-
-#if 0
 namespace plugin {
-
-using PluginName = std::string;
-using OptionName = std::string;
-using OptionValue = std::string;
-
-// defined by flextool
-// both plugins (.so/.dll) and Cling scripts can use `extern`
-// to modify |plugin_settings|
-extern std::map<
-         PluginName
-         , std::map<OptionName, OptionValue> // plugin KV settings
-       > plugin_settings;
-
-} // namespace plugin
-#endif // 0
-
-namespace reflection {
-
-typedef std::string reflectionID;
-
-/*class ReflectionCXXMethodRegistry {
-    //reflectionID id_;
-};*/
-
-class ReflectionCXXRecordRegistry {
-public:
-    ReflectionCXXRecordRegistry(const reflectionID& id,
-                                //clang::CXXRecordDecl const *node,
-                                ClassInfoPtr classInfoPtr);
-    reflectionID id_;
-    //clang::CXXRecordDecl const *node_;
-    ClassInfoPtr classInfoPtr_;
-};
-
-class ReflectionRegistry {
-public:
-    static ReflectionRegistry *instance;
-public:
-    static ReflectionRegistry *getInstance();
-    std::map<reflectionID, std::unique_ptr<ReflectionCXXRecordRegistry>> reflectionCXXRecordRegistry;
-};
-
-} // namespace reflection
-
-namespace reflection {
-
-ReflectionRegistry *ReflectionRegistry::instance;
-
-ReflectionRegistry *ReflectionRegistry::getInstance() {
-    if (!instance)
-        instance = new ReflectionRegistry;
-    return instance;
-}
-
-ReflectionCXXRecordRegistry::ReflectionCXXRecordRegistry(const reflectionID &id/*, const CXXRecordDecl *node*/, ClassInfoPtr classInfoPtr)
-    : id_(id)/*, node_(node)*/, classInfoPtr_(classInfoPtr) {
-}
-
-} // namespace reflection
-
-namespace plugin {
-
-namespace {
-
-// input: vector<a, b, c>
-// output: "a, b, c"
-std::string typenameParamsFullDecls(
-  const std::vector<reflection::MethodParamInfo>& params)
-{
-  std::string out;
-  size_t paramIter = 0;
-  const size_t methodParamsSize = params.size();
-  for(const auto& param: params) {
-    paramIter++;
-    if(param.type->getAsTemplateParamType()) {
-      out += "typename ";
-      //out += param.type->getPrintedName();
-      out += param.type
-        ->getAsTemplateParamType()->decl->getName();
-      if(paramIter != methodParamsSize) {
-        out += ", ";
-      } // paramIter != methodParamsSize
-    }
-  } // params endfor
-  return out;
-}
-
-// input: vector<a, b, c>
-// output: "a, b, c"
-std::string paramsFullDecls(
-  const std::vector<reflection::MethodParamInfo>& params)
-{
-  std::string out;
-  size_t paramIter = 0;
-  const size_t methodParamsSize = params.size();
-  for(const auto& param: params) {
-    out += param.fullDecl;
-    paramIter++;
-    if(paramIter != methodParamsSize) {
-      out += ", ";
-    } // paramIter != methodParamsSize
-  } // params endfor
-  return out;
-}
-
-// input: vector<a, b, c>
-// output: "a, b, c"
-std::string expandMethodParameters(
-  const std::vector<reflection::MethodParamInfo>& params)
-{
-  std::string out;
-  size_t paramIter = 0;
-  const size_t methodParamsSize = params.size();
-  for(const auto& param: params) {
-    out += param.name;
-    paramIter++;
-    if(paramIter != methodParamsSize) {
-      out += ", ";
-    } // paramIter != methodParamsSize
-  } // params endfor
-  return out;
-}
-
-// input: vector<a, b, c>
-// output: "a, b, c"
-std::string expandTemplateParameters(
-  const std::vector<reflection::TemplateParamInfo>& params)
-{
-  std::string out;
-  size_t paramIter = 0;
-  const size_t methodParamsSize = params.size();
-  for(const auto& param: params) {
-    out += param.tplDeclName;
-    paramIter++;
-    if(paramIter != methodParamsSize) {
-      out += ", ";
-    } // paramIter != methodParamsSize
-  } // params endfor
-  return out;
-}
-
-static std::string startHeaderGuard(
-  const std::string& guardName)
-{
-  if(!guardName.empty()) {
-    // squarets will generate code from string
-    // and append it after annotated variable
-    _squaretsString(
-R"raw(
-#if !defined([[+ guardName +]])
-#define [[+ guardName +]]
-)raw"
-    )
-    std::string squarets_output = "";
-    return squarets_output;
-  } else {
-    return "#pragma once\n";
-  } // !guardName.empty()
-  return "";
-}
-
-std::string endHeaderGuard(const std::string& guardName)
-{
-  if(!guardName.empty()) {
-    // squarets will generate code from string
-    // and append it after annotated variable
-    _squaretsString(
-R"raw(
-#endif // [[+ guardName +]]
-
-)raw"
-    )
-    std::string squarets_output = "";
-    return squarets_output;
-  }
-  return "";
-}
-
-// we want to generate file names based on parsed C++ types.
-// cause file names can not contain spaces ( \n\r)
-// and punctuations (,.:') we want to
-// replace special characters in filename to '_'
-// BEFORE:
-//   _typeclass_impl(
-//     typeclass_instance(
-//       target = "FireSpell",
-//       "MagicTemplated<std::string, int>,"
-//       "ParentTemplated_1<const char *>,"
-//       "ParentTemplated_2<const int &>")
-//   )
-// AFTER:
-//   FireSpell_MagicTemplated_std__string__int__ParentTemplated_1_const_char____ParentTemplated_2_const_int___.typeclass_instance.generated.hpp
-static void normalizeFileName(std::string &in)
-{
-  std::replace_if(in.begin(), in.end(), ::ispunct, '_');
-  std::replace_if(in.begin(), in.end(), ::isspace, '_');
-}
-
-static const char kStructPrefix[] = "struct ";
-static const char kRecordPrefix[] = "record ";
-
-// exatracts `SomeType` out of:
-// struct SomeType{};
-// OR
-// class SomeType{};
-// Note that `class` in clang LibTooling is `record`
-static std::string exatractTypeName(const std::string &in)
-{
-  {
-    DCHECK(base::size(kStructPrefix));
-    if(base::StartsWith(in, kStructPrefix
-         , base::CompareCase::INSENSITIVE_ASCII))
-    {
-      return in.substr(base::size(kStructPrefix) - 1
-                     , std::string::npos);
-    }
-  }
-
-  {
-    DCHECK(base::size(kRecordPrefix));
-    const std::string prefix = "record ";
-    if(base::StartsWith(in, kRecordPrefix
-         , base::CompareCase::INSENSITIVE_ASCII))
-    {
-      return in.substr(base::size(kRecordPrefix) - 1
-                     , std::string::npos);
-    }
-  }
-
-  return in;
-}
-
-// EXAMPLE:
-// _typeclass_impl(
-//   typeclass_instance(target = "FireSpell", "Printable")
-// )
-// Note quotes around "FireSpell":
-// target = "FireSpell"
-// we want to parse "FireSpell" without quotes
-static void prepareTplArg(std::string &in)
-{
-  // remove quotes
-  in.erase(
-    std::remove( in.begin(), in.end(), '\"' ),
-    in.end());
-}
-
-static std::string buildIncludeDirective(
-  const std::string& inStr
-  , const std::string& quote = R"raw(")raw")
-{
-  // squarets will generate code from string
-  // and append it after annotated variable
-  _squaretsString(
-R"raw(#include [[+ quote +]][[+ inStr +]][[+ quote +]])raw"
-  )
-  std::string squarets_output = "";
-  return squarets_output;
-}
-
-// name of plugin used in settings KV map
-static const char kSettingsPluginName[] = "flex_typeclass_plugin";
-
-// output directory for generated files
-static const char kOutDirOption[] = "out_dir";
-
-} // namespace
 
 TypeclassTooling::TypeclassTooling(
   const ::plugin::ToolPlugin::Events::RegisterAnnotationMethods& event
@@ -406,133 +122,6 @@ TypeclassTooling::TypeclassTooling(
 
   outDir_ = dir_exe_.Append("generated");
 
-#if 0
-  const std::map<std::string, std::string>::const_iterator it
-    = flex_typeclass_plugin::settings.find("outdir");
-  if(it != flex_typeclass_plugin::settings.end())
-  {
-    VLOG(9)
-      << "flex_typeclass_plugin::settings["
-      << it->first
-      << "] = "
-      << it->second;
-    CHECK(!it->second.empty())
-      << "settings must be not empty";
-    outDir_ = base::FilePath{it->second};
-  }
-#endif
-
-#if 0
-  if(!flex_typeclass_plugin::outdir.empty())
-  {
-    VLOG(9)
-      << "flex_typeclass_plugin::settings["
-      << "outdir"
-      << "] = "
-      << flex_typeclass_plugin::outdir;
-    outDir_ = base::FilePath{flex_typeclass_plugin::outdir};
-  } else {
-    LOG(WARNING)
-      << "flex_typeclass_plugin:"
-         " settings must be not empty";
-  }
-#endif // 0
-
-#if 0
-  const std::map<
-      std::string
-      , std::map<std::string, std::string>
-    >::const_iterator it
-      = plugin::plugin_settings.find(kSettingsPluginName);
-  if(it != plugin::plugin_settings.end())
-  {
-    const std::string& pluginName = it->first;
-    const std::map<std::string, std::string>& settingsKV
-      = it->second;
-    CHECK(!settingsKV.empty())
-      << "flex_typeclass_plugin: settings must be not empty";
-    VLOG(9)
-      << "found plugin::plugin_settings["
-      << pluginName
-      << "]";
-    for(const auto& setting: settingsKV) {
-      const std::string& optionName = setting.first;
-      const std::string& optionValue = setting.second;
-      VLOG(9)
-        << "plugin::plugin_settings["
-        << pluginName
-        << "] = "
-        << "("
-        << optionName
-        << ", "
-        << optionValue
-        << ")";
-      if(setting.first == kOutDirOption)
-      {
-        outDir_ = base::FilePath{optionValue};
-      } else {
-        LOG(WARNING)
-          << "flex_typeclass_plugin: "
-          << "unknown setting: "
-          << pluginName
-          << " = "
-          << "("
-          << optionName
-          << ", "
-          << optionValue
-          << ")";
-      }
-    }
-  }
-#endif // 0
-
-#if 0
-  flexlib::PerPluginSettings* perPluginSettings
-    = flexlib::PerPluginSettings::getInstance();
-  if(perPluginSettings->hasPluginOptions(kSettingsPluginName)) {
-    const flexlib::PerPluginSettings::OptionKV& optionKV
-      = perPluginSettings->getAllPluginOptions(kSettingsPluginName);
-    CHECK(!optionKV.empty())
-      << "flex_typeclass_plugin: settings must be not empty";
-    VLOG(9)
-      << "found plugin::plugin_settings["
-      << kSettingsPluginName
-      << "]";
-    for(const auto& setting: optionKV) {
-      const std::string& optionName = setting.first;
-      const std::string& optionValue = setting.second;
-      VLOG(9)
-        << "plugin::plugin_settings["
-        << kSettingsPluginName
-        << "] = "
-        << "("
-        << optionName
-        << ", "
-        << optionValue
-        << ")";
-      if(setting.first == kOutDirOption)
-      {
-        outDir_ = base::FilePath{optionValue};
-      } else {
-        // invalid configuration format
-        LOG(WARNING)
-          << "for plugin: "
-          << kSettingsPluginName
-          << " found unregistered setting: "
-          << "("
-          << optionName
-          << ", "
-          << optionValue
-          << ")";
-      }
-    }
-  } else {
-    DVLOG(9)
-      << "unable to find options for plugin: "
-      << kSettingsPluginName;
-  }
-#endif // 0
-
   if(!settings_.outDir.empty()) {
      outDir_ = base::FilePath{settings_.outDir};
   }
@@ -596,7 +185,8 @@ clang_utils::SourceTransformResult
     return clang_utils::SourceTransformResult{nullptr};
   }
 
-  reflection::NamespacesTree m_namespaces; // TODO
+  /// \todo support custom namespaces
+  reflection::NamespacesTree m_namespaces;
 
   std::string fullBaseType;
 
@@ -611,8 +201,6 @@ clang_utils::SourceTransformResult
     for(const clang::CXXBaseSpecifier& it
         : node1->bases())
     {
-      //node = it.getType()->getAsCXXRecordDecl();//<clang::RecordDecl>();
-
       if(it.getType()->getAsCXXRecordDecl()) {
         nodes.push_back(
           it.getType()->getAsCXXRecordDecl());
@@ -648,7 +236,6 @@ clang_utils::SourceTransformResult
 
         fullBaseType += preparedFullBaseType;
         fullBaseType += ",";
-        //break;
       }
     }
 
@@ -665,7 +252,7 @@ clang_utils::SourceTransformResult
 
     std::string targetTypeName;
     for(const auto& tit : typeclassBaseNames.as_vec_) {
-      if(tit.name_ =="name") {
+      if(tit.name_ == "name") {
         targetTypeName = tit.value_;
         prepareTplArg(targetTypeName);
       }
@@ -695,7 +282,7 @@ clang_utils::SourceTransformResult
       traitToItsType_[registryTargetName]
         = fullBaseType;
 
-      /// \todo
+      /// \todo template support
       DCHECK(!structInfo->templateParams.size());
 
       VLOG(9) << "templateParams.size"
@@ -963,10 +550,11 @@ clang_utils::SourceTransformResult
         reflection::ReflectionRegistry::getInstance()->
           reflectionCXXRecordRegistry[typeclassBaseName].get();
 
-    /*DLOG(INFO) << "ReflectedBaseTypeclass->classInfoPtr_->name = "
-      << ReflectedBaseTypeclass->classInfoPtr_->name;
-    DLOG(INFO) << "typeclassBaseName = "
-      << typeclassBaseName;*/
+    DVLOG(9) << "ReflectedBaseTypeclass->classInfoPtr_->name = "
+      << ReflectedBaseTypeclassRegistry->classInfoPtr_->name;
+
+    DVLOG(9) << "typeclassBaseName = "
+      << typeclassBaseName;
 
     const auto fileID = SM.getMainFileID();
     const auto fileEntry = SM.getFileEntryForID(
@@ -1118,7 +706,6 @@ clang_utils::SourceTransformResult
   size_t titIndex = 0;
   size_t processedTimes = 0;
   std::string fullBaseType;
-  //std::vector<std::string> validTypeAliases;
   for(const auto& tit : typeclassBaseNames.as_vec_) {
       if(tit.name_ == "type") {
         continue;
@@ -1130,10 +717,6 @@ clang_utils::SourceTransformResult
       processedTimes++;
 
       std::string typeclassBaseName = tit.value_;
-      //typeclassBaseName
-      //  = typeAlias.empty()
-      //    ? tit.value_
-      //    : typeAlias;
 
       VLOG(9)
         << "typeclassBaseName = "
@@ -1190,25 +773,26 @@ clang_utils::SourceTransformResult
 
       combinedTypeclassNames
         += typeclassBaseName
-        //ReflectedBaseTypeclassRegistry->classInfoPtr_->name
         + (titIndex < (typeclassBaseNamesSize - 1) ? "_" : "");
 
       DCHECK(!validTypeAlias.empty());
       typeclassNames.push_back(
-        //typeclassBaseName
-        //ReflectedBaseTypeclassRegistry->classInfoPtr_->name
         validTypeAlias.empty()
         ? ReflectedBaseTypeclassRegistry->classInfoPtr_->name
         : validTypeAlias
       );
+
       generator_includes.push_back(
         buildIncludeDirective(
           typeclassBaseName + R"raw(.typeclass.generated.hpp)raw"));
 
-      /*DLOG(INFO) << "ReflectedBaseTypeclass->classInfoPtr_->name = "
-        << ReflectedBaseTypeclass->classInfoPtr_->name;
-      DLOG(INFO) << "typeclassBaseName = "
-        << typeclassBaseName;*/
+      DVLOG(9)
+        << "ReflectedBaseTypeclass->classInfoPtr_->name = "
+        << ReflectedBaseTypeclassRegistry->classInfoPtr_->name;
+
+      DVLOG(9)
+        << "typeclassBaseName = "
+        << typeclassBaseName;
 
       VLOG(9)
         << "ReflectedBaseTypeclass is record = "
@@ -1251,8 +835,6 @@ clang_utils::SourceTransformResult
     return clang_utils::SourceTransformResult{""};
   }
 
-  // see https://github.com/asutton/clang/blob/master/lib/AST/DeclPrinter.cpp#L502
-
   clang::SourceLocation startLoc
     = sourceTransformOptions.decl->getLocStart();
   clang::SourceLocation endLoc
@@ -1264,11 +846,6 @@ clang_utils::SourceTransformResult
 
   std::string OriginalTypeclassBaseCode =
     sourceTransformOptions.rewriter.getRewrittenText(codeRange);
-
-  // removes $apply(typeclass, e.t.c.)
-  /*std::string CleanOriginalTypeclassBaseCode
-    = std::regex_replace(OriginalTypeclassBaseCode,
-        std::regex("\\$apply([^(]*)\\([^)]*\\)(.*)"), "$1$2");*/
 
   base::FilePath gen_hpp_name
     = outDir_.Append(
@@ -1327,12 +904,12 @@ clang_utils::SourceTransformResult
   {
     std::string headerGuard = "";
 
-  base::FilePath gen_cpp_name
-    = outDir_.Append(
-        (targetTypeName.empty()
-          ? combinedTypeclassNames
-          : targetTypeName)
-          + ".typeclass_combo.generated.cpp");
+    base::FilePath gen_cpp_name
+      = outDir_.Append(
+          (targetTypeName.empty()
+            ? combinedTypeclassNames
+            : targetTypeName)
+            + ".typeclass_combo.generated.cpp");
 
     std::map<std::string, std::any> cxtpl_params;;
 

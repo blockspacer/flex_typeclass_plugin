@@ -46,40 +46,38 @@ namespace generated {
 [[~]]  { // startscope
 [[~]]    for(const auto& method: ReflectedStructInfo->methods) {
 [[~]]      const size_t methodParamsSize = method->params.size();
-[[~]]      const bool needPrint = !method->isImplicit
-[[~]]          && !method->isOperator
-[[~]]          && !method->isCtor
-[[~]]          && !method->isDtor;
-[[~]]      const std::string tplTypenames = typenameParamsFullDecls(method->params);
+[[~]]      const bool needPrint = isTypeclassMethod(method);
+[[~]]      const std::string tplTypenames = expandTemplateTypes(method->params);
 [[~]]      if(needPrint) {
   template<
     [[+ tplTypenames +]][[+ tplTypenames.empty() ? "" : "," +]]
-[[~]]    int index_compoundId1 = 0;
-[[~]]    for(const auto& compoundId: ReflectedStructInfo->compoundId) {
-    typename T[[* index_compoundId1 *]],
-[[~]]      index_compoundId1++;
-[[~]]    } // end for
+    typename T,
     typename V,
-[[~]]    int index_compoundId2 = 0;
-[[~]]    for(const auto& compoundId: ReflectedStructInfo->compoundId) {
-[[~]]      const std::string delimiter =
-[[~]]       index_compoundId2 < (ReflectedStructInfoCompoundIdSize - 1) ? "," : "";
-    typename std::enable_if<std::is_same<[[+ compoundId +]], T[[* index_compoundId2 *]]>::value>::type* = nullptr[[+ delimiter +]]
-[[~]]      index_compoundId2++;
-[[~]]    } // end for
+[[~]]    // where fullCompoundId is combination of
+[[~]]    // impl types (types may be templated)
+[[~]]    const std::string fullCompoundId
+[[~]]     = joinWithSeparator(
+[[~]]         ReflectedStructInfo->compoundId
+[[~]]         , ", "
+[[~]]         , StrJoin::STRIP_LAST_SEPARATOR);
+[[~]]    const std::string methodSpecificators
+[[~]]       = printMethodForwarding(
+[[~]]           method
+[[~]]           , kSeparatorWhitespace
+[[~]]           // what method printer is allowed to print
+[[~]]           , MethodPrinter::Forwarding::Options::FORWARDING_ALL
+[[~]]             & ~MethodPrinter::Forwarding::Options::VIRTUAL);
+    typename std::enable_if<std::is_same<Typeclass<[[+ fullCompoundId +]]>, T>::value>::type* = nullptr
   >
-[[+ method->isExplicitCtor ? "explicit " : "" +]][[~]] /* no newline */
-[[+ method->isConstexpr ? "constexpr " : "" +]][[~]] /* no newline */
-[[+ method->isStatic ? "static " : "" +]][[~]] /* no newline */
-[[+ method->returnType->getPrintedName() +]][[~]] /* no newline */
-[[+ " " +]][[~]] /* no newline */
-[[+ method->name +]][[~]] /* no newline */
-(const V&[[~]]/* no newline */
+[[+ methodSpecificators +]][[~]] /* no newline */
+[[+ " " +]][[+ method->name +]][[~]] /* no newline */
+[[~]]   // method has arguments
+  (const V&[[~]]/* no newline */
 [[~]] if(methodParamsSize) {
 [[+   ", " +]][[~]] /* no newline */
-[[+ paramsFullDecls(method->params) +]][[~]] /* no newline */
+[[+ expandMethodParameterDeclarations(method->params) +]][[~]] /* no newline */
 [[~]] } // methodParamsSize
-) [[~]] /* no newline */
+  ) [[~]] /* no newline */
 [[+ method->isNoExcept ? "noexcept " : "" +]][[~]] /* no newline */
 ;
 [[~ /* newline */ ~]]
@@ -100,7 +98,7 @@ struct TypeclassImplBase<[[+ fullBaseType +]]> {
 
   virtual
     std::unique_ptr<TypeclassImplBase>
-      clone() = 0;
+      clone() const = 0;
 
   virtual
     std::unique_ptr<TypeclassImplBase>
@@ -113,35 +111,36 @@ struct TypeclassImplBase<[[+ fullBaseType +]]> {
 [[~]] **/
 [[~]]  { // startscope
 [[~]]    for(const auto& method: ReflectedStructInfo->methods) {
-[[~]]      const size_t methodParamsSize = method->params.size();
-[[~]]      const bool needPrint = !method->isImplicit
-[[~]]          && !method->isOperator
-[[~]]          && !method->isCtor
-[[~]]          && !method->isDtor;
-[[~]]      if(method->isTemplate()) {
-template< [[+ expandTemplateParameters(method->tplParams) +]] >
-[[~]]      } // method->isTemplate
+[[~]]      const bool needPrint = isTypeclassMethod(method);
 [[~]]      if(needPrint) {
-[[+ method->isExplicitCtor ? "explicit " : "" +]][[~]] /* no newline */
-[[+ method->isVirtual ? "virtual " : "" +]][[~]] /* no newline */
-[[+ method->isConstexpr ? "constexpr " : "" +]][[~]] /* no newline */
-[[+ method->isStatic ? "static " : "" +]][[~]] /* no newline */
-[[+ method->returnType->getPrintedName() +]][[~]] /* no newline */
-[[+ " __" +]][[~]] /* no newline */
-[[+ method->name +]][[~]] /* no newline */
-(
-[[+ paramsFullDecls(method->params) +]][[~]] /* no newline */
-) [[~]] /* no newline */
-[[+ method->isConst ? "const " : "" +]][[~]] /* no newline */
-[[+ method->isNoExcept ? "noexcept " : "" +]][[~]] /* no newline */
-[[+ method->isPure ? "= 0 " : "" +]][[~]] /* no newline */
-[[+ method->isDeleted ? "= delete " : "" +]][[~]] /* no newline */
-[[+ method->isDefault ? "= default " : "" +]][[~]] /* no newline */
-[[~]]      if(method->isDefined && method->isClassScopeInlined) {
-[[+ method->body +]]
-[[~]]      } else {
-;
-[[~]]      } // method->isDefined && method->isClassScopeInlined
+[[~]]        const std::string methodSpecificators
+[[~]]           = printMethodForwarding(
+[[~]]               method
+[[~]]               , kSeparatorWhitespace
+[[~]]               // what method printer is allowed to print
+[[~]]               , MethodPrinter::Forwarding::Options::FORWARDING_ALL);
+[[~]]        if(method->isTemplate()) {
+template< [[+ expandTemplateNames(method->tplParams) +]] >
+[[~]]        } // method->isTemplate
+[[+ methodSpecificators +]][[~]] /* no newline */
+[[+ " __" +]][[+ method->name +]][[~]] /* no newline */
+[[~]]   // method has arguments
+  (
+[[+ expandMethodParameterDeclarations(method->params) +]][[~]] /* no newline */
+  ) [[~]] /* no newline */
+[[~]]        const std::string methodTrailing
+[[~]]           = printMethodTrailing(
+[[~]]               method
+[[~]]               , kSeparatorWhitespace
+[[~]]               // what method printer is allowed to print
+[[~]]               , MethodPrinter::Trailing::Options::TRAILING_NOTHING
+[[~]]                 | MethodPrinter::Trailing::Options::CONST
+[[~]]                 | MethodPrinter::Trailing::Options::NOEXCEPT
+[[~]]                 | MethodPrinter::Trailing::Options::PURE
+[[~]]                 | MethodPrinter::Trailing::Options::DELETED
+[[~]]                 | MethodPrinter::Trailing::Options::DEFAULT
+[[~]]                 | MethodPrinter::Trailing::Options::BODY);
+[[+ methodTrailing +]][[~]] /* no newline */
 [[~ /* newline */ ~]]
 [[~]]      } // needPrint
 [[~]]    } // methods endfor
@@ -201,45 +200,6 @@ struct Typeclass<[[+ fullBaseType +]]> {
     return *this;
   }
 
-[[~]] // where ImplType is impl that can behave as `fullBaseType`
-  //template<
-  //  typename ImplType
-  //  //, typename = IsNotReference<ImplType>
-  //  , typename std::enable_if<
-  //      !std::is_same<Typeclass, std::decay_t<ImplType>>::value
-  //    >::type* = nullptr
-  //>
-  //Typeclass<[[+ fullBaseType +]]>& operator=(
-  //  ImplType&& impl)
-  //{
-  //  implBase_.reset(
-  //    new TypeclassImpl<std::decay_t<ImplType>>(
-  //      std::forward<ImplType>(impl)));
-  //  return *this;
-  //}
-
-[[~]] // where ImplType is impl that can behave as `fullBaseType`
-  /**
-   * Allows to write code like:
-    FireSpell spell {"title5", "description5"};
-    Spell myspell = spell;
-   **/
-  //template<
-  //  typename ImplType
-  //  //, typename = IsNotReference<ImplType>
-  //  , typename std::enable_if<
-  //      !std::is_same<Typeclass, std::decay_t<ImplType>>::value
-  //    >::type* = nullptr
-  //>
-  //Typeclass<[[+ fullBaseType +]]>& operator=(
-  //  const ImplType& impl)
-  //{
-  //  implBase_.reset(
-  //    new TypeclassImpl<std::decay_t<ImplType>>(
-  //      std::forward<ImplType>(impl)));
-  //  return *this;
-  //}
-
 [[~]] /**
 [[~]] Generate functions. Example:
 [[~]]   void has_enough_mana(
@@ -251,29 +211,40 @@ struct Typeclass<[[+ fullBaseType +]]> {
 [[~]]    for(const auto& method: ReflectedStructInfo->methods)
 [[~]]    {
 [[~]]      const size_t methodParamsSize = method->params.size();
-[[~]]      const bool needPrint = !method->isImplicit
-[[~]]          && !method->isOperator
-[[~]]          && !method->isCtor
-[[~]]          && !method->isDtor;
-[[~]]      if(method->isTemplate())
-[[~]]      {
-template< [[+ expandTemplateParameters(method->tplParams) +]] >
-[[~]]      } // method->isTemplate
+[[~]]      const bool needPrint = isTypeclassMethod(method);
 [[~]]      if(needPrint)
 [[~]]      {
-[[+ method->isExplicitCtor ? "explicit " : "" +]][[~]] /* no newline */
-[[+ method->isConstexpr ? "constexpr " : "" +]][[~]] /* no newline */
-[[+ method->isStatic ? "static " : "" +]][[~]] /* no newline */
-[[+ method->returnType->getPrintedName() +]][[~]] /* no newline */
-[[+ " " +]][[~]] /* no newline */
-[[+ method->name +]][[~]] /* no newline */
-(
-[[+ paramsFullDecls(method->params) +]][[~]] /* no newline */
-) [[~]] /* no newline */
-[[+ method->isConst ? "const " : "" +]][[~]] /* no newline */
-[[+ method->isNoExcept ? "noexcept " : "" +]][[~]] /* no newline */
+[[~]]         if(method->isTemplate())
+[[~]]         {
+template< [[+ expandTemplateNames(method->tplParams) +]] >
+[[~]]         } // method->isTemplate
+[[~]]         const std::string methodSpecificators
+[[~]]            = printMethodForwarding(
+[[~]]                method
+[[~]]                , kSeparatorWhitespace
+[[~]]               // what method printer is allowed to print
+[[~]]                , MethodPrinter::Forwarding::Options::FORWARDING_ALL
+[[~]]                  & ~MethodPrinter::Forwarding::Options::VIRTUAL);
+[[+ methodSpecificators +]][[~]] /* no newline */
+[[+ " " +]][[+ method->name +]][[~]] /* no newline */
+[[~]]   // method has arguments
+  (
+[[+ expandMethodParameterDeclarations(method->params) +]][[~]] /* no newline */
+  ) [[~]] /* no newline */
+[[~]]        const std::string methodTrailing
+[[~]]           = printMethodTrailing(
+[[~]]               method
+[[~]]               , kSeparatorWhitespace
+[[~]]               // what method printer is allowed to print
+[[~]]               , MethodPrinter::Trailing::Options::TRAILING_NOTHING
+[[~]]                 | MethodPrinter::Trailing::Options::CONST
+[[~]]                 | MethodPrinter::Trailing::Options::NOEXCEPT);
+[[+ methodTrailing +]][[~]] /* no newline */
   {
-    implBase_->__[[+ method->name +]]([[+ expandMethodParameters(method->params) +]]);
+[[~]] // call method from implementation
+    implBase_->__[[+ method->name +]]
+[[~]]   // method has arguments
+      ([[+ expandMethodParameterNames(method->params) +]]);
   }
 [[~ /* newline */ ~]]
 [[~]]      } // needPrint
