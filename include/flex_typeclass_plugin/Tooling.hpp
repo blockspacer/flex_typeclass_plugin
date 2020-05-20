@@ -129,6 +129,7 @@ private:
   std::map<std::string, std::string>
     traitToItsType_{};
 
+  // output directory for generated files
   base::FilePath outDir_;
 
   base::FilePath dir_exe_;

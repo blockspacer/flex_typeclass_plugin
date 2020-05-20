@@ -9,6 +9,8 @@ namespace only_for_code_generation {
 // like `trait`
 _typeclass(
   "name = MagicItem"
+  ", generator = InPlace"
+  ", BufferSize = 64"
   , public MagicItemTraits
 )
 
@@ -119,6 +121,7 @@ _generate(
   )
 )
 
+/// \todo remove
 // just wraps multiple `traits`, forwards calls
 /// \note example of combined typeclasses
 // allow typeclass_combo<Spell, MagicItemTraits)>

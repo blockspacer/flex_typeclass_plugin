@@ -168,6 +168,9 @@ clang_utils::SourceTransformResult
   VLOG(9)
     << "typeclass called...";
 
+  // used by code generator of inline typeclass
+  InlineTypeclassSettings inlineTypeclassSettings;
+
   flexlib::args typeclassBaseNames =
     sourceTransformOptions.func_with_args.parsed_func_.args_;
 
@@ -251,10 +254,34 @@ clang_utils::SourceTransformResult
     }
 
     std::string targetTypeName;
+    std::string targetGenerator;
     for(const auto& tit : typeclassBaseNames.as_vec_) {
-      if(tit.name_ == "name") {
+      if(tit.name_ == "name")
+      {
         targetTypeName = tit.value_;
         prepareTplArg(targetTypeName);
+        DCHECK(!targetTypeName.empty());
+      }
+      else if(tit.name_ == "generator")
+      {
+        targetGenerator = tit.value_;
+        prepareTplArg(targetGenerator);
+        DCHECK(targetGenerator == "InPlace"
+          || targetGenerator == "InHeap");
+      }
+      else if(tit.name_ == "BufferSize")
+      {
+        inlineTypeclassSettings.BufferSize
+          = tit.value_;
+        prepareTplArg(inlineTypeclassSettings.BufferSize);
+        DCHECK(!inlineTypeclassSettings.BufferSize.empty());
+      }
+      else if(tit.name_ == "BufferAlignment")
+      {
+        inlineTypeclassSettings.BufferAlignment
+          = tit.value_;
+        prepareTplArg(inlineTypeclassSettings.BufferAlignment);
+        DCHECK(!inlineTypeclassSettings.BufferAlignment.empty());
       }
     }
 

@@ -178,6 +178,37 @@ extern const char kSettingsPluginName[];
 // output directory for generated files
 extern const char kOutDirOption[];
 
+enum class SizePolicy {
+  Exact,  // Size == sizeof(T)
+  AtLeast // Size >= sizeof(T)
+};
+
+enum class AlignPolicy {
+  Exact,  // Alignment == alignof(T)
+  AtLeast // Alignment >= alignof(T)
+};
+
+// used by code generator of inline typeclass
+struct InlineTypeclassSettings {
+  std::string BufferSize
+    /// \note empty value means sizeof(T)
+    /// in generated code
+    = "";
+
+  std::string BufferAlignment
+    /// \note empty value means alignof(T)
+    /// in generated code
+    = "";
+
+  // used by code generator of inline typeclass
+  SizePolicy SizePolicyType
+    = SizePolicy::AtLeast;
+
+  // used by code generator of inline typeclass
+  AlignPolicy AlignPolicyType
+    = AlignPolicy::AtLeast;
+};
+
 // used to prohibit Ctor/Dtor/etc. generation in typeclass
 // based on provided interface
 bool isTypeclassMethod(
@@ -300,6 +331,14 @@ std::string exatractTypeName(
 // target = "FireSpell"
 // we want to parse "FireSpell" without quotes
 void prepareTplArg(std::string &in);
+
+void forEachDeclaredMethod(
+  const std::vector<reflection::MethodInfoPtr>& methods
+  , const base::RepeatingCallback<
+      void(
+        const reflection::MethodInfoPtr&
+        , size_t)
+    >& func);
 
 std::string buildIncludeDirective(
   const std::string& inStr

@@ -514,7 +514,7 @@ list(APPEND USED_3DPARTY_LIBS
   #microsoft_gsl
 )
 
-set_property(TARGET ${LIB_NAME} PROPERTY CXX_STANDARD 17)
+set_property(TARGET ${LIB_NAME} PROPERTY CXX_STANDARD 20)
 
 if(TARGET_EMSCRIPTEN)
   # use PROPERTY CXX_STANDARD 17
@@ -560,7 +560,7 @@ set_target_properties(${LIB_NAME}
     # Plugins don't have any prefix (e.g. 'lib' on Linux)
     PREFIX ""
     ENABLE_EXPORTS 1
-    CXX_STANDARD 17
+    CXX_STANDARD 20
     CXX_EXTENSIONS OFF
     CMAKE_CXX_STANDARD_REQUIRED ON
 )

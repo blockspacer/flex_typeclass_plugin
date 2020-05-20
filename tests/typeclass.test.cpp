@@ -182,11 +182,12 @@ namespace generated {
 // allow FireSpell to be used as MagicItemTraits
 // MagicItemTraits is base class (typeclass)
 template<>
-void has_enough_mana<MagicItem>
+void has_enough_mana<MagicItem::typeclass>
   (const FireSpell& data, const char* spellname) noexcept
 {
   /// \note don`t use get_concrete<type> here, it may be get_concrete<ref_type>
-  LOG(WARNING) << "(lib1) has_enough_mana " << " by "
+  LOG(WARNING)
+    << "(lib1) has_enough_mana " << " by "
     << data.title << " " << spellname;
 }
 
@@ -199,11 +200,12 @@ namespace generated {
 // allow WaterSpell to be used as MagicItemTraits
 // MagicItemTraits is base class (typeclass)
 template<>
-void has_enough_mana<MagicItem>
+void has_enough_mana<Typeclass<DEFINE_MagicItem>>
   (const WaterSpell& data, const char* spellname) noexcept
 {
   /// \note don`t use get_concrete<type> here, it may be get_concrete<ref_type>
-  LOG(WARNING) << "(lib1) has_enough_mana " << " by "
+  LOG(WARNING)
+    << "(lib1) has_enough_mana " << " by "
     << data.title << " " << spellname;
 }
 
@@ -221,26 +223,38 @@ void has_T<
   , const int &name2) noexcept
 {
   /// \note don`t use get_concrete<type> here, it may be get_concrete<ref_type>
-  LOG(WARNING) << "(Fire) has_T on " << name1
-            << " by " << name2 << " ";
+  LOG(WARNING)
+    << "(Fire) has_T on " << name1
+    << " by " << name2 << " "
+    << " by "
+    << data.title
+    << " ";
 }
 
 template<>
 void has_P1<
-    MagicLongType
+    MagicLongType::typeclass
   >(const FireSpell& data, const char *name1) noexcept
 {
   /// \note don`t use get_concrete<type> here, it may be get_concrete<ref_type>
-  LOG(WARNING) << "(FireSpell) has_P1 on " << name1;
+  LOG(WARNING)
+    << "(FireSpell) has_P1 on " << name1
+    << " by "
+    << data.title
+    << " ";
 }
 
 template<>
 void has_P2<
-    MagicLongType
+    MagicLongType::typeclass
   >(const FireSpell& data, const int& name1) noexcept
 {
   /// \note don`t use get_concrete<type> here, it may be get_concrete<ref_type>
-  LOG(WARNING) << "(FireSpell) has_P2 on " << name1;
+  LOG(WARNING)
+    << "(FireSpell) has_P2 on " << name1
+    << " by "
+    << data.title
+    << " ";
 }
 
 } // namespace poly
@@ -261,18 +275,21 @@ void has_T<
     << "(WaterSpell) has_T on "
     << name1
     << " by "
-    << name2
+    << data.title
     << " ";
 }
 
 template<>
 void has_P1<
-    MagicLongType
+    MagicLongType::typeclass
   >(const WaterSpell& data, const char *name1) noexcept
 {
   /// \note don`t use get_concrete<type> here, it may be get_concrete<ref_type>
   LOG(WARNING)
-    << "(WaterSpell) has_P1 on " << name1;
+    << "(WaterSpell) has_P1 on " << name1
+    << " by "
+    << data.title
+    << " ";
 }
 
 template<>
@@ -292,7 +309,7 @@ namespace poly {
 namespace generated {
 
 template<>
-void print<Printable>
+void print<Printable::typeclass>
   (const FireSpell& data) noexcept
 {
   LOG(WARNING)
@@ -328,7 +345,7 @@ namespace poly {
 namespace generated {
 
 template<>
-void cast<Spell>
+void cast<Spell::typeclass>
   (const FireSpell& data, const char* spellname, const int spellpower,
    const char* target) noexcept
 {
@@ -350,7 +367,7 @@ void has_spell<Spell>(
 }
 
 template<>
-void add_spell<Spell>(
+void add_spell<Spell::typeclass>(
   const FireSpell& data
   , const char *spellname ) noexcept
 {
@@ -360,7 +377,7 @@ void add_spell<Spell>(
 }
 
 template<>
-void remove_spell<Spell>(
+void remove_spell<Spell::typeclass>(
   const FireSpell& data
   , const char *spellname ) noexcept
 {
@@ -370,7 +387,7 @@ void remove_spell<Spell>(
 }
 
 template<>
-void set_spell_power<Spell>
+void set_spell_power<Spell::typeclass>
     (const FireSpell& data
     , const char *spellname
     , const int spellpower) noexcept
@@ -391,7 +408,7 @@ namespace poly {
 namespace generated {
 
 template<>
-void cast<Spell>
+void cast<Spell::typeclass>
   (const WaterSpell& data
   , const char* spellname
   , const int spellpower,
@@ -405,7 +422,7 @@ void cast<Spell>
 }
 
 template<>
-void has_spell<Spell>(
+void has_spell<Spell::typeclass>(
   const WaterSpell& data, const char *spellname ) noexcept
 {
   LOG(WARNING)
@@ -415,7 +432,7 @@ void has_spell<Spell>(
 }
 
 template<>
-void add_spell<Spell>(
+void add_spell<Spell::typeclass>(
   const WaterSpell& data, const char *spellname ) noexcept
 {
   LOG(WARNING)
@@ -433,7 +450,7 @@ void remove_spell<Spell>(
 }
 
 template<>
-void set_spell_power<Spell>
+void set_spell_power<Spell::typeclass>
   (const WaterSpell& data
   , const char *spellname
   , const int spellpower) noexcept
@@ -450,7 +467,68 @@ void set_spell_power<Spell>
 TEST(Typeclass, TypeclassGeneration) {
   using namespace poly::generated;
 
+  /// \note not init-ed will crash
+  //{
+  //  InplaceTypeclass<SpellTraits> myspell;
+  //  myspell.set_spell_power(
+  //    /*spellname*/ "spellname4"
+  //    , /*spellpower*/ 444);
+  //}
+
   {
+    // Use `Typeclass<MagicItemTraits>` only for polymorphic objects.
+    //
+    // Code generated by typeclass can be used both with polymorphic (`Typeclass<MagicItemTraits>`) and with normal objects (`FireSpell fs`).
+    //
+    // i.e. for ordinary types can use methods generated by typeclass like so:
+
+    FireSpell fs{"notPolymorphicA1", "notPolymorphicB1"};
+    has_enough_mana<MagicItem::typeclass>(fs, "spellname");
+  }
+
+  {
+    // `InplaceTypeclass<SpellTraits>` must be same as `InplaceSpell`
+    // i.e. using InplaceSpell = InplaceTypeclass<SpellTraits>;
+    InPlaceSpell myspell{
+      FireSpell{"title0", "description0"}};
+
+    myspell.set_spell_power(
+      /*spellname*/ "spellname0"
+      , /*spellpower*/ 0);
+
+    myspell.cast(
+      /*spellname*/ "spellname0"
+      , /*spellpower*/ 0
+      , /*target*/ "target0");
+  }
+
+  {
+    std::vector<InPlaceSpell> spells;
+    spells.push_back(FireSpell{"FireSpelltitle1"
+      , "FireSpelldescription1"});
+    {
+      WaterSpell ws{"WaterSpelltitle1"
+        , "WaterSpelldescription1"};
+      spells.push_back(/*copy*/ ws);
+    }
+    {
+      WaterSpell ws{"WaterSpelltitle2"
+        , "WaterSpelldescription2"};
+      spells.push_back(std::move(ws));
+    }
+    for(const InplaceTypeclass<SpellTraits>& spell
+        : spells)
+    {
+      spell.cast(
+        /*spellname*/ "spellname123"
+        , /*spellpower*/ 123
+        , /*target*/ "target123");
+    }
+  }
+
+  {
+    // `Typeclass<SpellTraits>` must be same as `Spell`
+    // i.e. using Spell = Typeclass<SpellTraits>;
     Typeclass<SpellTraits> myspell{
       FireSpell{"title1", "description1"}};
 
@@ -465,9 +543,10 @@ TEST(Typeclass, TypeclassGeneration) {
   }
 
   {
-    Spell myspell{FireSpell{"title2", "description2"}};
+    FireSpell fireSpell{"title2", "description2"};
+    InplaceTypeclass<SpellTraits> myspell(fireSpell);
 
-    Spell myspell_copy = myspell; // copy Spell
+    InplaceTypeclass<SpellTraits> myspell_copy = myspell; // copy Spell
 
     myspell_copy.set_spell_power(
       /*spellname*/ "spellname2"
@@ -497,9 +576,9 @@ TEST(Typeclass, TypeclassGeneration) {
 
   {
     FireSpell spell {"title4", "description4"};
-    Spell myspell = std::move(spell);
+    InplaceTypeclass<DEFINE_Spell> myspell = std::move(spell);
 
-    Spell myspell_move{std::move(myspell)}; // move Spell
+    InPlaceSpell myspell_move{std::move(myspell)}; // move Spell
 
     myspell_move.set_spell_power(
       /*spellname*/ "spellname4"
@@ -547,7 +626,40 @@ TEST(Typeclass, TypeclassGeneration) {
     }
   }
 
-  DCHECK(false);
+  {
+    std::vector<MagicLongType> spellmagicItems;
+    {
+      MagicLongType pushed{
+        FireSpell{"someTmpSpell0", "someTmpSpell0"}};
+      spellmagicItems.push_back(std::move(pushed));
+    }
+    {
+      Typeclass<DEFINE_MagicLongType> pushed{};
+      MagicLongType someTmpSpell{
+        FireSpell{"someTmpSpell1", "someTmpSpell1"}};
+      pushed = std::move(someTmpSpell); // move
+      spellmagicItems.push_back(std::move(pushed));
+    }
+
+    for(const MagicLongType& it : spellmagicItems) {
+      it.has_P1("p1");
+      it.has_T("t0", 1);
+    }
+  }
+
+  {
+    std::vector<InplaceTypeclass<DEFINE_MagicItem>> magicItems;
+    magicItems.push_back(
+      FireSpell{"FireSpelltitle1", "description1"});
+    magicItems.push_back(
+      WaterSpell{"WaterSpelltitle1", "description1"});
+
+    for(const MagicItem& it
+        : magicItems)
+    {
+      it.has_enough_mana("");
+    }
+  }
 
 #if 0
   // TODO: better example https://blog.rust-lang.org/2015/05/11/traits.html

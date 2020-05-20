@@ -20,6 +20,13 @@ const size_t ReflectedStructInfoCompoundIdSize =
 #include <array>
 #include <functional>
 #include <memory>
+#include <stdexcept>
+#include <utility>
+#include <vector>
+#include <cstddef>
+#include <cassert>
+#include <new>         // launder
+#include <type_traits> // aligned_storage
 
 namespace poly {
 namespace generated {
@@ -98,11 +105,11 @@ struct TypeclassImplBase<[[+ fullBaseType +]]> {
 
   virtual
     std::unique_ptr<TypeclassImplBase>
-      clone() const = 0;
+      clone_as_unique_ptr() const = 0;
 
   virtual
     std::unique_ptr<TypeclassImplBase>
-      move_clone() = 0;
+      move_clone_as_unique_ptr() = 0;
 
 [[~]] /**
 [[~]] Generate functions. Example:
@@ -151,26 +158,36 @@ template< [[+ expandTemplateNames(method->tplParams) +]] >
 [[~]] // where `fullBaseType` is trait like `Printable`
 template<>
 struct Typeclass<[[+ fullBaseType +]]> {
+  // use it when you want to implement logic, example:
+  //  `void has_enough_mana<MagicItem::typeclass>`
+  // using - Type alias, alias template (since C++11)
+  using typeclass
+    = Typeclass<[[+ fullBaseType +]]>;
+
   Typeclass()
     : implBase_{}
   {}
 
   Typeclass(
-    const Typeclass<[[+ fullBaseType +]]>& rhs)
-    : implBase_(rhs.implBase_->clone())
+    const Typeclass<[[+ fullBaseType +]]>
+      & rhs)
+    : implBase_(
+        rhs.implBase_->clone_as_unique_ptr())
   {}
 
-  Typeclass(Typeclass<[[+ fullBaseType +]]>&& rhs)
+  Typeclass(
+    Typeclass<[[+ fullBaseType +]]>
+      && rhs)
   {
-    implBase_ = rhs.implBase_->move_clone();
+    implBase_
+      = rhs.implBase_->move_clone_as_unique_ptr();
   }
 
+  /// \note use TypeclassRef<ImplType> for references
 [[~]] // where ImplType is impl that can behave as `fullBaseType`
   template<
     typename ImplType
-    /// \note use TypeclassRef<ImplType> for references
-    //, typename = IsNotReference<ImplType>
-    /// \note can't pass Typeclass here
+    /// \note can not pass Typeclass here
     , typename std::enable_if<
         !std::is_same<Typeclass, std::decay_t<ImplType>>::value
       >::type* = nullptr
@@ -186,17 +203,43 @@ struct Typeclass<[[+ fullBaseType +]]> {
         (std::forward<ImplType>(impl)))
   {}
 
-  Typeclass<[[+ fullBaseType +]]>& operator=
-    (const Typeclass<[[+ fullBaseType +]]>& rhs)
+  /// \note use Typeclass<ImplType> for references
+[[~]] // where ImplType is impl that can behave as `fullBaseType`
+  template<
+    typename ImplType
+    /// \note can not pass Typeclass here
+    , typename std::enable_if<
+        !std::is_same<Typeclass, std::decay_t<ImplType>>::value
+      >::type* = nullptr
+  >
+  Typeclass& operator=(ImplType&& impl)
   {
-    implBase_ = rhs.implBase_->clone();
+    implBase_
+      = std::make_unique<
+          TypeclassImpl<
+            std::decay_t<ImplType>
+            , [[+ fullBaseType +]]
+          >
+        >
+        (std::forward<ImplType>(impl));
     return *this;
   }
 
   Typeclass<[[+ fullBaseType +]]>& operator=
-    (Typeclass<[[+ fullBaseType +]]>&& rhs)
+    (const Typeclass<[[+ fullBaseType +]]>
+      & rhs)
   {
-    implBase_ = rhs.implBase_->move_clone();
+    implBase_
+      = rhs.implBase_->clone_as_unique_ptr();
+    return *this;
+  }
+
+  Typeclass<[[+ fullBaseType +]]>& operator=
+    (Typeclass<[[+ fullBaseType +]]>
+      && rhs)
+  {
+    implBase_
+      = rhs.implBase_->move_clone_as_unique_ptr();
     return *this;
   }
 
@@ -252,19 +295,431 @@ template< [[+ expandTemplateNames(method->tplParams) +]] >
 [[~]]  } // endscope
 
 private:
-  // This is actually a unique_ptr to an impl type.
+  // This is actually a ptr to an impl type.
   std::unique_ptr<
     TypeclassImplBase<[[+ fullBaseType +]]>
   > implBase_;
 };
 
+/// \note version of typeclass that uses aligned storage
+/// instead of unique_ptr
+// typeclass will store pointer to |implBase_|
+// We use |implBase_| as base class for typeclass instance
+[[~]] // where `fullBaseType` is trait like `Printable`
+template<>
+struct InplaceTypeclassImplBase<[[+ fullBaseType +]]>
+{
+  InplaceTypeclassImplBase() = default;
+
+  // We store a pointer to the base type
+  // and rely on InplaceTypeclassImplBase's virtual dtor to free the object.
+  virtual ~InplaceTypeclassImplBase() {}
+
+  virtual
+    InplaceTypeclassImplBase*
+      clone_as_raw_ptr(void* addr) const = 0;
+
+  virtual
+    InplaceTypeclassImplBase*
+      move_clone_as_raw_ptr(void* addr) = 0;
+
+[[~]] /**
+[[~]] Generate functions. Example:
+[[~]]   virtual void __has_enough_mana(
+[[~]]     const char *spellname) const noexcept = 0 ;
+[[~]] **/
+[[~]]  { // startscope
+[[~]]    for(const auto& method: ReflectedStructInfo->methods) {
+[[~]]      const bool needPrint = isTypeclassMethod(method);
+[[~]]      if(needPrint) {
+[[~]]        const std::string methodSpecificators
+[[~]]           = printMethodForwarding(
+[[~]]               method
+[[~]]               , kSeparatorWhitespace
+[[~]]               // what method printer is allowed to print
+[[~]]               , MethodPrinter::Forwarding::Options::FORWARDING_ALL);
+[[~]]        if(method->isTemplate()) {
+template< [[+ expandTemplateNames(method->tplParams) +]] >
+[[~]]        } // method->isTemplate
+[[+ methodSpecificators +]][[~]] /* no newline */
+[[+ " __" +]][[+ method->name +]][[~]] /* no newline */
+[[~]]   // method has arguments
+  (
+[[+ expandMethodParameterDeclarations(method->params) +]][[~]] /* no newline */
+  ) [[~]] /* no newline */
+[[~]]        const std::string methodTrailing
+[[~]]           = printMethodTrailing(
+[[~]]               method
+[[~]]               , kSeparatorWhitespace
+[[~]]               // what method printer is allowed to print
+[[~]]               , MethodPrinter::Trailing::Options::TRAILING_NOTHING
+[[~]]                 | MethodPrinter::Trailing::Options::CONST
+[[~]]                 | MethodPrinter::Trailing::Options::NOEXCEPT
+[[~]]                 | MethodPrinter::Trailing::Options::PURE
+[[~]]                 | MethodPrinter::Trailing::Options::DELETED
+[[~]]                 | MethodPrinter::Trailing::Options::DEFAULT
+[[~]]                 | MethodPrinter::Trailing::Options::BODY);
+[[+ methodTrailing +]][[~]] /* no newline */
+[[~ /* newline */ ~]]
+[[~]]      } // needPrint
+[[~]]    } // methods endfor
+[[~]]  } // endscope
+
+};
+
+/// \note version of typeclass that uses aligned storage
+/// instead of unique_ptr
+[[~]] // where `fullBaseType` is trait like `Printable`
+template<>
+struct InplaceTypeclass<
+    [[+ fullBaseType +]]
+  >
+{
+  // use it when you want to implement logic, example:
+  //  `void has_enough_mana<MagicItem::typeclass>`
+  // using - Type alias, alias template (since C++11)
+  using typeclass
+    = Typeclass<[[+ fullBaseType +]]>;
+
+  InplaceTypeclass()
+  {}
+
+  InplaceTypeclass(
+    const InplaceTypeclass<
+        [[+ fullBaseType +]]
+      >
+      & rhs)
+  {
+#if !defined(_GLIBCXX_HAVE_BUILTIN_LAUNDER)
+    implBase_ =
+#endif // _GLIBCXX_HAVE_BUILTIN_LAUNDER
+      rhs.__implBase()->clone_as_raw_ptr(&storage_);
+  }
+
+  InplaceTypeclass(
+    InplaceTypeclass<
+        [[+ fullBaseType +]]
+      >
+      && rhs)
+  {
+#if !defined(_GLIBCXX_HAVE_BUILTIN_LAUNDER)
+    implBase_ =
+#endif // _GLIBCXX_HAVE_BUILTIN_LAUNDER
+      rhs.__implBase()->move_clone_as_raw_ptr(&storage_);
+  }
+
+  /// \note static_assert used only for compile-time checks, so
+  /// also don't forget to provide some runtime checks by assert-s
+  /// \note we use template,
+  /// so compiler will be able to
+  /// print required |Size| and |Alignment|
+  template<
+    std::size_t ActualSize
+    , std::size_t ActualAlignment
+  >
+  constexpr
+  inline /* use `inline` to eleminate function call overhead */
+  static
+  void static_validate() noexcept
+  {
+[[~]]  // |AlignPolicyType| and |SizePolicyType| must be
+[[~]]  //  provided by code generator
+[[~]]  if (inlineTypeclassSettings.AlignPolicyType == AlignPolicy::AtLeast)
+[[~]]  {
+
+      static_assert(
+        BufferAlignment >= ActualAlignment
+        , "Typeclass: Alignment must be at least alignof(T)");
+
+[[~]]  }
+[[~]]  else if (inlineTypeclassSettings.AlignPolicyType == AlignPolicy::Exact)
+[[~]]  {
+
+      static_assert(
+        BufferAlignment == ActualAlignment
+        , "Typeclass: Alignment must be at exactly alignof(T)");
+
+[[~]]  }
+[[~]]  else
+[[~]]  {
+
+      // dependent_false yields false only if
+      // previous if branches yield false
+      static_assert(dependent_false<
+          InplaceTypeclass<
+            [[+ fullBaseType +]]
+          >
+        >::value);
+
+[[~]]  }
+[[~]]  if (inlineTypeclassSettings.SizePolicyType == SizePolicy::AtLeast)
+[[~]]  {
+
+      static_assert(
+        BufferSize >= ActualSize
+        , "Typeclass: sizeof(T) must be at least 'Size'");
+
+[[~]]  }
+[[~]]  else if (inlineTypeclassSettings.SizePolicyType == SizePolicy::Exact)
+[[~]]  {
+
+      static_assert(
+        BufferSize == ActualSize
+        , "Typeclass: sizeof(T) must be exactly 'Size'");
+
+[[~]]  }
+[[~]]  else
+[[~]]  {
+
+      // dependent_false yields false only if
+      // previous if branches yield false
+      static_assert(dependent_false<
+          InplaceTypeclass<
+            [[+ fullBaseType +]]
+          >
+        >::value);
+
+[[~]]  }
+  }
+
+  /// \note use InplaceTypeclassRef<ImplType> for references
+[[~]] // where ImplType is impl that can behave as `fullBaseType`
+  template<
+    typename ImplType
+    /// \note can not pass InplaceTypeclass here
+    , typename std::enable_if<
+        !std::is_same<InplaceTypeclass, std::decay_t<ImplType>>::value
+      >::type* = nullptr
+  >
+  InplaceTypeclass(ImplType&& impl)
+  {
+    // wrap static_assert into static_validate
+    // for console message with desired sizeof in case of error
+    static_validate<sizeof(ImplType), alignof(ImplType)>();
+
+#if !defined(_GLIBCXX_HAVE_BUILTIN_LAUNDER)
+    implBase_ =
+#endif // _GLIBCXX_HAVE_BUILTIN_LAUNDER
+      new (&storage_)
+        InplaceTypeclassImpl<
+            std::decay_t<ImplType>
+            , [[+ fullBaseType +]]
+          >(std::forward<ImplType>(impl));
+  }
+
+  /// \note use InplaceTypeclassRef<ImplType> for references
+[[~]] // where ImplType is impl that can behave as `fullBaseType`
+  template<
+    typename ImplType
+    /// \note can not pass InplaceTypeclass here
+    , typename std::enable_if<
+        !std::is_same<InplaceTypeclass, std::decay_t<ImplType>>::value
+      >::type* = nullptr
+  >
+  InplaceTypeclass& operator=(ImplType&& impl)
+  {
+    // wrap static_assert into static_validate
+    // for console message with desired sizeof in case of error
+    static_validate<sizeof(ImplType), alignof(ImplType)>();
+
+    __implBase()->
+      ~InplaceTypeclassImplBase<[[+ fullBaseType +]]>();
+
+#if !defined(_GLIBCXX_HAVE_BUILTIN_LAUNDER)
+    implBase_ =
+#endif // _GLIBCXX_HAVE_BUILTIN_LAUNDER
+      new (&storage_)
+        InplaceTypeclassImpl<
+            std::decay_t<ImplType>
+            , [[+ fullBaseType +]]
+          >(std::forward<ImplType>(impl));
+
+    return *this;
+  }
+
+  InplaceTypeclass<
+    [[+ fullBaseType +]]
+  >& operator=
+    (const InplaceTypeclass<
+        [[+ fullBaseType +]]
+      >
+      & rhs)
+  {
+    __implBase()->
+      ~InplaceTypeclassImplBase<[[+ fullBaseType +]]>();
+
+#if !defined(_GLIBCXX_HAVE_BUILTIN_LAUNDER)
+    implBase_ =
+#endif // _GLIBCXX_HAVE_BUILTIN_LAUNDER
+      rhs.__implBase()->
+        clone_as_raw_ptr(&storage_);
+
+    return *this;
+  }
+
+  InplaceTypeclass<
+    [[+ fullBaseType +]]
+  >& operator=
+    (InplaceTypeclass<
+      [[+ fullBaseType +]]
+    >
+      && rhs)
+  {
+    __implBase()->
+      ~InplaceTypeclassImplBase<[[+ fullBaseType +]]>();
+
+#if !defined(_GLIBCXX_HAVE_BUILTIN_LAUNDER)
+    implBase_ =
+#endif // _GLIBCXX_HAVE_BUILTIN_LAUNDER
+      rhs.__implBase()->
+        move_clone_as_raw_ptr(&storage_);
+
+    return *this;
+  }
+
+[[~]] /**
+[[~]] Generate functions. Example:
+[[~]]   void has_enough_mana(
+[[~]]     const char *spellname) const noexcept   {
+[[~]]       implBase_->__has_enough_mana(spellname);
+[[~]]   }
+[[~]] **/
+[[~]]  { // startscope
+[[~]]    for(const auto& method: ReflectedStructInfo->methods)
+[[~]]    {
+[[~]]      const size_t methodParamsSize = method->params.size();
+[[~]]      const bool needPrint = isTypeclassMethod(method);
+[[~]]      if(needPrint)
+[[~]]      {
+[[~]]         if(method->isTemplate())
+[[~]]         {
+template< [[+ expandTemplateNames(method->tplParams) +]] >
+[[~]]         } // method->isTemplate
+[[~]]         const std::string methodSpecificators
+[[~]]            = printMethodForwarding(
+[[~]]                method
+[[~]]                , kSeparatorWhitespace
+[[~]]               // what method printer is allowed to print
+[[~]]                , MethodPrinter::Forwarding::Options::FORWARDING_ALL
+[[~]]                  & ~MethodPrinter::Forwarding::Options::VIRTUAL);
+[[+ methodSpecificators +]][[~]] /* no newline */
+[[+ " " +]][[+ method->name +]][[~]] /* no newline */
+[[~]]   // method has arguments
+  (
+[[+ expandMethodParameterDeclarations(method->params) +]][[~]] /* no newline */
+  ) [[~]] /* no newline */
+[[~]]        const std::string methodTrailing
+[[~]]           = printMethodTrailing(
+[[~]]               method
+[[~]]               , kSeparatorWhitespace
+[[~]]               // what method printer is allowed to print
+[[~]]               , MethodPrinter::Trailing::Options::TRAILING_NOTHING
+[[~]]                 | MethodPrinter::Trailing::Options::CONST
+[[~]]                 | MethodPrinter::Trailing::Options::NOEXCEPT);
+[[+ methodTrailing +]][[~]] /* no newline */
+  {
+[[~]] // call method from implementation
+    __implBase()->
+      __[[+ method->name +]]
+[[~]]   // method has arguments
+      ([[+ expandMethodParameterNames(method->params) +]]);
+  }
+[[~ /* newline */ ~]]
+[[~]]      } // needPrint
+[[~]]    } // methods endfor
+[[~]]  } // endscope
+
+private:
+  inline /* use `inline` to eleminate function call overhead */
+  InplaceTypeclassImplBase<[[+ fullBaseType +]]>*
+    __implBase() const noexcept
+  {
+#if defined(_GLIBCXX_HAVE_BUILTIN_LAUNDER)
+    // requires std >= 201703L
+    return
+      (InplaceTypeclassImplBase<[[+ fullBaseType +]]>*)
+        (std::launder(&storage_));
+#else // _GLIBCXX_HAVE_BUILTIN_LAUNDER
+    return implBase_;
+#endif // _GLIBCXX_HAVE_BUILTIN_LAUNDER
+  }
+
+private:
+[[~]] if (!inlineTypeclassSettings.BufferSize.empty()) {
+  static constexpr std::size_t BufferSize
+    = [[+ inlineTypeclassSettings.BufferSize +]];
+[[~]] } else { // if !inlineTypeclassSettings.BufferSize.empty()
+  static constexpr std::size_t BufferSize
+    = 64;
+[[~]] } // if !inlineTypeclassSettings.BufferSize.empty()
+
+[[~]] if (!inlineTypeclassSettings.BufferAlignment.empty()) {
+  static const size_t BufferAlignment
+    = [[+ inlineTypeclassSettings.BufferAlignment +]];
+[[~]] } else { // if !inlineTypeclassSettings.BufferAlignment.empty()
+  static const size_t BufferAlignment
+    = std::alignment_of_v<
+        InplaceTypeclassImplBase<[[+ fullBaseType +]]>
+      >;
+[[~]] } // if !inlineTypeclassSettings.BufferAlignment.empty()
+
+
+
+  /// \note avoid UB related to |aligned_storage_t|
+  /// see https://mropert.github.io/2017/12/23/undefined_ducks/
+  /// or use std::launder
+  /// \note |aligned_storage_t| ensures that memory is contiguous in the class,
+  /// avoids cache miss.
+  /// (comparing to dynamic heap allocation approach where impl may be in heap,
+  /// but the class may be in stack or another region in heap)
+  /// \see about `Data Locality` https://gameprogrammingpatterns.com/data-locality.html
+  std::aligned_storage_t<
+      BufferSize
+      , BufferAlignment
+    > storage_
+    {};
+
+#if !defined(_GLIBCXX_HAVE_BUILTIN_LAUNDER)
+  // This is actually a ptr to an impl type.
+  /// \note doing a reinterpret_cast from derived to base
+  /// is not guaranteed to do what you expect.
+  /// A solution to that is to save the result of the new expression
+  /// see https://mropert.github.io/2017/12/23/undefined_ducks/
+  InplaceTypeclassImplBase<[[+ fullBaseType +]]>*
+    implBase_
+    {};
+#endif // _GLIBCXX_HAVE_BUILTIN_LAUNDER
+};
+
 [[~]] if(!targetTypeName.empty()) {
-// Type alias, alias template (since C++11)
-using [[+ targetTypeName +]] = Typeclass<[[+ fullBaseType +]]>;
+
+// using - Type alias, alias template (since C++11)
+using InHeap[[+ targetTypeName +]]
+  = Typeclass<[[+ fullBaseType +]]>;
+
+// using - Type alias, alias template (since C++11)
+using InPlace[[+ targetTypeName +]]
+  = InplaceTypeclass<[[+ fullBaseType +]]>;
+
+[[~]] if(targetGenerator == "InPlace") {
+
+// using - Type alias, alias template (since C++11)
+using [[+ targetTypeName +]]
+  = InPlace[[+ targetTypeName +]];
+
+[[~]] } else {
+
+// using - Type alias, alias template (since C++11)
+using [[+ targetTypeName +]]
+  = InHeap[[+ targetTypeName +]];
+
+[[~]] } // if targetGenerator
 
 // fullBaseType may be VERY long templated type,
 // but we can shorten it with #define
-#define DEFINE_[[+ targetTypeName +]] [[+ fullBaseType +]]
+#define DEFINE_[[+ targetTypeName +]] \
+  [[+ fullBaseType +]]
+
 [[~]] } // if(!targetTypeName.empty())
 
 } // namespace poly

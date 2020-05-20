@@ -55,6 +55,8 @@ namespace generated {
 [[~]]    } // methods endfor
 [[~]]  } // endscope
 
+/// \note If we properly declare our types as final,
+/// the compiler may be able to inline some of the virtual calls.
 [[~]] // where `BaseTypeclassName` is trait like `Printable`
 template<>
 struct
@@ -62,6 +64,8 @@ struct
     [[+ ImplTypeclassName +]],
     [[+ BaseTypeclassName +]]
   >
+[[~]] // mark generated class as final
+[[~]] // note that final can improve performance
   final
   : public TypeclassImplBase<[[+ BaseTypeclassName +]]>
 {
@@ -90,8 +94,14 @@ struct
   {}
 
   std::unique_ptr<
-      TypeclassImplBase<[[+ BaseTypeclassName +]]>>
-  clone() const override final
+    TypeclassImplBase<[[+ BaseTypeclassName +]]>
+  >
+    clone_as_unique_ptr() const
+[[~]] // mark all generated methods as override
+    override
+[[~]] // mark all generated methods as final
+[[~]] // note that final can improve performance
+    final
   {
       // Copy-construct a new instance of TypeclassImpl on the heap.
       return std::make_unique<TypeclassImpl<
@@ -101,8 +111,14 @@ struct
   }
 
   std::unique_ptr<
-      TypeclassImplBase<[[+ BaseTypeclassName +]]>>
-  move_clone() override final
+    TypeclassImplBase<[[+ BaseTypeclassName +]]>
+  >
+    move_clone_as_unique_ptr()
+[[~]] // mark all generated methods as override
+    override
+[[~]] // mark all generated methods as final
+[[~]] // note that final can improve performance
+    final
   {
       // Copy-construct a new instance of TypeclassImpl on the heap.
       return std::make_unique<TypeclassImpl<
@@ -149,7 +165,150 @@ template< [[+ expandTemplateNames(method->tplParams) +]] >
 [[~]]                 | MethodPrinter::Trailing::Options::CONST
 [[~]]                 | MethodPrinter::Trailing::Options::NOEXCEPT);
 [[+ methodTrailing +]][[~]] /* no newline */
-override final
+[[~]] // mark all generated methods as override
+override
+[[~]] // mark all generated methods as final
+[[~]] // note that final can improve performance
+final
+  {
+[[~]] // call method
+    return
+      [[+ method->name +]][[~]] /* no newline */
+[[~]]   // method is templated
+        < Typeclass<[[+ BaseTypeclassName +]]> >[[~]] /* no newline */
+[[~]]   // method has arguments
+        ([[~]] /* no newline */
+          concreteData_[[~]] /* no newline */
+          [[+ methodParamsSize ? ", " : "" +]][[~]] /* no newline */
+          [[+ expandMethodParameterNames(method->params) +]][[~]] /* no newline */
+        );
+  }
+[[~ /* newline */ ~]]
+[[~]]      } // needPrint
+[[~]]    } // methods endfor
+[[~]]  } // endscope
+
+  // Our actual data
+  // that can implement `BaseTypeclassName`
+  // (where `BaseTypeclassName` is trait like `Printable`)
+  [[+ ImplTypeclassName +]] concreteData_;
+};
+
+/// \note version of typeclass that uses aligned storage
+/// instead of unique_ptr
+[[~]] // where `BaseTypeclassName` is trait like `Printable`
+template<>
+struct
+  InplaceTypeclassImpl<
+    [[+ ImplTypeclassName +]],
+    [[+ BaseTypeclassName +]]
+  >
+[[~]] // mark generated class as final
+[[~]] // note that final can improve performance
+  final
+  : public InplaceTypeclassImplBase<[[+ BaseTypeclassName +]]>
+{
+  typedef [[+ ImplTypeclassName +]] type;
+
+  InplaceTypeclassImpl(
+    const [[+ ImplTypeclassName +]]& arg)
+    : concreteData_(arg)
+  {}
+
+  InplaceTypeclassImpl(
+    [[+ ImplTypeclassName +]]&& arg)
+    : concreteData_(std::move(arg))
+  {}
+
+  // Construct the embedded concrete type from multiple arguments.
+  template<typename... args_t>
+  InplaceTypeclassImpl(args_t&&... args)
+    : concreteData_(std::forward<args_t>(args)...)
+  {}
+
+  // Construct the embedded concrete type from multiple arguments.
+  template<typename... args_t>
+  InplaceTypeclassImpl(const args_t&... args)
+    : concreteData_(std::forward<args_t>(args)...)
+  {}
+
+  InplaceTypeclassImplBase<[[+ BaseTypeclassName +]]>*
+    clone_as_raw_ptr(void* addr) const
+[[~]] // mark all generated methods as override
+    override
+[[~]] // mark all generated methods as final
+[[~]] // note that final can improve performance
+    final
+  {
+      // Copy-construct a new instance of InplaceTypeclassImpl
+      return new (addr)
+        InplaceTypeclassImpl<
+        [[+ ImplTypeclassName +]],
+        [[+ BaseTypeclassName +]]
+      >
+      (concreteData_);
+  }
+
+  InplaceTypeclassImplBase<[[+ BaseTypeclassName +]]>*
+    move_clone_as_raw_ptr(void* addr)
+[[~]] // mark all generated methods as override
+    override
+[[~]] // mark all generated methods as final
+[[~]] // note that final can improve performance
+    final
+  {
+      // Copy-construct a new instance of InplaceTypeclassImpl
+      return new (addr)
+        InplaceTypeclassImpl<
+        [[+ ImplTypeclassName +]],
+        [[+ BaseTypeclassName +]]
+      >
+      (std::move(concreteData_));
+  }
+
+[[~]] /**
+[[~]] EXAMPLE:
+[[~]] void __print() const noexcept override final
+[[~]] {
+[[~]]   return print< Printable >(concrete);
+[[~]] }
+[[~]] **/
+[[~]]  { // startscope
+[[~]]    for(const auto& method: ReflectedBaseTypeclass->methods) {
+[[~]]      const size_t methodParamsSize = method->params.size();
+[[~]]      const bool needPrint = isTypeclassMethod(method);
+[[~]]      if(needPrint) {
+[[~]]        if(method->isTemplate()) {
+template< [[+ expandTemplateNames(method->tplParams) +]] >
+[[~]]        } // method->isTemplate
+[[~]]        const std::string methodSpecificators
+[[~]]          = printMethodForwarding(
+[[~]]              method
+[[~]]              , kSeparatorWhitespace
+[[~]]               // what method printer is allowed to print
+[[~]]              , MethodPrinter::Forwarding::Options::FORWARDING_ALL
+[[~]]                & ~MethodPrinter::Forwarding::Options::VIRTUAL);
+[[+ methodSpecificators +]][[~]] /* no newline */
+[[+ " __" +]][[~]] /* no newline */
+[[+ method->name +]][[~]] /* no newline */
+[[~]]   // method has arguments
+  (
+[[+ expandMethodParameterDeclarations(method->params) +]][[~]] /* no newline */
+  ) [[~]] /* no newline */
+[[~]]        const std::string methodTrailing
+[[~]]           = printMethodTrailing(
+[[~]]               method
+[[~]]               , kSeparatorWhitespace
+[[~]]               // what method printer is allowed to print
+[[~]]               , MethodPrinter::Trailing::Options::TRAILING_NOTHING
+[[~]]                 | MethodPrinter::Trailing::Options::CONST
+[[~]]                 | MethodPrinter::Trailing::Options::NOEXCEPT);
+[[+ methodTrailing +]][[~]] /* no newline */
+[[~]] // mark all generated methods as override
+override
+[[~]] // mark all generated methods as final
+[[~]] // note that final can improve performance
+final
   {
 [[~]] // call method
     return

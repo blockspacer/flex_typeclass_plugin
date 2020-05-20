@@ -79,9 +79,26 @@ const char kSettingsPluginName[] = "flex_typeclass_plugin";
 // extern
 const char kOutDirOption[] = "out_dir";
 
+void forEachDeclaredMethod(
+  const std::vector<reflection::MethodInfoPtr>& methods
+  , const base::RepeatingCallback<
+      void(
+        const reflection::MethodInfoPtr&
+        , size_t)
+    >& func
+){
+  size_t index = 0;
+  for(const reflection::MethodInfoPtr& method : methods) {
+    func.Run(method, index);
+    index++;
+  }
+}
+
 bool isTypeclassMethod(
   const reflection::MethodInfoPtr& methodInfo)
 {
+  // only normal member functions should have
+  // wrappers generated for them
   return !methodInfo->isImplicit
       && !methodInfo->isOperator
       && !methodInfo->isCtor
