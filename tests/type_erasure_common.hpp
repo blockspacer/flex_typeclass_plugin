@@ -22,6 +22,11 @@ namespace generated {
 template<class U>
 struct dependent_false : std::false_type {};
 
+// similar to dependent_false
+// used to print type names in static_assert
+template<typename... typeclass>
+struct typename_false : std::false_type {};
+
 /**
  * TypeclassImplBase is the base class for TypeclassImpl.
  * TypeclassImplBase has a pure virtual function
@@ -29,6 +34,11 @@ struct dependent_false : std::false_type {};
  **/
 template<typename... typeclass>
 struct TypeclassImplBase {
+
+  static_assert(
+    typename_false<typeclass...>::value
+    , "unable to find base of Typeclass implementation");
+
   /**
    * TypeclassImplBase has a virtual dtor
    * to trigger TypeclassImpl's dtor.
@@ -61,23 +71,42 @@ struct TypeclassImplBase {
 /// instead of unique_ptr
 template<typename... typeclass>
 struct InplaceTypeclassImplBase {
+  static_assert(
+    typename_false<typeclass...>::value
+    , "unable to find base of Typeclass implementation");
 };
 
 // TypeclassImpl has the storage for the object of type_t (typename).
 template<typename type_t, typename... typeclass>
-struct TypeclassImpl : public TypeclassImplBase<typeclass...> {
+struct TypeclassImpl
+  : public TypeclassImplBase<typeclass...>
+{
   typedef type_t type;
+
+  static_assert(
+    typename_false<type_t, typeclass...>::value
+    , "unable to find Typeclass implementation");
 };
 
 /// \note version of typeclass that uses aligned storage
 /// instead of unique_ptr
 template<typename type_t, typename... typeclass>
-struct InplaceTypeclassImpl : public TypeclassImplBase<typeclass...> {
+struct InplaceTypeclassImpl
+  : public TypeclassImplBase<typeclass...>
+{
   typedef type_t type;
+
+  static_assert(
+    typename_false<type_t, typeclass...>::value
+    , "unable to find Typeclass implementation");
 };
 
 template<typename... typeclass>
-struct Typeclass {
+struct Typeclass
+{
+  static_assert(
+    typename_false<typeclass...>::value
+    , "unable to find Typeclass");
 };
 
 /// \note version of typeclass that uses aligned storage
@@ -85,7 +114,11 @@ struct Typeclass {
 template<
   typename... typeclass
 >
-struct InplaceTypeclass {
+struct InplaceTypeclass
+{
+  static_assert(
+    typename_false<typeclass...>::value
+    , "unable to find in-place Typeclass");
 };
 
 template<typename T>

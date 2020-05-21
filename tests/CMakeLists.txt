@@ -51,9 +51,14 @@ set(generated_typeclasses
   #${flextool_outdir}/LongMagicItemSpell.typeclass_combo.generated.cpp
   ${flextool_outdir}/Spell.typeclass.generated.cpp
   ${flextool_outdir}/MagicLongType.typeclass.generated.cpp
+  # IntSummable
+  #${flextool_outdir}/IntSummable.typeclass.generated.hpp
+  #${flextool_outdir}/int_IntSummable.typeclass_instance.generated.hpp
+  #${flextool_outdir}/double_IntSummable.typeclass_instance.generated.hpp
 )
 
-# generated files
+# Set GENERATED properties of your generated source file.
+# So cmake won't complain about missing source file.
 set_source_files_properties(
   ${generated_typeclasses}
   PROPERTIES GENERATED 1)
@@ -66,39 +71,47 @@ get_property(${LIB_NAME}_location TARGET "${LIB_NAME}" PROPERTY LIBRARY_OUTPUT_D
 set(${LIB_NAME}_file "${${LIB_NAME}_location}/${LIB_NAME}${CMAKE_SHARED_LIBRARY_SUFFIX}")
 message(STATUS "${LIB_NAME} file == ${${LIB_NAME}_file}")
 
-# link with library via --extra-arg=-l
-#--extra-arg=-l${flexlib_file}
+# you can link with library via --extra-arg=-l
+# example: --extra-arg=-l${flexlib_file}
 add_custom_command(
-    #TARGET ${LIB_NAME}
-    #POST_BUILD
     OUTPUT ${generated_typeclasses}
-    COMMAND ${flextool}
-          --vmodule=*=200 --enable-logging=stderr --log-level=100
-          --indir=${CMAKE_SOURCE_DIR}
-          --outdir=${flextool_outdir}
-          --load_plugin=${flex_squarets_plugin}
-          #--load_plugin=${flex_meta_plugin}
-          --load_plugin=${flex_reflect_plugin}
-          --load_plugin=${${LIB_NAME}_file}
-          --extra-arg=-I${cling_includes}
-          --extra-arg=-I${clang_includes}
-          --extra-arg=-I${corrade_includes}
-          --extra-arg=-I${entt_includes}
-          # NOTE: Cling does not support compile_commands.json
-          # so we must add headers used by `flex_support_headers` package
-          # place into `flex_support_headers` includes that can be used by Cling
-          --extra-arg=-I${chromium_base_headers}
-          --extra-arg=-I${chromium_build_util_headers}
-          --extra-arg=-I${basis_headers}
-          --extra-arg=-I${flexlib_headers}
-          --extra-arg=-DCLING_IS_ON=1
-          # path to tests/example_datatypes.hpp
-          --extra-arg=-I${CMAKE_CURRENT_SOURCE_DIR}
-          --extra-arg=-Wno-undefined-inline
-          ${flextool_extra_args}
-          ${flextool_input_files}
-          --cling_scripts=${flex_support_headers}
-          --cling_scripts=${flex_typeclass_plugin_settings}
+    # code generator COMMAND will only be launched
+    # if some of DEPENDS files were changed.
+    DEPENDS
+      ${flextool_input_files}
+    #COMMAND
+    #  ${CMAKE_COMMAND} -E echo " Removing ${generated_typeclasses}."
+    #COMMAND
+    #  ${CMAKE_COMMAND} -E remove ${generated_typeclasses}
+    COMMAND
+      ${flextool}
+        --vmodule=*=200 --enable-logging=stderr --log-level=100
+        --indir=${CMAKE_SOURCE_DIR}
+        --outdir=${flextool_outdir}
+        --load_plugin=${flex_squarets_plugin}
+        #--load_plugin=${flex_meta_plugin}
+        --load_plugin=${flex_reflect_plugin}
+        --load_plugin=${${LIB_NAME}_file}
+        --extra-arg=-I${cling_includes}
+        --extra-arg=-I${clang_includes}
+        --extra-arg=-I${corrade_includes}
+        --extra-arg=-I${entt_includes}
+        # NOTE: Cling does not support compile_commands.json
+        # so we must add headers used by `flex_support_headers` package
+        # place into `flex_support_headers` includes that can be used by Cling
+        --extra-arg=-I${chromium_base_headers}
+        --extra-arg=-I${chromium_build_util_headers}
+        --extra-arg=-I${basis_headers}
+        --extra-arg=-I${flexlib_headers}
+        --extra-arg=-DCLING_IS_ON=1
+        # path to tests/example_datatypes.hpp
+        --extra-arg=-I${CMAKE_CURRENT_SOURCE_DIR}
+        --extra-arg=-Wno-undefined-inline
+        ${flextool_extra_args}
+        ${flextool_input_files}
+        # cling_scripts must be ending argument
+        --cling_scripts=${flex_support_headers}
+        --cling_scripts=${flex_typeclass_plugin_settings}
     DEPENDS ${LIB_NAME} ${ROOT_PROJECT_LIB} ${${LIB_NAME}_file}
     COMMENT "running ${flextool}"
     VERBATIM # to support \t for example

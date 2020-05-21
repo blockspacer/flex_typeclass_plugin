@@ -2,11 +2,13 @@
 
 Plugin for [https://github.com/blockspacer/flextool](https://github.com/blockspacer/flextool)
 
-Plugin provides support for typeclasses (or Rust-like traits or "TEPS" - "Type Erasure Parent Style" or virtual concepts).
+Plugin provides support for typeclasses (or Rust-like traits or "TEPS" - "Type Erasure Parent Style" or virtual concepts, etc.).
 
-If you don`t know why to use C++ typeclasses see https://www.youtube.com/watch?v=OtU51Ytfe04
+Note that plugin output is valid C++ code: you can open generated files and debug them as usual.
 
-See for details [https://blockspacer.github.io/flex_docs/](https://blockspacer.github.io/flex_docs/)
+If you do not know why to use C++ typeclasses see https://www.youtube.com/watch?v=OtU51Ytfe04
+
+See for details about flextool [https://blockspacer.github.io/flex_docs/](https://blockspacer.github.io/flex_docs/)
 
 See for more details about typeclasses and `Polymorphic Ducks`:
 
@@ -53,7 +55,6 @@ MagicItemTraits {
 we want to allow `FireSpell` to be used with `MagicItemTraits` as `MagicItem`
 
 ```cpp
-// like impl for trait
 struct FireSpell {
   std::string title = "FireSpell";
   std::string description = "FireSpell";
@@ -75,21 +76,75 @@ tcFireSpell->has_enough_mana("...");
 
 `Typeclass<MagicItemTraits>` will be able to store not only `FireSpell` (Inheritance-free polymorphism).
 
-Note that we separated data (`FireSpell`), interface (`MagicItemTraits`) and implementation (see `has_enough_mana` below).
+Note that we separated data (`FireSpell`), interface (`MagicItemTraits`) and implementation (see definition of `has_enough_mana` below).
 
 1. generete typeclass
 
 ```cpp
+// generates typeclass MagicItem
+// that must have same functions as
+// MagicItemTraits
 _typeclass(public MagicItemTraits, name = MagicItem)
 ```
 
-generates class `Typeclass<MagicItemTraits>`
+generates class `Typeclass<MagicItemTraits>` and `using MagicItem = Typeclass<MagicItemTraits>;`
+
+```cpp
+// simplified pseudo-code that uses shared_ptr
+class Typeclass<MagicItemTraits>
+{
+  public:
+    template <class T>
+    Typeclass(T data)
+      : self_(std::make_shared<
+          // pseudo-code for simplicity
+          TypeclassImpl<T,MagicItemTraits>
+        >(data)) {}
+
+    // External interface: Just forward the call to the wrapped object.
+    void has_enough_mana<MagicItem::typeclass>
+      (const char* spellname) const {
+        self_->has_enough_mana(spellname);
+    }
+
+  private:
+    // The abstract base class is hidden under the covers...
+    struct TypeclassImplBase<MagicItemTraits>
+    {
+        virtual ~TypeclassImplBase() = default;
+        virtual void has_enough_mana
+          (const char* spellname) const = 0;
+    };
+
+    // ... and so are the templates.
+    template <class T>
+    class TypeclassImpl<FireSpell,MagicItemTraits>
+      : public TypeclassImplBase<MagicItemTraits>
+    {
+      public:
+        TypeclassImpl(T data) : data_(data) {}
+        virtual void has_enough_mana
+          (const char* spellname) const override {
+            // Forward call
+            data_.has_enough_mana(spellname);
+        }
+
+      private:
+        T data_;
+    };
+
+    // in most cases object will be stored not in shared_ptr
+    std::shared_ptr<const TypeclassImplBase<MagicItemTraits>> self_;
+};
+```
 
 `Typeclass<MagicItemTraits>` stores pointer to `TypeclassImplBase<MagicItemTraits>`
 
-`TypeclassImplBase<MagicItemTraits>` will be used as base class
+`TypeclassImplBase<MagicItemTraits>` will be used as base class.
 
-`name` parameter is optional, `name = MagicItem` generates
+`TypeclassImplBase` is Concept - abstract base class that is hidden under the covers.
+
+`name` parameter is optional, `name = MagicItem` used to generate:
 
 ```cpp
 using MagicItem = Typeclass<MagicItemTraits>;
@@ -97,11 +152,24 @@ using MagicItem = Typeclass<MagicItemTraits>;
 
 also `name` parameter controls name of generated `.hpp` and `.cpp` files.
 
+```cpp
+// will generate files with names based on `name = MagicItem`:
+// 1. MagicItem.typeclass.generated.cpp
+// 2. MagicItem.typeclass.generated.hpp
+_typeclass(public MagicItemTraits, name = MagicItem)
+```
+
 2. generete typeclass instance
 
 ```cpp
-_apply(
-  typeclass_instance(target = "FireSpell", "MagicItemTraits")
+// will generate files with names based on `target = "FireSpell"`:
+// 1. FireSpell_MagicItem.typeclass_instance.generated.cpp
+// 2. FireSpell_MagicItem.typeclass_instance.generated.hpp
+_generate(
+  typeclass_instance(
+    impl_target = "FireSpell"
+    , "MagicItem"
+  )
 )
 ```
 
@@ -109,12 +177,14 @@ generates class `TypeclassImpl<FireSpell,MagicItemTraits>`
 
 `TypeclassImpl<FireSpell,MagicItemTraits>` stores `MagicItemTraits` as private member
 
-`TypeclassImpl<FireSpell,MagicItemTraits>` inherits from `TypeclassImplBase<MagicItemTraits>`
+`TypeclassImpl<FireSpell,MagicItemTraits>` inherits from `TypeclassImplBase<MagicItemTraits>`.
+
+`TypeclassImpl` is Model - class that stores data and implements Concept.
 
 3. define functionality related to typeclass instance
 
 ```cpp
-#include "FireSpell_MagicItemTraits.typeclass_instance.generated.hpp"
+#include "FireSpell_MagicItem.typeclass_instance.generated.hpp"
 
 namespace poly {
 namespace generated {
@@ -123,15 +193,17 @@ namespace generated {
 // MagicItemTraits is base class (typeclass)
 template<>
 void has_enough_mana<MagicItem::typeclass>
-    (const FireSpell& data, const char* spellname) noexcept {
-    /// \note don`t use get_concrete<type> here, it may be get_concrete<ref_type>
-    std::cout << "(lib1) has_enough_mana " << " by "
-      << data.title << " " << spellname << std::endl;
+  (const FireSpell& data, const char* spellname) noexcept
+{
+  std::cout << "(lib1) has_enough_mana " << " by "
+    << data.title << " " << spellname << std::endl;
 }
 
 } // namespace poly
 } // namespace generated
 ```
+
+where `MagicItem::typeclass` is `InHeapTypeclass<MagicItem>` or `InPlaceTypeclass<MagicItem>` etc. (based on chosen type of code generator)
 
 i.e. we can now do
 
@@ -158,6 +230,11 @@ has_enough_mana<MagicItem::typeclass>(fs, "spellname");
 Use `generator = InPlace` with custom `BufferSize`:
 
 ```cpp
+// generates typeclass MagicItem
+// that must have same functions as
+// MagicItemTraits
+// We specified `BufferSize = 64` and `generator = InPlace`
+// to optimize performance
 _typeclass(
   "name = MagicItem"
   ", generator = InPlace"
@@ -168,7 +245,7 @@ _typeclass(
 
 `generator = InPlace` will generate code that uses aligned storage.
 
-Storage will use the given size (`BufferSize = 64`)
+Storage will use the provided size (`BufferSize = 64`)
 
 If storage can not hold provided type, than `static_assert` will raise comilation error (you can see correct size in error message and fix `BufferSize` based on it).
 
@@ -218,6 +295,265 @@ has_enough_mana<MagicItem::typeclass>(fs, "spellname");
 ```
 
 This is useful when you don't know beforehand what type of object you will be using.
+
+## Implementation note: typeclass and templated concepts
+
+Our implementation allows to use concepts with templates:
+
+```cpp
+template<typename T1, typename T2>
+struct
+MagicTemplatedTraits {
+  virtual void has_T(const T1& name1, const T2& name2) const noexcept = 0;
+};
+
+// generates typeclass MagicLongTypeExample
+// that must have same functions as
+// MagicTemplatedTraits<std::string, int>
+_typeclass(
+  "name = MagicLongTypeExample"
+  , public MagicTemplatedTraits<std::string, int>
+)
+
+// note that we combined multiple concepts,
+// where each concept with `template`
+_typeclass(
+  "name = MagicLongType"
+  , public MagicTemplatedTraits<std::string, int>
+  , public ParentTemplatedTraits_1<const char *>
+  , public ParentTemplatedTraits_2<const int &>
+)
+
+// note that we use "MagicLongType" as alias (by "name = MagicLongType")
+// because without alias type will be too long, like
+// FireSpell_MagicTemplated_std__string__int__ParentTemplated_1_const_char____ParentTemplated_2_const_int___
+// code below allows to create short file name like
+// FireSpell_MagicLongType.typeclass_instance.generated.hpp
+_generate(
+  typeclass_instance(
+    impl_target = "FireSpell"
+    , "MagicLongType"
+  )
+)
+
+// implement generated functions somewhere
+
+namespace poly {
+namespace generated {
+
+template<>
+void has_T<
+    MagicLongType
+  >(const FireSpell& data
+  , const std::string &name1
+  , const int &name2) noexcept
+{
+  /// \note do not use get_concrete<type> here, it may be get_concrete<ref_type>
+  LOG(WARNING)
+    << "(Fire) has_T on " << name1
+    << " by " << name2 << " "
+    << " by "
+    << data.title
+    << " ";
+}
+
+template<>
+void has_P1<
+    MagicLongType::typeclass
+  >(const FireSpell& data, const char *name1) noexcept
+{
+  /// \note do not use get_concrete<type> here, it may be get_concrete<ref_type>
+  LOG(WARNING)
+    << "(FireSpell) has_P1 on " << name1
+    << " by "
+    << data.title
+    << " ";
+}
+
+template<>
+void has_P2<
+    MagicLongType::typeclass
+  >(const FireSpell& data, const int& name1) noexcept
+{
+  /// \note do not use get_concrete<type> here, it may be get_concrete<ref_type>
+  LOG(WARNING)
+    << "(FireSpell) has_P2 on " << name1
+    << " by "
+    << data.title
+    << " ";
+}
+
+} // namespace poly
+} // namespace generated
+
+// usage
+{
+  std::vector<MagicLongType> spellmagicItems;
+  {
+    MagicLongType pushed{
+      FireSpell{"someTmpSpell0", "someTmpSpell0"}};
+    spellmagicItems.push_back(std::move(pushed));
+  }
+  {
+    Typeclass<DEFINE_MagicLongType> pushed{};
+    MagicLongType someTmpSpell{
+      FireSpell{"someTmpSpell1", "someTmpSpell1"}};
+    pushed = std::move(someTmpSpell); // move
+    spellmagicItems.push_back(std::move(pushed));
+  }
+
+  for(const MagicLongType& it : spellmagicItems) {
+    it.has_P1("p1");
+    it.has_T("t0", 1);
+  }
+}
+```
+
+## Implementation note: typeclass-related functions
+
+Most of other typeclass implementations do not use `template<>` to implement typeclass-related functions.
+
+```cpp
+// possible issue if two typeclass-es must have function `has_enough_mana`
+void has_enough_mana
+  (const FireSpell& data, const char* spellname) noexcept
+{
+  /// ...
+}
+```
+
+Usage of `template<>` may solve problems related to possible collision of function names in different typeclass-es.
+
+```cpp
+// `template` allows to say that logic
+// must be implemented only for typeclass `MagicItem`.
+template<>
+void has_enough_mana<MagicItem::typeclass>
+  (const FireSpell& data, const char* spellname) noexcept
+{
+  /// ...
+}
+```
+
+That approach is inspired by Rust where you can write code like
+
+```rust
+impl MagicItem for FireSpell {
+  fn has_enough_mana(&self) {
+    // ...
+  }
+}
+```
+
+## How to combine mul­tiple con­cepts (typeclass-es)
+
+You can find details about that problem at [https://aherrmann.github.io/programming/2014/10/19/type-erasure-with-merged-concepts/](https://aherrmann.github.io/programming/2014/10/19/type-erasure-with-merged-concepts/)
+
+### Approach 1: one model (single model stores whole data)
+
+Merge typeclass-es, use only one model.
+
+```cpp
+struct Opener {
+  virtual void open() const noexcept = 0;
+};
+
+struct Greeter {
+  virtual void greet() const noexcept = 0;
+};
+
+$typeclass(
+  "name = OpenerAndGreeter"
+  , public Opener
+  , public Greeter
+)
+```
+
+For example, `class OpenerAndGreeter` can store:
+
+```cpp
+OpenerAndGreeter model;
+```
+
+And you can use it like below:
+
+```cpp
+OpenerAndGreeter openerAndGreeter{
+  // some data...
+};
+openerAndGreeter.open();
+openerAndGreeter.greet();
+```
+
+Pros:
+- Good performance
+- Good memory usage
+- Usefull when you want to make each typeclass NOT optional.
+
+Cons:
+- Function names from different typeclasses must not collide.
+
+### Approach 2: multiple optional models (each model stores separate data)
+
+Merge typeclass-es, use multiple optional models.
+
+```cpp
+struct Opener {
+  virtual void open() const noexcept = 0;
+};
+
+struct Greeter {
+  virtual void greet() const noexcept = 0;
+};
+
+$typeclass_combination(
+  "name = OpenerAndGreeter"
+  , public Opener
+  , public Greeter
+)
+```
+
+Allows to make each model of typeclass optional.
+
+For example, `class OpenerAndGreeter` can store:
+
+```cpp
+optional<Opener> opener_model;
+optional<Greeter> greeter_model;
+```
+
+And you can use it like below:
+
+```cpp
+OpenerAndGreeter openerAndGreeter;
+
+openerAndGreeter.set<Opener>(
+  Opener{
+    // some data...
+  }
+);
+
+if(openerAndGreeter.has<Opener>())
+  openerAndGreeter.open<Opener>();
+
+openerAndGreeter.set<Greeter>(
+  Greeter{
+    // some data...
+  }
+);
+
+if(openerAndGreeter.has<Greeter>())
+  openerAndGreeter.greet<Greeter>();
+```
+
+Pros:
+- Function names from different typeclasses can collide.
+- Usefull when you want to make each typeclass optional.
+
+Cons:
+- Normal performance
+- Normal memory usage
+
 
 ## Development flow (for contributors)
 
@@ -323,7 +659,7 @@ Note that `conanfile.py` modified to detect local builds via `self.in_local_cach
 
 After change source in folder local_build (run commands in source package folder):
 
-```
+```bash
 conan build . \
   --build-folder local_build
 

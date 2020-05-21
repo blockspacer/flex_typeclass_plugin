@@ -55,6 +55,7 @@ namespace generated {
 [[~]]    } // methods endfor
 [[~]]  } // endscope
 
+// It is Model - class that stores data and implements Concept.
 /// \note If we properly declare our types as final,
 /// the compiler may be able to inline some of the virtual calls.
 [[~]] // where `BaseTypeclassName` is trait like `Printable`
@@ -194,6 +195,7 @@ final
   [[+ ImplTypeclassName +]] concreteData_;
 };
 
+// It is Model - class that stores data and implements Concept.
 /// \note version of typeclass that uses aligned storage
 /// instead of unique_ptr
 [[~]] // where `BaseTypeclassName` is trait like `Printable`

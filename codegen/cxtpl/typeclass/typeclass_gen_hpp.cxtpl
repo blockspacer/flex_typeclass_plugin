@@ -92,7 +92,9 @@ namespace generated {
 [[~]]    } // methods endfor
 [[~]]  } // endscope
 
-// typeclass will store pointer to |implBase_|
+// It is Concept - abstract base class
+// that is hidden under the covers.
+// Typeclass will store pointer to |implBase_|
 // We use |implBase_| as base class for typeclass instance
 [[~]] // where `fullBaseType` is trait like `Printable`
 template<>
@@ -285,7 +287,7 @@ template< [[+ expandTemplateNames(method->tplParams) +]] >
 [[+ methodTrailing +]][[~]] /* no newline */
   {
 [[~]] // call method from implementation
-    implBase_->__[[+ method->name +]]
+    return implBase_->__[[+ method->name +]]
 [[~]]   // method has arguments
       ([[+ expandMethodParameterNames(method->params) +]]);
   }
@@ -301,9 +303,11 @@ private:
   > implBase_;
 };
 
+// It is Concept - abstract base class
+// that is hidden under the covers.
 /// \note version of typeclass that uses aligned storage
 /// instead of unique_ptr
-// typeclass will store pointer to |implBase_|
+// Typeclass will store pointer to |implBase_|
 // We use |implBase_| as base class for typeclass instance
 [[~]] // where `fullBaseType` is trait like `Printable`
 template<>
@@ -581,7 +585,7 @@ struct InplaceTypeclass<
 [[~]] Generate functions. Example:
 [[~]]   void has_enough_mana(
 [[~]]     const char *spellname) const noexcept   {
-[[~]]       implBase_->__has_enough_mana(spellname);
+[[~]]       return implBase_->__has_enough_mana(spellname);
 [[~]]   }
 [[~]] **/
 [[~]]  { // startscope
@@ -619,7 +623,7 @@ template< [[+ expandTemplateNames(method->tplParams) +]] >
 [[+ methodTrailing +]][[~]] /* no newline */
   {
 [[~]] // call method from implementation
-    __implBase()->
+    return __implBase()->
       __[[+ method->name +]]
 [[~]]   // method has arguments
       ([[+ expandMethodParameterNames(method->params) +]]);

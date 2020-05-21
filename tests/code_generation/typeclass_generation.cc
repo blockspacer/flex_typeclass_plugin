@@ -8,6 +8,14 @@ namespace only_for_code_generation {
 
 // like `trait`
 _typeclass(
+  "name = IntSummable"
+  ", generator = InPlace"
+  ", BufferSize = 64"
+  , public SummableTraits<int, int>
+)
+
+// like `trait`
+_typeclass(
   "name = MagicItem"
   ", generator = InPlace"
   ", BufferSize = 64"
@@ -41,6 +49,38 @@ _typeclass(
   , public SpellTraits
 )
 
+// generates FireSpell_IntSummable
+// like impl for trait
+// allow typeclass<IntSummableTraits> to store FireSpell
+_generate(
+  typeclass_instance(
+    impl_target = "FireSpell"
+    , "IntSummable"
+  )
+)
+
+// generates int_IntSummable
+// like impl for trait
+// allow typeclass<IntSummableTraits> to store int
+_generate(
+  typeclass_instance(
+    impl_target = "int"
+    , "IntSummable"
+  )
+)
+
+// Usage: sum int with int
+// generates double_IntSummable
+// like impl for trait
+// allow typeclass<IntSummableTraits> to store double
+_generate(
+  typeclass_instance(
+    impl_target = "double"
+    , "IntSummable"
+  )
+)
+
+// Usage: sum int with double
 // generates FireSpell_MagicItem
 // like impl for trait
 // allow typeclass<MagicItemTraits> to store FireSpell

@@ -161,6 +161,12 @@
 
 //#include "LongMagicItemSpell.typeclass_combo.generated.hpp"
 
+
+#include "IntSummable.typeclass.generated.hpp"
+#include "FireSpell_IntSummable.typeclass_instance.generated.hpp"
+#include "int_IntSummable.typeclass_instance.generated.hpp"
+#include "double_IntSummable.typeclass_instance.generated.hpp"
+
 #include "Spell.typeclass.generated.hpp"
 #include "FireSpell_MagicItem.typeclass_instance.generated.hpp"
 
@@ -185,8 +191,7 @@ template<>
 void has_enough_mana<MagicItem::typeclass>
   (const FireSpell& data, const char* spellname) noexcept
 {
-  /// \note don`t use get_concrete<type> here, it may be get_concrete<ref_type>
-  LOG(WARNING)
+  LOG(INFO)
     << "(lib1) has_enough_mana " << " by "
     << data.title << " " << spellname;
 }
@@ -203,8 +208,7 @@ template<>
 void has_enough_mana<Typeclass<DEFINE_MagicItem>>
   (const WaterSpell& data, const char* spellname) noexcept
 {
-  /// \note don`t use get_concrete<type> here, it may be get_concrete<ref_type>
-  LOG(WARNING)
+  LOG(INFO)
     << "(lib1) has_enough_mana " << " by "
     << data.title << " " << spellname;
 }
@@ -222,8 +226,7 @@ void has_T<
   , const std::string &name1
   , const int &name2) noexcept
 {
-  /// \note don`t use get_concrete<type> here, it may be get_concrete<ref_type>
-  LOG(WARNING)
+  LOG(INFO)
     << "(Fire) has_T on " << name1
     << " by " << name2 << " "
     << " by "
@@ -236,8 +239,7 @@ void has_P1<
     MagicLongType::typeclass
   >(const FireSpell& data, const char *name1) noexcept
 {
-  /// \note don`t use get_concrete<type> here, it may be get_concrete<ref_type>
-  LOG(WARNING)
+  LOG(INFO)
     << "(FireSpell) has_P1 on " << name1
     << " by "
     << data.title
@@ -249,8 +251,7 @@ void has_P2<
     MagicLongType::typeclass
   >(const FireSpell& data, const int& name1) noexcept
 {
-  /// \note don`t use get_concrete<type> here, it may be get_concrete<ref_type>
-  LOG(WARNING)
+  LOG(INFO)
     << "(FireSpell) has_P2 on " << name1
     << " by "
     << data.title
@@ -270,8 +271,7 @@ void has_T<
   , const std::string &name1
   , const int &name2) noexcept
 {
-  /// \note don`t use get_concrete<type> here, it may be get_concrete<ref_type>
-  LOG(WARNING)
+  LOG(INFO)
     << "(WaterSpell) has_T on "
     << name1
     << " by "
@@ -284,8 +284,7 @@ void has_P1<
     MagicLongType::typeclass
   >(const WaterSpell& data, const char *name1) noexcept
 {
-  /// \note don`t use get_concrete<type> here, it may be get_concrete<ref_type>
-  LOG(WARNING)
+  LOG(INFO)
     << "(WaterSpell) has_P1 on " << name1
     << " by "
     << data.title
@@ -297,8 +296,7 @@ void has_P2<
     MagicLongType
   >(const WaterSpell& data, const int& name1) noexcept
 {
-  /// \note don`t use get_concrete<type> here, it may be get_concrete<ref_type>
-  LOG(WARNING)
+  LOG(INFO)
     << "(WaterSpell) has_P2 on " << name1;
 }
 
@@ -312,7 +310,7 @@ template<>
 void print<Printable::typeclass>
   (const FireSpell& data) noexcept
 {
-  LOG(WARNING)
+  LOG(INFO)
     << "(lib1) print for FireSpell "
     << data.title << " " << data.description;
 }
@@ -330,7 +328,7 @@ template<>
 void print<Printable>
   (const WaterSpell& data) noexcept
 {
-  LOG(WARNING)
+  LOG(INFO)
     << "(lib1) print for WaterSpell "
     << data.title << " " << data.description;
 }
@@ -349,8 +347,7 @@ void cast<Spell::typeclass>
   (const FireSpell& data, const char* spellname, const int spellpower,
    const char* target) noexcept
 {
-  /// \note don`t use get_concrete<type> here, it may be get_concrete<ref_type>
-  LOG(WARNING)
+  LOG(INFO)
     << "(lib1) cast on " << target
     << " by " << data.title << " " << spellname
     << " with " << spellpower;
@@ -360,7 +357,7 @@ template<>
 void has_spell<Spell>(
   const FireSpell& data, const char *spellname ) noexcept
 {
-  LOG(WARNING)
+  LOG(INFO)
     << "(lib1) has_spell by "
     << data.title << " " << spellname
     << " with " << spellname;
@@ -371,7 +368,7 @@ void add_spell<Spell::typeclass>(
   const FireSpell& data
   , const char *spellname ) noexcept
 {
-  LOG(WARNING)
+  LOG(INFO)
     << "(lib1) add_spell by " << data.title << " " << spellname
     << " with " << spellname;
 }
@@ -381,7 +378,7 @@ void remove_spell<Spell::typeclass>(
   const FireSpell& data
   , const char *spellname ) noexcept
 {
-  LOG(WARNING)
+  LOG(INFO)
     << "(lib1) remove_spell by " << data.title << " " << spellname
     << " with " << spellname;
 }
@@ -392,8 +389,7 @@ void set_spell_power<Spell::typeclass>
     , const char *spellname
     , const int spellpower) noexcept
 {
-  /// \note don`t use get_concrete<type> here, it may be get_concrete<ref_type>
-  LOG(WARNING)
+  LOG(INFO)
     << "(lib1) set_spell_power by " << data.title << " " << spellname
     << " with " << spellpower;
 }
@@ -417,8 +413,7 @@ void cast<Spell::typeclass>
   , const int spellpower,
    const char* target) noexcept
 {
-  /// \note don`t use get_concrete<type> here, it may be get_concrete<ref_type>
-  LOG(WARNING)
+  LOG(INFO)
     << "(lib1) cast on " << target
     << " by " << data.title << " " << spellname
     << " with " << spellpower;
@@ -428,7 +423,7 @@ template<>
 void has_spell<Spell::typeclass>(
   const WaterSpell& data, const char *spellname ) noexcept
 {
-  LOG(WARNING)
+  LOG(INFO)
     << "(lib1) has_spell by "
     << data.title << " " << spellname
     << " with " << spellname;
@@ -438,7 +433,7 @@ template<>
 void add_spell<Spell::typeclass>(
   const WaterSpell& data, const char *spellname ) noexcept
 {
-  LOG(WARNING)
+  LOG(INFO)
     << "(lib1) add_spell by " << data.title << " " << spellname
     << " with " << spellname;
 }
@@ -447,7 +442,7 @@ template<>
 void remove_spell<Spell>(
   const WaterSpell& data, const char *spellname ) noexcept
 {
-  LOG(WARNING)
+  LOG(INFO)
     << "(lib1) remove_spell by " << data.title << " " << spellname
     << " with " << spellname;
 }
@@ -458,8 +453,7 @@ void set_spell_power<Spell::typeclass>
   , const char *spellname
   , const int spellpower) noexcept
 {
-  /// \note don`t use get_concrete<type> here, it may be get_concrete<ref_type>
-  LOG(WARNING)
+  LOG(INFO)
     << "(lib1) set_spell_power by " << data.title << " " << spellname
     << " with " << spellpower;
 }
@@ -480,10 +474,37 @@ void some_test_func_proxy<Printable::typeclass>
 //void some_test_func_proxy<Printable::typeclass>
 //  (const FireSpell& data, const char* arg1) noexcept
 //{
-//  LOG(WARNING)
+//  LOG(INFO)
 //    << "(lib1) print for FireSpell "
 //    << data.title << " " << data.description;
 //}
+
+} // namespace poly
+} // namespace generated
+
+namespace poly {
+namespace generated {
+
+template<>
+int sum_with<IntSummable::typeclass>
+  (const FireSpell& data, const int arg1, const int arg2) noexcept
+{
+  return data.title.size() + arg1 + arg2;
+}
+
+template<>
+int sum_with<IntSummable::typeclass>
+  (const int& data, const int arg1, const int arg2) noexcept
+{
+  return data + arg1 + arg2;
+}
+
+template<>
+int sum_with<IntSummable::typeclass>
+  (const double& data, const int arg1, const int arg2) noexcept
+{
+  return data + arg1 + arg2;
+}
 
 } // namespace poly
 } // namespace generated
@@ -493,8 +514,7 @@ void some_test_func
 {
   data.title = "changed title";
 
-  /// \note don`t use get_concrete<type> here, it may be get_concrete<ref_type>
-  LOG(WARNING)
+  LOG(INFO)
     << "some_test_func "
     << " by "
     << data.title
@@ -505,19 +525,48 @@ void some_test_func
 TEST(Typeclass, TypeclassGeneration) {
   using namespace poly::generated;
 
-  {
-    Printable printable{
-      WaterSpell{"printableWaterSpell1", "printableWaterSpell2"}};
-    printable.some_test_func_proxy("arg1");
-  }
-
-  /// \note not init-ed will crash
+  /// \note not initializeded typeclass will crash
   //{
   //  InplaceTypeclass<SpellTraits> myspell;
   //  myspell.set_spell_power(
   //    /*spellname*/ "spellname4"
   //    , /*spellpower*/ 444);
   //}
+
+  {
+    Printable printable{
+      WaterSpell{"printableWaterSpell1", "printableWaterSpell2"}};
+    printable.some_test_func_proxy("arg1");
+  }
+
+  // test:
+  // 1 uses function that returns value
+  // 2 uses both default and custom types
+  {
+    {
+      FireSpell fs{"notPolymorphicA1", "notPolymorphicB1"};
+      IntSummable ihs(std::move(fs));
+      const int result = ihs.sum_with(1, 7);
+      LOG(INFO)
+        << "sum_with done, result: "
+        << result;
+    }
+
+    std::vector<InHeapIntSummable> vec;
+    FireSpell fs{"notPolymorphicA1", "notPolymorphicB1"};
+    vec.push_back(std::move(fs));
+    vec.push_back(InHeapIntSummable{5});
+    vec.push_back(double{0.5});
+    vec.push_back(double{0.1});
+
+    for(const InHeapIntSummable& item: vec)
+    {
+      const int result = item.sum_with(1, 7);
+      LOG(INFO)
+        << "sum_with done, result: "
+        << result;
+    }
+  }
 
   {
     // Use `Typeclass<MagicItemTraits>` only for polymorphic objects.

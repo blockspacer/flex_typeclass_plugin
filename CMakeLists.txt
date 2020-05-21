@@ -395,7 +395,8 @@ set(flex_typeclass_plugin_generated_sources
   ${CMAKE_CURRENT_BINARY_DIR}/CodeGenerator.cc.generated.cc
 )
 
-# generated files
+# Set GENERATED properties of your generated source file.
+# So cmake won't complain about missing source file.
 set_source_files_properties(
   ${flex_typeclass_plugin_generated_sources}
   PROPERTIES GENERATED 1)
@@ -413,51 +414,62 @@ set(flex_typeclass_plugin_settings
   ${CMAKE_CURRENT_BINARY_DIR}/flex_typeclass_plugin_settings.cc
 )
 
-# link with library via --extra-arg=-l
-#--extra-arg=-l${flexlib_file}
+set(flextool_input_files
+  ${flex_typeclass_plugin_src_DIR}/Tooling.cc
+  ${flex_typeclass_plugin_src_DIR}/CodeGenerator.cc
+)
+
+# you can link with library via --extra-arg=-l
+# example: --extra-arg=-l${flexlib_file}
 message(STATUS "flextool=${flextool}")
 add_custom_command(
-    OUTPUT ${flex_typeclass_plugin_generated_sources}
-    COMMAND ${CMAKE_COMMAND} -E echo " Removing ${flex_typeclass_plugin_generated_sources}."
-    COMMAND ${CMAKE_COMMAND} -E remove ${flex_typeclass_plugin_generated_sources}
-    COMMAND ${CMAKE_COMMAND} -E echo " Creating ${flex_typeclass_plugin_generated_sources}."
-    COMMAND ${flextool}
-          --vmodule=*=200 --enable-logging=stderr --log-level=100
-          --indir=${CMAKE_CURRENT_SOURCE_DIR}
-          --outdir=${flextool_outdir}
-          --load_plugin=${flex_squarets_plugin}
-          #--load_plugin=${flex_meta_plugin}
-          --load_plugin=${flex_reflect_plugin}
-          #--load_plugin=${${LIB_NAME}_file}
-          --extra-arg=-I${cling_includes}
-          --extra-arg=-I${clang_includes}
-          --extra-arg=-I${corrade_includes}
-          --extra-arg=-I${entt_includes}
-            --extra-arg=-DCLING_IS_ON=1
-          # NOTE: Cling does not support compile_commands.json
-          # so we must add headers used by `flex_support_headers` package
-          # place into `flex_support_headers` includes that can be used by Cling
-          --extra-arg=-I${CMAKE_CURRENT_SOURCE_DIR}/include
-          --extra-arg=-I${chromium_base_headers}
-          --extra-arg=-I${chromium_build_util_headers}
-          --extra-arg=-I${basis_headers}
-          --extra-arg=-I${flexlib_headers}
-          # path to tests/example_datatypes.hpp
-          --extra-arg=-I${CMAKE_CURRENT_SOURCE_DIR}/tests
-          --extra-arg=-Wno-undefined-inline
-          --extra-arg=-DTYPECLASS_TEMPLATE_CPP="${TYPECLASS_TEMPLATE_CPP}"
-          --extra-arg=-DTYPECLASS_TEMPLATE_HPP="${TYPECLASS_TEMPLATE_HPP}"
-          --extra-arg=-DTYPECLASS_INSTANCE_TEMPLATE_CPP="${TYPECLASS_INSTANCE_TEMPLATE_CPP}"
-          --extra-arg=-DTYPECLASS_COMBO_TEMPLATE_CPP="${TYPECLASS_COMBO_TEMPLATE_CPP}"
-          --extra-arg=-DTYPECLASS_COMBO_TEMPLATE_HPP="${TYPECLASS_COMBO_TEMPLATE_HPP}"
-          ${flextool_extra_args}
-          ${flex_typeclass_plugin_src_DIR}/Tooling.cc
-          ${flex_typeclass_plugin_src_DIR}/CodeGenerator.cc
-          --cling_scripts=${flex_support_headers}
-          --cling_scripts=${flex_typeclass_plugin_settings}
-    COMMENT "running ${flextool}"
+    OUTPUT
+      ${flex_typeclass_plugin_generated_sources}
+    # code generator COMMAND will only be launched
+    # if some of DEPENDS files were changed.
+    DEPENDS
+      ${flextool_input_files}
+    #COMMAND
+    #  ${CMAKE_COMMAND} -E echo " Removing ${flex_typeclass_plugin_generated_sources}."
+    #COMMAND
+    #  ${CMAKE_COMMAND} -E remove ${flex_typeclass_plugin_generated_sources}
+    #COMMAND
+    #  ${CMAKE_COMMAND} -E echo " Creating ${flex_typeclass_plugin_generated_sources}."
+    COMMAND
+      ${flextool}
+        --vmodule=*=200 --enable-logging=stderr --log-level=100
+        --indir=${CMAKE_CURRENT_SOURCE_DIR}
+        --outdir=${flextool_outdir}
+        --load_plugin=${flex_squarets_plugin}
+        #--load_plugin=${flex_meta_plugin}
+        --load_plugin=${flex_reflect_plugin}
+        #--load_plugin=${${LIB_NAME}_file}
+        --extra-arg=-I${cling_includes}
+        --extra-arg=-I${clang_includes}
+        --extra-arg=-I${corrade_includes}
+        --extra-arg=-I${entt_includes}
+        --extra-arg=-DCLING_IS_ON=1
+        --extra-arg=-I${CMAKE_CURRENT_SOURCE_DIR}/include
+        --extra-arg=-I${chromium_base_headers}
+        --extra-arg=-I${chromium_build_util_headers}
+        --extra-arg=-I${basis_headers}
+        --extra-arg=-I${flexlib_headers}
+        # path to tests/example_datatypes.hpp
+        --extra-arg=-I${CMAKE_CURRENT_SOURCE_DIR}/tests
+        --extra-arg=-Wno-undefined-inline
+        --extra-arg=-DTYPECLASS_TEMPLATE_CPP="${TYPECLASS_TEMPLATE_CPP}"
+        --extra-arg=-DTYPECLASS_TEMPLATE_HPP="${TYPECLASS_TEMPLATE_HPP}"
+        --extra-arg=-DTYPECLASS_INSTANCE_TEMPLATE_CPP="${TYPECLASS_INSTANCE_TEMPLATE_CPP}"
+        --extra-arg=-DTYPECLASS_COMBO_TEMPLATE_CPP="${TYPECLASS_COMBO_TEMPLATE_CPP}"
+        --extra-arg=-DTYPECLASS_COMBO_TEMPLATE_HPP="${TYPECLASS_COMBO_TEMPLATE_HPP}"
+        ${flextool_extra_args}
+        ${flextool_input_files}
+        # cling_scripts must be ending argument
+        --cling_scripts=${flex_support_headers}
+        --cling_scripts=${flex_typeclass_plugin_settings}
+    COMMENT
+      "running ${flextool}"
     VERBATIM # to support \t for example
-    #DEPENDS generator someInputFile.cpp.in
 )
 
 message(STATUS "flex_typeclass_plugin_SOURCES=${flex_typeclass_plugin_SOURCES}")

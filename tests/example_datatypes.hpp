@@ -70,6 +70,13 @@ MagicItemTraits {
 };
 
 // like `trait`
+template<typename TypeName1, typename TypeName2>
+struct
+SummableTraits {
+  virtual int sum_with(const TypeName1 arg1, const TypeName2 arg2) const noexcept = 0;
+};
+
+// like `trait`
 template<typename T1>
 struct
 ParentTemplatedTraits_1 {
