@@ -35,6 +35,8 @@ struct typename_false : std::false_type {};
 template<typename... typeclass>
 struct TypeclassImplBase {
 
+  virtual ~TypeclassImplBase() {}
+
   static_assert(
     typename_false<typeclass...>::value
     , "unable to find base of Typeclass implementation");
@@ -71,6 +73,9 @@ struct TypeclassImplBase {
 /// instead of unique_ptr
 template<typename... typeclass>
 struct InplaceTypeclassImplBase {
+
+  virtual ~InplaceTypeclassImplBase() {}
+
   static_assert(
     typename_false<typeclass...>::value
     , "unable to find base of Typeclass implementation");
@@ -79,6 +84,7 @@ struct InplaceTypeclassImplBase {
 // TypeclassImpl has the storage for the object of type_t (typename).
 template<typename type_t, typename... typeclass>
 struct TypeclassImpl
+  final
   : public TypeclassImplBase<typeclass...>
 {
   typedef type_t type;
@@ -92,6 +98,7 @@ struct TypeclassImpl
 /// instead of unique_ptr
 template<typename type_t, typename... typeclass>
 struct InplaceTypeclassImpl
+  final
   : public TypeclassImplBase<typeclass...>
 {
   typedef type_t type;

@@ -194,6 +194,8 @@ void has_enough_mana<MagicItem::typeclass>
   LOG(INFO)
     << "(lib1) has_enough_mana " << " by "
     << data.title << " " << spellname;
+  LOG(INFO)
+    << "someglobal " << data.someglobal;
 }
 
 } // namespace poly
@@ -232,6 +234,8 @@ void has_T<
     << " by "
     << data.title
     << " ";
+  LOG(INFO)
+    << "someglobal " << data.someglobal;
 }
 
 template<>
@@ -244,6 +248,8 @@ void has_P1<
     << " by "
     << data.title
     << " ";
+  LOG(INFO)
+    << "someglobal " << data.someglobal;
 }
 
 template<>
@@ -256,6 +262,8 @@ void has_P2<
     << " by "
     << data.title
     << " ";
+  LOG(INFO)
+    << "someglobal " << data.someglobal;
 }
 
 } // namespace poly
@@ -313,6 +321,8 @@ void print<Printable::typeclass>
   LOG(INFO)
     << "(lib1) print for FireSpell "
     << data.title << " " << data.description;
+  LOG(INFO)
+    << "someglobal " << data.someglobal;
 }
 
 } // namespace poly
@@ -351,6 +361,8 @@ void cast<Spell::typeclass>
     << "(lib1) cast on " << target
     << " by " << data.title << " " << spellname
     << " with " << spellpower;
+  LOG(INFO)
+    << "someglobal " << data.someglobal;
 }
 
 template<>
@@ -361,6 +373,8 @@ void has_spell<Spell>(
     << "(lib1) has_spell by "
     << data.title << " " << spellname
     << " with " << spellname;
+  LOG(INFO)
+    << "someglobal " << data.someglobal;
 }
 
 template<>
@@ -371,6 +385,8 @@ void add_spell<Spell::typeclass>(
   LOG(INFO)
     << "(lib1) add_spell by " << data.title << " " << spellname
     << " with " << spellname;
+  LOG(INFO)
+    << "someglobal " << data.someglobal;
 }
 
 template<>
@@ -381,6 +397,8 @@ void remove_spell<Spell::typeclass>(
   LOG(INFO)
     << "(lib1) remove_spell by " << data.title << " " << spellname
     << " with " << spellname;
+  LOG(INFO)
+    << "someglobal " << data.someglobal;
 }
 
 template<>
@@ -522,6 +540,28 @@ void some_test_func
     << arg1;
 }
 
+void pass_by_cref
+  (const poly::generated::Printable& printable
+   , const char* arg1) noexcept
+{
+  /// \todo disallow modification of
+  /// const poly::generated::Printable& printable
+  /// create ConstRefPrintable
+  printable.some_test_func_proxy(arg1);
+}
+
+// USAGE:
+// int elem = random elem(v.begin(), v.end()); // v is a vector of int
+// template<typename ForwardIterable<ForwardIterableType>>
+//ForwardIterable<ForwardIterableType>
+//  getRandomElem
+//    (ForwardIterable<ForwardIterableType> first, ForwardIterable<ForwardIterableType> last)
+//{
+//  ForwardIterable<ForwardIterableType>::difference_type dist
+//    = std::distance(first, last);
+//  return std::advance(f, rand() % dist);
+//}
+
 TEST(Typeclass, TypeclassGeneration) {
   using namespace poly::generated;
 
@@ -533,10 +573,37 @@ TEST(Typeclass, TypeclassGeneration) {
   //    , /*spellpower*/ 444);
   //}
 
+  /// \todo
+  /// std::sort(vehicles.begin(), vehicles.end());
+
+  /// \todo
+  /// struct Vehicle {
+  ///  vtable const* const vptr_;
+  ///  union { void* ptr_;
+  ///          std::aligned_storage_t<16> buffer_; };
+  ///  bool on_heap_;
+  ///
+  ///  template <typename Any>
+  ///  Vehicle(Any vehicle) : vptr_{&vtable_for<Any>} {
+  ///    if constexpr (sizeof(Any) > 16) {
+  ///      on_heap_ = true;
+  ///      ptr_ = new Any(vehicle);
+  ///    } else {
+  ///      on_heap_ = false;
+  ///      new (&buffer_) Any{vehicle};
+  ///    }
+  ///  }
+  ///
+  ///  void accelerate()
+  ///  { vptr_->accelerate(on_heap_ ? ptr_ : &buffer_); }
+  ///};
+
   {
     Printable printable{
       WaterSpell{"printableWaterSpell1", "printableWaterSpell2"}};
     printable.some_test_func_proxy("arg1");
+
+    pass_by_cref(printable, "arg2");
   }
 
   // test:

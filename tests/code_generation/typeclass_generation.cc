@@ -6,6 +6,68 @@
 
 namespace only_for_code_generation {
 
+/// \todo package into conan registry (over internet)
+/// \todo dockerize/Vagrantfile conan workspace
+/// \todo add CI
+/// \todo check on multiple platforms i.e. Windows, Linux
+/// \todo add nemespace name and class name to generator settings
+/// \todo custom template at runtime
+/// \todo rename InHeap to SHARED REMOTE STORAGE
+/// \todo rename InPlace to AlwaysLocalStorage
+/// \todo add SBO support
+/// \todo add shared_ptr support
+/// \todo add const ref support by template param TypeclassOptions
+/// \todo add default typeclass functions with overriding
+/// \todo add default typeclass data members with overriding
+/// \todo add templated default typeclass functions
+/// \todo add traits inheritance
+/// \todo add traits explicit constructor from multiple args
+/// \todo add traits operators (==,<,>,+,-,etc.)
+/// \todo not templated typeclass functions i.e.
+/// NOT has_enough_mana<MagicItem::typeclass>(fs, "spellname");
+/// BUT has_enough_mana(fs, "spellname");
+/// \todo typeclass functions that can accept typeclass i.e.
+/// has_enough_mana(MagicItem{}, "spellname"); // not impl FireSpell, but typeclass MagicItem
+/// \todo GMock example
+/// \todo example with custom pool allocator
+/// \todo debug runtime asserts
+/// \todo thread-safety guards
+/// \todo use UB sanitizer
+/// \todo support for custom vtable http://ldionne.com/cppnow-2018-runtime-polymorphism/#/14/1
+/// \todo example with function
+/// \todo better unit tests (check crash, compile error messages etc.)
+/// \todo benchmarks
+/// \todo better docs
+/**
+template <typename Signature, typename StoragePolicy>
+struct basic_function;
+
+template <typename R, typename ...Args, typename StoragePolicy>
+struct basic_function<R(Args...), StoragePolicy> {
+  template <typename F>
+  basic_function(F&& f) : poly_{std::forward<F>(f)} { }
+
+  R operator()(Args ...args) const
+  { return poly_.virtual_("call"_s)(poly_, args...); }
+
+private:
+  dyno::poly<Callable<R(Args...)>, StoragePolicy> poly_;
+};
+
+template <typename Signature>
+using function = basic_function<Signature,
+                                dyno::sbo_storage<16>>;
+template <typename Signature, std::size_t Size = 32>
+using inplace_function = basic_function<Signature,
+                                        dyno::local_storage<Size>>;
+template <typename Signature>
+using function_view = basic_function<Signature,
+                                     dyno::non_owning_storage>;
+template <typename Signature>
+using shared_function = basic_function<Signature,
+                                       dyno::shared_remote_storage>;
+**/
+
 // like `trait`
 _typeclass(
   "name = IntSummable"

@@ -1,5 +1,7 @@
 #pragma once
 
+#include <string>
+
 #define GEN_CAT(a, b) GEN_CAT_I(a, b)
 #define GEN_CAT_I(a, b) GEN_CAT_II(~, a ## b)
 #define GEN_CAT_II(p, res) res
@@ -30,9 +32,36 @@
     GEN_UNIQUE_NAME(__gen_tmp__apply) \
     ;
 
+
+/// \note example with explicit constructor
+struct Square {
+  explicit Square(float width, float height)
+    : width(width), height(height) {}
+
+  float width;
+  float height;
+};
+
+/// \note example with explicit constructor
+struct CircleTraits {
+  explicit Circle(float radius)
+    : radius(radius) {}
+
+  float radius;
+};
+
+/// \note example with static constexpr member
 struct FireSpell {
   std::string title = "FireSpell";
   std::string description = "FireSpell";
+
+  static constexpr char someglobal[] = "someglobal";
+
+  inline friend bool operator<
+    (const FireSpell& x, const FireSpell& y)
+  {
+    return x.title.size() < y.title.size();
+  }
 };
 
 struct WaterSpell {
@@ -96,3 +125,47 @@ struct
 MagicTemplatedTraits {
   virtual void has_T(const T1& name1, const T2& name2) const noexcept = 0;
 };
+
+template <class ValueType>
+struct ForwardIterableTraits {
+  //virtual ~ForwardIterableTraits() noexcept = default;
+  virtual void operator++() = 0;
+  virtual ForwardIterableTraits& clone() const = 0;
+};
+
+/// \note example of traits with inheritance
+template <class ValueType>
+struct BidirectionalIterableTraits
+  : public ForwardIterableTraits<ValueType>
+{
+  //virtual ~BidirectionalIterableTraits() noexcept = default;
+  virtual void operator??() = 0;
+  virtual BidirectionalIterableTraits& clone() const = 0;
+};
+
+/// \note example of traits with operators
+struct LessThanComparable<typename T> {
+  virtual bool operator<(const T& a, const T& b) = 0;
+  /// \note example of traits with default implementation
+  virtual bool operator>(const T& a, const T& b) { return b < a; }
+  virtual bool operator<=(const T& a, const T& b) { return !(b < a); }
+  virtual bool operator>=(const T& a, const T& b) { return !(a < b); }
+};
+
+struct SquareTraits {
+  virtual void draw() const = 0;
+  virtual void set_position(float x, float y) = 0;
+  virtual void set_width(float width) = 0;
+  virtual void set_height(float height) = 0;
+  virtual void set_alpha(float alpha = 0.5) = 0;
+};
+
+struct CircleTraits {
+  virtual void draw() const = 0;
+  virtual void set_position(float x, float y) = 0;
+  virtual void set_radius(float radius) = 0;
+  virtual void set_alpha(float alpha = 0.3) = 0;
+};
+
+/// \todo example of type erasure for function call operator
+/// https://github.com/actor-framework/actor-framework/blob/ccd149ed5ae504388ca46c07d5dc43e3a3520938/libcaf_core/caf/detail/unique_function.hpp

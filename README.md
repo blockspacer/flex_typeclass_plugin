@@ -2,7 +2,7 @@
 
 Plugin for [https://github.com/blockspacer/flextool](https://github.com/blockspacer/flextool)
 
-Plugin provides support for typeclasses (or Rust-like traits or "TEPS" - "Type Erasure Parent Style" or virtual concepts, etc.).
+Plugin provides support for typeclasses (or Rust-like traits or "TEPS" - "Type Erasure Parent Style" or virtual concepts or runtime concepts, etc.).
 
 Note that plugin output is valid C++ code: you can open generated files and debug them as usual.
 
@@ -10,11 +10,27 @@ If you do not know why to use C++ typeclasses see https://www.youtube.com/watch?
 
 See for details about flextool [https://blockspacer.github.io/flex_docs/](https://blockspacer.github.io/flex_docs/)
 
+See for more details about typeclass implementation
+
+- http://ldionne.com/cppnow-2018-runtime-polymorphism/#/14/1
+
 See for more details about typeclasses and `Polymorphic Ducks`:
 
 - https://mropert.github.io/2017/11/30/polymorphic_ducks/
 - https://mropert.github.io/2017/12/17/better_polymorphic_ducks/
 - https://mropert.github.io/2017/12/23/undefined_ducks/
+
+Runtime Concepts for the C++ Standard Template Library by Sean Parent:
+
+- https://sean-parent.stlab.cc/papers/2008-03-sac/p171-pirkelbauer.pdf
+
+Dynamic Generic Programming with Virtual Concepts by Andrea Proli:
+
+- https://github.com/andyprowl/virtual-concepts/blob/master/draft/Dynamic%20Generic%20Programming%20with%20Virtual%20Concepts.pdf
+
+Runtime Polymorphic Generic Programming — Mixing Objects and Concepts in ConceptC++
+
+- https://pdfs.semanticscholar.org/aa3f/fdcb687f2b5115996f4ef1f2a1ea0a01cb6a.pdf
 
 ## Before installation
 
@@ -225,7 +241,78 @@ FireSpell fs;
 has_enough_mana<MagicItem::typeclass>(fs, "spellname");
 ```
 
+## SHARED REMOTE STORAGE
+
+TODO: IN DEVELOPMENT
+
+```cpp
+// HOW THAT'S IMPLEMENTED
+// pseudo code based on http://ldionne.com/cppnow-2018-runtime-polymorphism/#/8/2
+class Vehicle {
+  vtable const* const vptr_;
+  std::shared_ptr<void> ptr_;
+
+public:
+  template <typename Any>
+  Vehicle(Any vehicle)
+    : vptr_{&vtable_for<Any>}
+    , ptr_{std::make_shared<Any>(vehicle)}
+  { }
+
+  void accelerate()
+  { vptr_->accelerate(ptr_.get()); }
+};
+```
+
+## NON-OWNING STORAGE (reference semantics, not value semantics)
+
+TODO: IN DEVELOPMENT
+
+```cpp
+// HOW THAT'S IMPLEMENTED
+// pseudo code based on http://ldionne.com/cppnow-2018-runtime-polymorphism/#/8/2
+class VehicleRef {
+  vtable const* const vptr_;
+  void* ref_;
+
+public:
+  template <typename Any>
+  VehicleRef(Any& vehicle)
+    : vptr_{&vtable_for<Any>}
+    , ref_{&vehicle}
+  { }
+
+  void accelerate()
+  { vptr_->accelerate(ref_); }
+};
+```
+
 ## How to optimize for performance
+
+`generator = InPlace` is ALWAYS-LOCAL STORAGE. DOESN'T FIT? DOESN'T COMPILE!
+
+```cpp
+// HOW THAT'S IMPLEMENTED
+// pseudo code based on http://ldionne.com/cppnow-2018-runtime-polymorphism/#/8/2
+class Vehicle {
+  vtable const* const vptr_;
+  std::aligned_storage_t<64> buffer_;
+
+public:
+  template <typename Any>
+  Vehicle(Any vehicle) : vptr_{&vtable_for<Any>} {
+    static_assert(sizeof(Any) <= sizeof(buffer_),
+      "can't hold such a large object in a Vehicle");
+    new (&buffer_) Any(vehicle);
+  }
+
+  void accelerate()
+  { vptr_->accelerate(&buffer_); }
+
+  ~Vehicle()
+  { vptr_->dtor(&buffer_); }
+};
+```
 
 Use `generator = InPlace` with custom `BufferSize`:
 
