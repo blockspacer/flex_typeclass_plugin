@@ -2,7 +2,7 @@
 
 Plugin for [https://github.com/blockspacer/flextool](https://github.com/blockspacer/flextool)
 
-Plugin provides support for typeclasses (or Rust-like traits or "TEPS" - "Type Erasure Parent Style" or virtual concepts or runtime concepts, etc.).
+Plugin provides support for typeclasses (or Rust-like traits or Clojure-like protocols or "TEPS" - "Type Erasure Parent Style" or virtual concepts or runtime concepts or Haskell-like type classes or runtime-polymorphic objects with value semantics or inheritance-free polymorphism , etc.).
 
 Note that plugin output is valid C++ code: you can open generated files and debug them as usual.
 
@@ -202,7 +202,7 @@ generates class `TypeclassImpl<FireSpell,MagicItemTraits>`
 ```cpp
 #include "FireSpell_MagicItem.typeclass_instance.generated.hpp"
 
-namespace poly {
+namespace morph {
 namespace generated {
 
 // allow FireSpell to be used as MagicItemTraits
@@ -215,7 +215,7 @@ void has_enough_mana<MagicItem::typeclass>
     << data.title << " " << spellname << std::endl;
 }
 
-} // namespace poly
+} // namespace morph
 } // namespace generated
 ```
 
@@ -287,9 +287,23 @@ public:
 };
 ```
 
-## How to optimize for performance
+## remote storage
+
+Remote storage is the default one, it always stores a pointer to a heap-allocated object.
+
+## SBO storage
+
+TODO: IN DEVELOPMENT
+
+For example, let's define our drawable wrapper so that it tries to store objects up to 16 bytes in a local buffer, but then falls back to the heap if the object is larger:
+
+## ALWAYS-LOCAL STORAGE
+
+Let's say you actually never want to do an allocation. No problem, just use `generator = InPlace`.
 
 `generator = InPlace` is ALWAYS-LOCAL STORAGE. DOESN'T FIT? DOESN'T COMPILE!
+
+By tweaking these (important) implementation details for you specific use case, you can make your program much more efficient than with classic inheritance.
 
 ```cpp
 // HOW THAT'S IMPLEMENTED
@@ -425,7 +439,7 @@ _generate(
 
 // implement generated functions somewhere
 
-namespace poly {
+namespace morph {
 namespace generated {
 
 template<>
@@ -470,7 +484,7 @@ void has_P2<
     << " ";
 }
 
-} // namespace poly
+} // namespace morph
 } // namespace generated
 
 // usage
@@ -575,7 +589,7 @@ openerAndGreeter.greet();
 Pros:
 - Good performance
 - Good memory usage
-- Usefull when you want to make each typeclass NOT optional.
+- Useful when you want to make each typeclass NOT optional.
 
 Cons:
 - Function names from different typeclasses must not collide.
@@ -635,12 +649,30 @@ if(openerAndGreeter.has<Greeter>())
 
 Pros:
 - Function names from different typeclasses can collide.
-- Usefull when you want to make each typeclass optional.
+- Useful when you want to make each typeclass optional.
 
 Cons:
 - Normal performance
 - Normal memory usage
 
+## Proxy Dilemma
+
+The problem stems from the fact that a
+referencing type-erasure wrapper is itself a distinct object from the object it erases. In other words:
+
+```cpp
+auto r = Rectangle{{1.0, 2.0}, 5.0, 6.0};
+auto s = ShapeRef{std::ref(r)};
+assert(&r == &s); // THIS ASSERTION ALWAYS FAILS
+```
+
+This is an issue for compile-time generic algorithms written in the form of function templates:
+depending on how they are written, these algorithms may not be allowed to work transparently with
+objects accessed through a type-erasing wrapper
+
+See for details:
+
+- Dynamic Generic Programming with Virtual Concepts by Andrea Proli: https://github.com/andyprowl/virtual-concepts/blob/master/draft/Dynamic%20Generic%20Programming%20with%20Virtual%20Concepts.pdf
 
 ## Development flow (for contributors)
 

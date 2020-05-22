@@ -32,6 +32,113 @@
     GEN_UNIQUE_NAME(__gen_tmp__apply) \
     ;
 
+#if 0
+namespace morph {
+
+namespace validate_codestyle {
+  // Usage:
+  // constexpr const char concept_postfix[] = "Traits";
+} // namespace generated
+
+namespace generated {
+  // keep that empty namespace here, may be used by |generator_namespace|
+} // namespace generated
+
+struct generator_namespace {
+  // Usage:
+  //using output_namespace = morph::generated;
+};
+
+struct generator_paths {
+  // Usage:
+  // may be full path or relative path
+  // constexpr const char source_file_path[] = "anything_here.cpp";
+
+  // Usage:
+  // may be full path or relative path
+  // constexpr const char header_file_path[] = "anything_here.hpp";
+
+  // Usage:
+  // paths to files that must be included in generated code
+  // constexpr const char include_paths[] = "anything_here.hpp";
+};
+
+// Type that will be able to implement some typeclass
+// Usually that type stores only data
+// Used by |typeclass_instance|
+template<typename T>
+struct impl_target {
+};
+
+// Id of typeclass you want to implement
+// Usually typeclass stores only virtual functions
+// Used both by |typeclass| and |typeclass_instance|
+struct typeclass_target {
+  // Usage:
+  // constexpr const char name[] = "anything_here";
+};
+
+struct copy_only_interface {
+  // allow only copy
+};
+
+struct move_only_interface {
+  // allow only move
+};
+
+template<typename Storage = std::unique_ptr>
+struct remote_storage {
+  // Remote storage is the default one,
+  // it always stores a pointer to a heap-allocated object.
+};
+
+template<typename Storage = std::shared_ptr>
+struct shared_storage {
+  // ...
+};
+
+enum class SizePolicy {
+  Exact,  // Size == sizeof(T)
+  AtLeast // Size >= sizeof(T)
+};
+
+enum class AlignPolicy {
+  Exact,  // Alignment == alignof(T)
+  AtLeast // Alignment >= alignof(T)
+};
+
+template<
+  SizePolicy SizePolicyType
+  , AlignPolicy AlignPolicyType
+  , size_t MinSize
+  , size_t MaxSize
+  , size_t Align
+  /// \note list of types may be not full
+  /// (can store any object that can fit into storage)
+  , typename... types_must_fit_storage
+>
+struct always_local_storage {
+  // ...
+};
+
+template<
+  size_t Size
+  , size_t Align
+  /// \note list of types may be not full
+  /// (can store any object that can fit into storage)
+  , typename... types_must_fit_storage
+>
+struct small_buffer_optimized_storage {
+  // try to store objects up to |Size| bytes in a local buffer,
+  // but then fall back to the heap if the object is larger
+};
+
+struct not_owning_storage {
+  // reference semantics, not value semantics
+};
+
+} // namespace morph
+#endif
 
 /// \note example with explicit constructor
 struct Square {
@@ -43,7 +150,7 @@ struct Square {
 };
 
 /// \note example with explicit constructor
-struct CircleTraits {
+struct Circle {
   explicit Circle(float radius)
     : radius(radius) {}
 
@@ -139,17 +246,23 @@ struct BidirectionalIterableTraits
   : public ForwardIterableTraits<ValueType>
 {
   //virtual ~BidirectionalIterableTraits() noexcept = default;
-  virtual void operator??() = 0;
+  virtual void operator--() = 0;
   virtual BidirectionalIterableTraits& clone() const = 0;
 };
 
 /// \note example of traits with operators
-struct LessThanComparable<typename T> {
-  virtual bool operator<(const T& a, const T& b) = 0;
-  /// \note example of traits with default implementation
-  virtual bool operator>(const T& a, const T& b) { return b < a; }
-  virtual bool operator<=(const T& a, const T& b) { return !(b < a); }
-  virtual bool operator>=(const T& a, const T& b) { return !(a < b); }
+//template <typename T>
+//struct LessThanComparable {
+//  virtual bool operator<(const T& a, const T& b) = 0;
+//  /// \note example of traits with default implementation
+//  virtual bool operator>(const T& a, const T& b) { return b < a; }
+//  virtual bool operator<=(const T& a, const T& b) { return !(b < a); }
+//  virtual bool operator>=(const T& a, const T& b) { return !(a < b); }
+//};
+
+struct ShapeTraits {
+  virtual void draw() const = 0;
+  virtual void set_position(float x, float y) = 0;
 };
 
 struct SquareTraits {

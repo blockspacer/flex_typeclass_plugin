@@ -15,7 +15,7 @@
 #include <functional>
 #include <memory>
 
-namespace poly {
+namespace morph {
 namespace generated {
 
 [[~]] /**
@@ -335,7 +335,7 @@ final
   [[+ ImplTypeclassName +]] concreteData_;
 };
 
-} // namespace poly
+} // namespace morph
 } // namespace generated
 
 [[+ endHeaderGuard(headerGuard) /* no newline */ +]][[~]]

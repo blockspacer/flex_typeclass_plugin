@@ -28,7 +28,7 @@ const size_t ReflectedStructInfoCompoundIdSize =
 #include <new>         // launder
 #include <type_traits> // aligned_storage
 
-namespace poly {
+namespace morph {
 namespace generated {
 
 [[~]] /**
@@ -726,7 +726,7 @@ using [[+ targetTypeName +]]
 
 [[~]] } // if(!targetTypeName.empty())
 
-} // namespace poly
+} // namespace morph
 } // namespace generated
 
 [[+ endHeaderGuard(headerGuard) /* no newline */ +]][[~]]

@@ -182,7 +182,7 @@
 #include "Printable.typeclass.generated.hpp"
 #include "FireSpell_Printable.typeclass_instance.generated.hpp"
 
-namespace poly {
+namespace morph {
 namespace generated {
 
 // allow FireSpell to be used as MagicItemTraits
@@ -198,10 +198,10 @@ void has_enough_mana<MagicItem::typeclass>
     << "someglobal " << data.someglobal;
 }
 
-} // namespace poly
+} // namespace morph
 } // namespace generated
 
-namespace poly {
+namespace morph {
 namespace generated {
 
 // allow WaterSpell to be used as MagicItemTraits
@@ -215,10 +215,10 @@ void has_enough_mana<Typeclass<DEFINE_MagicItem>>
     << data.title << " " << spellname;
 }
 
-} // namespace poly
+} // namespace morph
 } // namespace generated
 
-namespace poly {
+namespace morph {
 namespace generated {
 
 template<>
@@ -266,10 +266,10 @@ void has_P2<
     << "someglobal " << data.someglobal;
 }
 
-} // namespace poly
+} // namespace morph
 } // namespace generated
 
-namespace poly {
+namespace morph {
 namespace generated {
 
 template<>
@@ -308,10 +308,10 @@ void has_P2<
     << "(WaterSpell) has_P2 on " << name1;
 }
 
-} // namespace poly
+} // namespace morph
 } // namespace generated
 
-namespace poly {
+namespace morph {
 namespace generated {
 
 template<>
@@ -325,13 +325,13 @@ void print<Printable::typeclass>
     << "someglobal " << data.someglobal;
 }
 
-} // namespace poly
+} // namespace morph
 } // namespace generated
 
 #include "Printable.typeclass.generated.hpp"
 #include "WaterSpell_Printable.typeclass_instance.generated.hpp"
 
-namespace poly {
+namespace morph {
 namespace generated {
 
 template<>
@@ -343,13 +343,13 @@ void print<Printable>
     << data.title << " " << data.description;
 }
 
-} // namespace poly
+} // namespace morph
 } // namespace generated
 
 #include "Spell.typeclass.generated.hpp"
 #include "FireSpell_Spell.typeclass_instance.generated.hpp"
 
-namespace poly {
+namespace morph {
 namespace generated {
 
 template<>
@@ -412,7 +412,7 @@ void set_spell_power<Spell::typeclass>
     << " with " << spellpower;
 }
 
-} // namespace poly
+} // namespace morph
 } // namespace generated
 
 #include "Spell.typeclass.generated.hpp"
@@ -421,7 +421,7 @@ void set_spell_power<Spell::typeclass>
 void some_test_func
   (WaterSpell& data, const char* arg1) noexcept;
 
-namespace poly {
+namespace morph {
 namespace generated {
 
 template<>
@@ -497,10 +497,10 @@ void some_test_func_proxy<Printable::typeclass>
 //    << data.title << " " << data.description;
 //}
 
-} // namespace poly
+} // namespace morph
 } // namespace generated
 
-namespace poly {
+namespace morph {
 namespace generated {
 
 template<>
@@ -524,7 +524,31 @@ int sum_with<IntSummable::typeclass>
   return data + arg1 + arg2;
 }
 
-} // namespace poly
+/// \todo
+//template <>
+//template <
+//  typename T
+//  /*, typename std::enable_if<
+//    !std::is_same<IntSummable::typeclass, std::decay_t<T>>::value
+//  >::type* = nullptr*/
+//>
+//int sum_with<IntSummable::typeclass, T>
+//  (const T& data, const int arg1, const int arg2) noexcept
+//{
+//  return data + arg1 + arg2;
+//}
+
+/// \todo
+//template <typename A, typename B>
+//auto call(add_, A const & a, B const & b)
+//  -> decltype(a + b) { return a + b; }
+
+/// \todo
+// template <typename A, typename B, typename... More>
+// auto call(add_, A const & a, B const & b, More const &... more)
+//  -> decltype(ns::add(a + b, more...)) { return ns::add(a + b, more...); }
+
+} // namespace morph
 } // namespace generated
 
 void some_test_func
@@ -541,11 +565,11 @@ void some_test_func
 }
 
 void pass_by_cref
-  (const poly::generated::Printable& printable
+  (const morph::generated::Printable& printable
    , const char* arg1) noexcept
 {
   /// \todo disallow modification of
-  /// const poly::generated::Printable& printable
+  /// const morph::generated::Printable& printable
   /// create ConstRefPrintable
   printable.some_test_func_proxy(arg1);
 }
@@ -563,7 +587,7 @@ void pass_by_cref
 //}
 
 TEST(Typeclass, TypeclassGeneration) {
-  using namespace poly::generated;
+  using namespace morph::generated;
 
   /// \note not initializeded typeclass will crash
   //{
@@ -611,7 +635,7 @@ TEST(Typeclass, TypeclassGeneration) {
   // 2 uses both default and custom types
   {
     {
-      FireSpell fs{"notPolymorphicA1", "notPolymorphicB1"};
+      FireSpell fs{"notpolymorphicA1", "notpolymorphicB1"};
       IntSummable ihs(std::move(fs));
       const int result = ihs.sum_with(1, 7);
       LOG(INFO)
@@ -620,7 +644,8 @@ TEST(Typeclass, TypeclassGeneration) {
     }
 
     std::vector<InHeapIntSummable> vec;
-    FireSpell fs{"notPolymorphicA1", "notPolymorphicB1"};
+    FireSpell fs{"notpolymorphicA1", "notpolymorphicB1"};
+    //vec.push_back(&fs); // must be disallowed
     vec.push_back(std::move(fs));
     vec.push_back(InHeapIntSummable{5});
     vec.push_back(double{0.5});
@@ -642,7 +667,7 @@ TEST(Typeclass, TypeclassGeneration) {
     //
     // i.e. for ordinary types can use methods generated by typeclass like so:
 
-    FireSpell fs{"notPolymorphicA1", "notPolymorphicB1"};
+    FireSpell fs{"notpolymorphicA1", "notpolymorphicB1"};
     has_enough_mana<MagicItem::typeclass>(fs, "spellname");
   }
 

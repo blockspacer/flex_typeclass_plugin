@@ -3,7 +3,7 @@
 #include <type_traits>
 #include <memory>
 
-namespace poly {
+namespace morph {
 namespace generated {
 
 /* Required wrapper for if constexpr
@@ -135,5 +135,11 @@ using IsNotReference
       , void
     >::type;
 
-} // namespace poly
+struct bad_cast : std::bad_cast {
+  virtual char const * what() const noexcept override {
+    return "bad_cast";
+  }
+};
+
+} // namespace morph
 } // namespace generated
