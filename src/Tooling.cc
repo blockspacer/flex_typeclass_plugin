@@ -48,6 +48,8 @@
 
 namespace plugin {
 
+static constexpr const char kSingleComma = ',';
+
 TypeclassTooling::TypeclassTooling(
   const ::plugin::ToolPlugin::Events::RegisterAnnotationMethods& event
 #if defined(CLING_IS_ON)
@@ -181,6 +183,9 @@ clang_utils::SourceTransformResult
     sourceTransformOptions.matchResult.Nodes.getNodeAs<
       clang::CXXRecordDecl>("bind_gen");
 
+  const clang::LangOptions& langOptions
+    = sourceTransformOptions.rewriter.getLangOpts();
+
   if (!node1) {
     LOG(ERROR)
       << "CXXRecordDecl not found ";
@@ -193,6 +198,27 @@ clang_utils::SourceTransformResult
 
   std::string fullBaseType;
 
+  /*
+   * example input:
+      struct
+      _typeclass(
+        "generator = InPlace"
+        ", BufferSize = 64")
+      MagicLongType
+        : public MagicTemplatedTraits<std::string, int>
+        , public ParentTemplatedTraits_1<const char *>
+        , public ParentTemplatedTraits_2<const int &>
+      {};
+   *
+   * exatracted node->bases()
+   * via clang::Lexer::getSourceText(clang::CharSourceRange) are:
+   *
+   *  public MagicTemplatedTraits<std::string, int>
+   *  , public ParentTemplatedTraits_1<const char *>
+   *  , public ParentTemplatedTraits_2<const int &>
+  */
+  std::string baseClassesCode;
+
   if (node1) {
     reflection::AstReflector reflector(
       sourceTransformOptions.matchResult.Context);
@@ -201,9 +227,32 @@ clang_utils::SourceTransformResult
     std::vector<reflection::ClassInfoPtr> structInfos;
     reflection::ClassInfoPtr structInfo;
 
+    DCHECK(node1->bases().begin() != node1->bases().end())
+      << "no bases for: "
+      << node1->getNameAsString();
     for(const clang::CXXBaseSpecifier& it
         : node1->bases())
     {
+      {
+        clang::SourceRange varSourceRange
+          = it.getSourceRange();
+        clang::CharSourceRange charSourceRange(
+          varSourceRange,
+          true // IsTokenRange
+        );
+        clang::SourceLocation initStartLoc = charSourceRange.getBegin();
+        if(varSourceRange.isValid()) {
+          StringRef sourceText
+            = clang::Lexer::getSourceText(
+                charSourceRange
+                , SM, langOptions, 0);
+          DCHECK(initStartLoc.isValid());
+          baseClassesCode += sourceText.str();
+          baseClassesCode += kSingleComma;
+        } else {
+          DCHECK(false);
+        }
+      }
       if(it.getType()->getAsCXXRecordDecl()) {
         nodes.push_back(
           it.getType()->getAsCXXRecordDecl());
@@ -238,12 +287,25 @@ clang_utils::SourceTransformResult
           preparedFullBaseType);
 
         fullBaseType += preparedFullBaseType;
-        fullBaseType += ",";
+        fullBaseType += kSingleComma;
       }
     }
 
     // remove last comma
+    if (!baseClassesCode.empty()) {
+      DCHECK(baseClassesCode.back() == kSingleComma);
+      baseClassesCode.pop_back();
+    }
+
+    VLOG(9)
+      << "baseClassesCode: "
+      << baseClassesCode
+      << " of "
+      << node1->getNameAsString();
+
+    // remove last comma
     if (!fullBaseType.empty()) {
+      DCHECK(fullBaseType.back() == kSingleComma);
       fullBaseType.pop_back();
     }
 
@@ -253,16 +315,12 @@ clang_utils::SourceTransformResult
       return clang_utils::SourceTransformResult{""};
     }
 
-    std::string targetTypeName;
+    std::string targetTypeName
+      = node1->getNameAsString();
+
     std::string targetGenerator;
     for(const auto& tit : typeclassBaseNames.as_vec_) {
-      if(tit.name_ == "name")
-      {
-        targetTypeName = tit.value_;
-        prepareTplArg(targetTypeName);
-        DCHECK(!targetTypeName.empty());
-      }
-      else if(tit.name_ == "generator")
+      if(tit.name_ == "generator")
       {
         targetGenerator = tit.value_;
         prepareTplArg(targetGenerator);
@@ -553,7 +611,7 @@ clang_utils::SourceTransformResult
       validTypeAlias = it->second;
     } else {
       LOG(ERROR)
-        << "user not tegistered typeclass"
+        << "user not registered typeclass"
         << " for trait: "
         << typeclassBaseName;
        CHECK(false);
@@ -784,10 +842,10 @@ clang_utils::SourceTransformResult
         }
         validTypeAlias = it->second;
         fullBaseType += validTypeAlias;
-        fullBaseType += ",";
+        fullBaseType += kSingleComma;
       } else {
         LOG(ERROR)
-          << "user not tegistered typeclass"
+          << "user not registered typeclass"
           << " for trait: "
           << typeclassBaseName;
          CHECK(false);
@@ -852,6 +910,7 @@ clang_utils::SourceTransformResult
   }
   // remove last comma
   if (!fullBaseType.empty()) {
+    DCHECK(fullBaseType.back() == kSingleComma);
     fullBaseType.pop_back();
   }
 

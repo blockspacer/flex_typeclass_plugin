@@ -207,7 +207,7 @@ namespace generated {
 // allow WaterSpell to be used as MagicItemTraits
 // MagicItemTraits is base class (typeclass)
 template<>
-void has_enough_mana<Typeclass<DEFINE_MagicItem>>
+void has_enough_mana<Typeclass<DEFINE_MagicItem>::typeclass>
   (const WaterSpell& data, const char* spellname) noexcept
 {
   LOG(INFO)
@@ -223,7 +223,7 @@ namespace generated {
 
 template<>
 void has_T<
-    MagicLongType
+    MagicLongType::typeclass
   >(const FireSpell& data
   , const std::string &name1
   , const int &name2) noexcept
@@ -274,7 +274,7 @@ namespace generated {
 
 template<>
 void has_T<
-    MagicLongType
+    MagicLongType::typeclass
   >(const WaterSpell& data
   , const std::string &name1
   , const int &name2) noexcept
@@ -301,7 +301,7 @@ void has_P1<
 
 template<>
 void has_P2<
-    MagicLongType
+    MagicLongType::typeclass
   >(const WaterSpell& data, const int& name1) noexcept
 {
   LOG(INFO)
@@ -335,7 +335,7 @@ namespace morph {
 namespace generated {
 
 template<>
-void print<Printable>
+void print<Printable::typeclass>
   (const WaterSpell& data) noexcept
 {
   LOG(INFO)
@@ -366,7 +366,7 @@ void cast<Spell::typeclass>
 }
 
 template<>
-void has_spell<Spell>(
+void has_spell<Spell::typeclass>(
   const FireSpell& data, const char *spellname ) noexcept
 {
   LOG(INFO)
@@ -457,7 +457,7 @@ void add_spell<Spell::typeclass>(
 }
 
 template<>
-void remove_spell<Spell>(
+void remove_spell<Spell::typeclass>(
   const WaterSpell& data, const char *spellname ) noexcept
 {
   LOG(INFO)
@@ -761,7 +761,7 @@ TEST(Typeclass, TypeclassGeneration) {
 
   {
     FireSpell spell {"title4", "description4"};
-    InplaceTypeclass<DEFINE_Spell> myspell = std::move(spell);
+    Spell myspell = std::move(spell);
 
     InPlaceSpell myspell_move{std::move(myspell)}; // move Spell
 
@@ -819,7 +819,7 @@ TEST(Typeclass, TypeclassGeneration) {
       spellmagicItems.push_back(std::move(pushed));
     }
     {
-      Typeclass<DEFINE_MagicLongType> pushed{};
+      MagicLongType pushed{};
       MagicLongType someTmpSpell{
         FireSpell{"someTmpSpell1", "someTmpSpell1"}};
       pushed = std::move(someTmpSpell); // move
@@ -833,7 +833,7 @@ TEST(Typeclass, TypeclassGeneration) {
   }
 
   {
-    std::vector<InplaceTypeclass<DEFINE_MagicItem>> magicItems;
+    std::vector<MagicItem> magicItems;
     magicItems.push_back(
       FireSpell{"FireSpelltitle1", "description1"});
     magicItems.push_back(

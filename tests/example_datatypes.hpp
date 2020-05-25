@@ -10,13 +10,8 @@
 
 // generates class that will have functions with same names
 // as in passed data type, forwards calls
-#define _typeclass(settings, ...) \
-  /* generate definition required to use __attribute__ */ \
-  struct \
-  __attribute__((annotate("{gen};{funccall};typeclass(" settings ")"))) \
-  GEN_UNIQUE_NAME(__gen_tmp__typeclass) \
-  : __VA_ARGS__ \
-  {};
+#define _typeclass(settings) \
+  __attribute__((annotate("{gen};{funccall};typeclass(" settings ")")))
 
 #define _generate(...) \
   /* generate definition required to use __attribute__ */ \

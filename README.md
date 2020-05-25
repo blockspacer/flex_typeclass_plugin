@@ -24,6 +24,10 @@ Runtime Concepts for the C++ Standard Template Library by Sean Parent:
 
 - https://sean-parent.stlab.cc/papers/2008-03-sac/p171-pirkelbauer.pdf
 
+- A Generic, Extendable and Efficient Solution for Polymorphic Programming (p0957r4):
+
+http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p0957r4.pdf
+
 Dynamic Generic Programming with Virtual Concepts by Andrea Proli:
 
 - https://github.com/andyprowl/virtual-concepts/blob/master/draft/Dynamic%20Generic%20Programming%20with%20Virtual%20Concepts.pdf

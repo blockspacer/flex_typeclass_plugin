@@ -1,3 +1,5 @@
+#pragma once
+
 #include <string>
 #include <iostream>
 #include <vector>
@@ -176,6 +178,7 @@ namespace only_for_code_generation {
 /// \todo ability to toggle exceptions or asserts or std::terminate
 /// \todo example how to rewrite visitor with type erasure
 /// \todo example with function
+/// https://github.com/wmx16835/my-stl/blob/4afe9edc22b30e9d9a953db375d46ad20071296a/main/p0957/mock/proxy_callable_impl.h
 /// https://github.com/Ladisgin/function/blob/2d1b5b6cee5290bfb9fe5218877c72009ce255a5/function.h#L22
 /**
 template <typename Signature, typename StoragePolicy>
@@ -208,20 +211,22 @@ using shared_function = basic_function<Signature,
 **/
 
 // like `trait`
+struct
 _typeclass(
-  "name = IntSummable"
-  ", generator = InPlace"
-  ", BufferSize = 64"
-  , public SummableTraits<int, int>
-)
+  "generator = InPlace"
+  ", BufferSize = 64")
+IntSummable
+  : public SummableTraits<int, int>
+{};
 
 // like `trait`
+struct
 _typeclass(
-  "name = MagicItem"
-  ", generator = InPlace"
-  ", BufferSize = 64"
-  , public MagicItemTraits
-)
+  "generator = InPlace"
+  ", BufferSize = 64")
+MagicItem
+  : public MagicItemTraits
+{};
 
 // like `trait`
 /// \note example of merged typeclasses
@@ -231,24 +236,29 @@ _typeclass(
 /// Inherited methods are not optional,
 /// you must define them all.
 // like `trait`
+struct
 _typeclass(
-  "name = MagicLongType"
-  , public MagicTemplatedTraits<std::string, int>
+  "generator = InPlace"
+  ", BufferSize = 64")
+MagicLongType
+  : public MagicTemplatedTraits<std::string, int>
   , public ParentTemplatedTraits_1<const char *>
   , public ParentTemplatedTraits_2<const int &>
-)
+{};
 
 // like `trait`
-_typeclass(
-  "name = Printable"
-  , public PrintableTraits
-)
+struct
+_typeclass()
+Printable
+  : public PrintableTraits
+{};
 
 // like `trait`
-_typeclass(
-  "name = Spell"
-  , public SpellTraits
-)
+struct
+_typeclass()
+Spell
+  : public SpellTraits
+{};
 
 // generates FireSpell_IntSummable
 // like impl for trait
