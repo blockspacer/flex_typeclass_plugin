@@ -524,6 +524,10 @@ std::string joinWithSeparator(
   return result;
 }
 
+// Before:
+// struct only_for_code_generation::Spell SpellTraits
+// After:
+// only_for_code_generation::Spell SpellTraits
 std::string exatractTypeName(
   const std::string& input)
 {

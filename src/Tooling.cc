@@ -25,6 +25,9 @@
 #include <clang/AST/RecursiveASTVisitor.h>
 #include <clang/AST/ASTContext.h>
 #include <clang/Lex/Preprocessor.h>
+#include <clang/AST/DeclTemplate.h>
+
+#include <llvm/Support/raw_ostream.h>
 
 #include <base/cpu.h>
 #include <base/bind.h>
@@ -45,6 +48,7 @@
 #include <regex>
 #include <iostream>
 #include <fstream>
+#include <sstream>
 
 namespace plugin {
 
@@ -348,21 +352,28 @@ clang_utils::SourceTransformResult
      << targetTypeName;
 
     {
+      const clang::QualType& paramType =
+        //template_type->getDefaultArgument();
+        sourceTransformOptions.matchResult.Context
+          ->getTypeDeclType(node1);
       std::string registryTargetName =
-        targetTypeName.empty()
-        ? fullBaseType
-        : targetTypeName;
+        exatractTypeName(paramType.getAsString());
 
       VLOG(9) << "ReflectionRegistry... for record " <<
         registryTargetName;
 
+      /// \todo remove ReflectionRegistry, use template args
       reflection::ReflectionRegistry::getInstance()->
         reflectionCXXRecordRegistry[registryTargetName]
           = std::make_unique<
               reflection::ReflectionCXXRecordRegistry>(
                 registryTargetName, /*node,*/ structInfo);
 
-      VLOG(9) << "registering type for trait...";
+      VLOG(9)
+        << "registering type for trait..."
+        << registryTargetName
+        << " "
+        << fullBaseType;
 
       traitToItsType_[registryTargetName]
         = fullBaseType;
@@ -524,27 +535,146 @@ clang_utils::SourceTransformResult
   clang::SourceManager &SM
     = sourceTransformOptions.rewriter.getSourceMgr();
 
+  clang::PrintingPolicy printingPolicy(
+    sourceTransformOptions.rewriter.getLangOpts());
+
   std::string targetName;
+
+  std::string typeclassBaseName;
 
   const clang::CXXRecordDecl *node =
     sourceTransformOptions.matchResult.Nodes.getNodeAs<
       clang::CXXRecordDecl>("bind_gen");
 
-  if (node) {
-    targetName = node->getNameAsString();
-  }
+  CHECK(node->getDescribedClassTemplate())
+    << "node "
+    << node->getNameAsString()
+    << " must be template";
 
-  for(const auto& tit : typeclassBaseNames.as_vec_) {
-    if(tit.name_ =="impl_target") {
-      targetName = tit.value_;
-      prepareTplArg(targetName);
+  /// \brief Retrieves the class template that is described by this
+  /// class declaration.
+  ///
+  /// Every class template is represented as a ClassTemplateDecl and a
+  /// CXXRecordDecl. The former contains template properties (such as
+  /// the template parameter lists) while the latter contains the
+  /// actual description of the template's
+  /// contents. ClassTemplateDecl::getTemplatedDecl() retrieves the
+  /// CXXRecordDecl that from a ClassTemplateDecl, while
+  /// getDescribedClassTemplate() retrieves the ClassTemplateDecl from
+  /// a CXXRecordDecl.
+  if(node->getDescribedClassTemplate()) {
+    clang::TemplateDecl* templateDecl =
+      node->getDescribedClassTemplate();
+    clang::TemplateParameterList *tp =
+      templateDecl->getTemplateParameters();
+    //clang::TemplateParameterList *tArgs =
+    //  templateDecl->getTemplateA();
+    for(clang::NamedDecl *parameter_decl: *tp) {
+      DCHECK(!parameter_decl->isParameterPack());
+
+      std::string parameterType;
+
+      /// \brief Declaration of a template type parameter.
+      ///
+      /// For example, "T" in
+      /// \code
+      /// template<typename T> class vector;
+      /// \endcode
+      if (clang::TemplateTypeParmDecl* template_type
+          = clang::dyn_cast<clang::TemplateTypeParmDecl>(parameter_decl))
+      {
+        DCHECK(template_type->wasDeclaredWithTypename())
+          << node->getNameAsString();
+        DCHECK(template_type->hasDefaultArgument())
+          << node->getNameAsString();
+
+        DCHECK(parameterType.empty())
+          << node->getNameAsString();
+        //llvm::raw_string_ostream out(parameterType);
+        //parameterType
+        //  = template_type->getDefaultArgument()->printPretty(
+        //    printingPolicy
+        //  );
+        const clang::QualType& paramType =
+          template_type->getDefaultArgument();
+          //sourceTransformOptions.matchResult.Context
+          //  ->getTypeDeclType(template_type->getDefaultArgument());
+        parameterType
+          = exatractTypeName(
+              paramType.getAsString(printingPolicy));
+        DCHECK(!parameterType.empty())
+          << node->getNameAsString();
+      }
+      /// NonTypeTemplateParmDecl - Declares a non-type template parameter,
+      /// e.g., "Size" in
+      /// @code
+      /// template<int Size> class array { };
+      /// @endcode
+      else if (clang::NonTypeTemplateParmDecl* non_template_type
+          = clang::dyn_cast<clang::NonTypeTemplateParmDecl>(parameter_decl))
+      {
+        DCHECK(parameterType.empty())
+          << node->getNameAsString();
+        //parameterType
+        //  += non_template_type->getType().getAsString(printingPolicy);
+        DCHECK(non_template_type->hasDefaultArgument())
+          << node->getNameAsString();
+        llvm::raw_string_ostream out(parameterType);
+        non_template_type->getDefaultArgument()->printPretty(
+          out
+          , nullptr // clang::PrinterHelper
+          , printingPolicy
+          , 0 // indent
+        );
+        DCHECK(!parameterType.empty())
+          << node->getNameAsString();
+      }
+      DCHECK(!parameterType.empty())
+          << node->getNameAsString();
+
+      DVLOG(9)
+        << " template parameter decl: "
+        << parameter_decl->getNameAsString()
+        << " parameterType: "
+        << parameterType;
+
+      /**
+       * Example input:
+          template<
+            IntSummable typeclass_target
+            , FireSpell impl_target
+          >
+          struct
+          _typeclass_instance()
+          FireSpell_MagicItem
+          {};
+       **/
+      if(parameter_decl->getNameAsString() == "typeclass_target") {
+        DCHECK(typeclassBaseName.empty())
+          << node->getNameAsString();
+        typeclassBaseName = exatractTypeName(parameterType);
+      }
+      else if(parameter_decl->getNameAsString() == "impl_target") {
+        DCHECK(targetName.empty())
+          << node->getNameAsString();
+        targetName = exatractTypeName(parameterType);
+      } else {
+        LOG(ERROR)
+          << "Unknown argument "
+          << parameter_decl->getNameAsString()
+          << " in typeclass instance: "
+          << node->getNameAsString();
+        CHECK(false)
+          << node->getNameAsString();
+      }
     }
   }
 
   if (targetName.empty()) {
       LOG(ERROR)
         << "target for typeclass instance not found ";
-      CHECK(false);
+      CHECK(false)
+        << node->getNameAsString();
       return clang_utils::SourceTransformResult{nullptr};
   }
 
@@ -556,28 +686,31 @@ clang_utils::SourceTransformResult
     }
   }
 
-  size_t processedTimes = 0;
+  //size_t processedTimes = 0;
+
+  DCHECK(!targetName.empty())
+    << node->getNameAsString();
+
+  DCHECK(!typeclassBaseName.empty())
+    << node->getNameAsString();
 
   /// \todo remove loop
-  for(const auto& tit : typeclassBaseNames.as_vec_) {
-    VLOG(9)
+  //for(const auto& tit : typeclassBaseNames.as_vec_)
+  {
+    /*VLOG(9)
       << "arg name: "
       << tit.name_
       << " arg value: "
       << tit.value_;
 
-    if(tit.name_ == "impl_target") {
-      continue;
-    }
-
     if(tit.name_ == "trait_type") {
       continue;
-    }
+    }*/
 
-    processedTimes++;
+    //processedTimes++;
 
-    std::string typeclassBaseName = tit.value_;
-    prepareTplArg(typeclassBaseName);
+    //std::string typeclassBaseName = tit.value_;
+    //prepareTplArg(typeclassBaseName);
 
     VLOG(9)
       << "typeclassBaseName = "
@@ -586,6 +719,10 @@ clang_utils::SourceTransformResult
     VLOG(9)
       << "target = "
       << targetName;
+
+    VLOG(9)
+      << "node->getNameAsString() = "
+      << node->getNameAsString();
 
     if(typeclassBaseName.empty()) {
         return clang_utils::SourceTransformResult{""};
@@ -617,6 +754,7 @@ clang_utils::SourceTransformResult
        CHECK(false);
     }
 
+    /// \todo remove ReflectionRegistry, use template args
     if(reflection::ReflectionRegistry::getInstance()->
       reflectionCXXRecordRegistry.find(typeclassBaseName)
         == reflection::ReflectionRegistry::getInstance()->
@@ -652,11 +790,15 @@ clang_utils::SourceTransformResult
       << original_full_file_path;
 
     {
-        std::string fileTypeclassBaseName = typeclassBaseName;
+        std::string fileTypeclassBaseName
+          = ReflectedBaseTypeclassRegistry->classInfoPtr_->name;
         normalizeFileName(fileTypeclassBaseName);
+        DCHECK(!fileTypeclassBaseName.empty());
 
+        DCHECK(!node->getNameAsString().empty());
         base::FilePath gen_hpp_name
-          = outDir_.Append(targetName + "_" + fileTypeclassBaseName
+          = outDir_.Append(
+            node->getNameAsString()
             + ".typeclass_instance.generated.hpp");
 
         base::FilePath gen_base_typeclass_hpp_name
@@ -728,16 +870,17 @@ clang_utils::SourceTransformResult
 
     }
   }
-  if(processedTimes <= 0) {
+  /*if(processedTimes <= 0) {
     LOG(ERROR)
       << "nothing to do with "
       << sourceTransformOptions.func_with_args.func_with_args_as_string_;
     CHECK(false);
-  }
+  }*/
 
   return clang_utils::SourceTransformResult{nullptr};
 }
 
+#if 0
 clang_utils::SourceTransformResult
   TypeclassTooling::typeclass_combo(
     const clang_utils::SourceTransformOptions& sourceTransformOptions)
@@ -1047,5 +1190,6 @@ clang_utils::SourceTransformResult
 
   return clang_utils::SourceTransformResult{nullptr};
 }
+#endif // 0
 
 } // namespace plugin

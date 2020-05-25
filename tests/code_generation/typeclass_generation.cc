@@ -263,64 +263,76 @@ Spell
 // generates FireSpell_IntSummable
 // like impl for trait
 // allow typeclass<IntSummableTraits> to store FireSpell
-_generate(
-  typeclass_instance(
-    impl_target = "FireSpell"
-    , "IntSummable"
-  )
-)
+template<
+  typename typeclass_target = IntSummable
+  , typename impl_target = FireSpell
+>
+struct
+_typeclass_instance()
+FireSpell_IntSummable
+{};
 
 // generates int_IntSummable
 // like impl for trait
 // allow typeclass<IntSummableTraits> to store int
-_generate(
-  typeclass_instance(
-    impl_target = "int"
-    , "IntSummable"
-  )
-)
+template<
+  typename typeclass_target = IntSummable
+  , typename impl_target = int
+>
+struct
+_typeclass_instance()
+int_IntSummable
+{};
 
 // Usage: sum int with int
 // generates double_IntSummable
 // like impl for trait
 // allow typeclass<IntSummableTraits> to store double
-_generate(
-  typeclass_instance(
-    impl_target = "double"
-    , "IntSummable"
-  )
-)
+template<
+  typename typeclass_target = IntSummable
+  , typename impl_target = double
+>
+struct
+_typeclass_instance()
+double_IntSummable
+{};
 
 // Usage: sum int with double
 // generates FireSpell_MagicItem
 // like impl for trait
 // allow typeclass<MagicItemTraits> to store FireSpell
-_generate(
-  typeclass_instance(
-    impl_target = "FireSpell"
-    , "MagicItem"
-  )
-)
+template<
+  typename typeclass_target = IntSummable
+  , typename impl_target = FireSpell
+>
+struct
+_typeclass_instance()
+FireSpell_MagicItem
+{};
 
 // generates FireSpell_Spell
 // like impl for trait
 // allow typeclass<SpellTraits> to store FireSpell
-_generate(
-  typeclass_instance(
-    impl_target = "FireSpell"
-    , "Spell"
-  )
-)
+template<
+  typename typeclass_target = Spell
+  , typename impl_target = FireSpell
+>
+struct
+_typeclass_instance()
+FireSpell_Spell
+{};
 
 // generates FireSpell_Printable
 // like impl for trait
 // allow typeclass<PrintableTraits> to store FireSpell
-_generate(
-  typeclass_instance(
-    impl_target = "FireSpell"
-    , "Printable"
-  )
-)
+template<
+  typename typeclass_target = Printable
+  , typename impl_target = FireSpell
+>
+struct
+_typeclass_instance()
+FireSpell_Printable
+{};
 
 // like impl for trait
 /// \note example of merged typeclasses
@@ -330,32 +342,44 @@ _generate(
 /// because combined typeclasses avoids problems releted to
 /// collision of function names
 // allow typeclass<MagicTemplated...long name> to store FireSpell
-_generate(
-  typeclass_instance(
-    impl_target = "FireSpell"
-    , "MagicLongType"
-  )
-)
+template<
+  typename typeclass_target = MagicLongType
+  , typename impl_target = FireSpell
+>
+struct
+_typeclass_instance()
+FireSpell_MagicLongType
+{};
 
 // like impl for trait
-/// \note you can list multiple functions in same _apply
-/// with ';' as delimiter,
-_generate(
-  typeclass_instance(
-    impl_target = "WaterSpell"
-    , "Spell"
-  )
-  ;
-  typeclass_instance(
-    impl_target = "WaterSpell"
-    , "MagicItem"
-  )
-  ;
-  typeclass_instance(
-    impl_target = "WaterSpell"
-    , "Printable"
-  )
-)
+template<
+  typename typeclass_target = Spell
+  , typename impl_target = WaterSpell
+>
+struct
+_typeclass_instance()
+WaterSpell_Spell
+{};
+
+// like impl for trait
+template<
+  typename typeclass_target = MagicItem
+  , typename impl_target = WaterSpell
+>
+struct
+_typeclass_instance()
+WaterSpell_MagicItem
+{};
+
+// like impl for trait
+template<
+  typename typeclass_target = Printable
+  , typename impl_target = WaterSpell
+>
+struct
+_typeclass_instance()
+WaterSpell_Printable
+{};
 
 // like impl for trait
 /// \note example of merged typeclasses
@@ -365,12 +389,14 @@ _generate(
 /// because combined typeclasses avoids problems releted to
 /// collision of function names
 // allow typeclass<MagicTemplated...long name> to store WaterSpell
-_generate(
-  typeclass_instance(
-    impl_target = "WaterSpell"
-    , "MagicLongType"
-  )
-)
+template<
+  typename typeclass_target = MagicLongType
+  , typename impl_target = WaterSpell
+>
+struct
+_typeclass_instance()
+WaterSpell_MagicLongType
+{};
 
 /// \todo remove
 // just wraps multiple `traits`, forwards calls

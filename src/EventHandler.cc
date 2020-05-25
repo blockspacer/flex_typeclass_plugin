@@ -123,16 +123,16 @@ void FlexTypeclassEventHandler::RegisterAnnotationMethods(
         , base::Unretained(tooling_.get()));
   }
 
-  {
-    VLOG(9)
-      << "registered source transform rule:"
-         " typeclass_combo";
-    CHECK(tooling_);
-    sourceTransformRules["typeclass_combo"] =
-      base::BindRepeating(
-        &TypeclassTooling::typeclass_combo
-        , base::Unretained(tooling_.get()));
-  }
+  //{
+  //  VLOG(9)
+  //    << "registered source transform rule:"
+  //       " typeclass_combo";
+  //  CHECK(tooling_);
+  //  sourceTransformRules["typeclass_combo"] =
+  //    base::BindRepeating(
+  //      &TypeclassTooling::typeclass_combo
+  //      , base::Unretained(tooling_.get()));
+  //}
 }
 
 void FlexTypeclassEventHandler::Init(

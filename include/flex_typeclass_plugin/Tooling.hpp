@@ -99,9 +99,9 @@ public:
         typeclass_combo(Spell, MagicItem)
       )
    */
-  clang_utils::SourceTransformResult
-    typeclass_combo(
-      const clang_utils::SourceTransformOptions& sourceTransformOptions);
+  //clang_utils::SourceTransformResult
+  //  typeclass_combo(
+  //    const clang_utils::SourceTransformOptions& sourceTransformOptions);
 
 private:
   ::clang_utils::SourceTransformRules* sourceTransformRules_;

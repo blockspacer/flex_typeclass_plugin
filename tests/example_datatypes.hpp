@@ -13,6 +13,9 @@
 #define _typeclass(settings) \
   __attribute__((annotate("{gen};{funccall};typeclass(" settings ")")))
 
+#define _typeclass_instance(settings) \
+  __attribute__((annotate("{gen};{funccall};typeclass_instance(" settings ")")))
+
 #define _generate(...) \
   /* generate definition required to use __attribute__ */ \
   struct \
