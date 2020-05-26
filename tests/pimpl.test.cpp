@@ -41,6 +41,6 @@ SCENARIO("pimpl", "[basic]") {
 
     REQUIRE(foo.foo() == 1234);
 
-    REQUIRE(foo.baz() == "s1omedata");
+    REQUIRE(foo.baz() == "somedata");
   }
 }

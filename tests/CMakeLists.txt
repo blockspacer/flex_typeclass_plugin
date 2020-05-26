@@ -106,6 +106,8 @@ add_custom_command(
         --extra-arg=-DCLING_IS_ON=1
         # path to tests/example_datatypes.hpp
         --extra-arg=-I${CMAKE_CURRENT_SOURCE_DIR}
+        # path to flex_typeclass_plugin/include/flex_typeclass_plugin/pregenerated
+        --extra-arg=-I${pregenerated_DIR}
         --extra-arg=-Wno-undefined-inline
         ${flextool_extra_args}
         ${flextool_input_files}

@@ -2,11 +2,11 @@
 
 Plugin for [https://github.com/blockspacer/flextool](https://github.com/blockspacer/flextool)
 
-Plugin provides support for typeclasses (or Rust-like traits or Clojure-like protocols or "TEPS" - "Type Erasure Parent Style" or virtual concepts or runtime concepts or Haskell-like type classes or runtime-polymorphic objects with value semantics or inheritance-free polymorphism , etc.).
+Plugin provides support for typeclass-es (or Rust-like traits or Clojure-like protocols or "TEPS" - "Type Erasure Parent Style" or virtual concepts or runtime concepts or Haskell-like type classes or runtime-polymorphic objects with value semantics or inheritance-free polymorphism, etc.).
 
 Note that plugin output is valid C++ code: you can open generated files and debug them as usual.
 
-If you do not know why to use C++ typeclasses see https://www.youtube.com/watch?v=OtU51Ytfe04
+If you do not know why to use C++ typeclass-es see [https://www.youtube.com/watch?v=OtU51Ytfe04](https://www.youtube.com/watch?v=OtU51Ytfe04)
 
 See for details about flextool [https://blockspacer.github.io/flex_docs/](https://blockspacer.github.io/flex_docs/)
 
@@ -14,27 +14,27 @@ See for more details about typeclass implementation
 
 - http://ldionne.com/cppnow-2018-runtime-polymorphism/#/14/1
 
-See for more details about typeclasses and `Polymorphic Ducks`:
+See for more details about typeclass-es and `Polymorphic Ducks`:
 
-- https://mropert.github.io/2017/11/30/polymorphic_ducks/
-- https://mropert.github.io/2017/12/17/better_polymorphic_ducks/
-- https://mropert.github.io/2017/12/23/undefined_ducks/
+- [https://mropert.github.io/2017/11/30/polymorphic_ducks/](https://mropert.github.io/2017/11/30/polymorphic_ducks/)
+- [https://mropert.github.io/2017/12/17/better_polymorphic_ducks/](https://mropert.github.io/2017/12/17/better_polymorphic_ducks/)
+- [https://mropert.github.io/2017/12/23/undefined_ducks/](https://mropert.github.io/2017/12/23/undefined_ducks/)
 
 Runtime Concepts for the C++ Standard Template Library by Sean Parent:
 
-- https://sean-parent.stlab.cc/papers/2008-03-sac/p171-pirkelbauer.pdf
+- [https://sean-parent.stlab.cc/papers/2008-03-sac/p171-pirkelbauer.pdf](https://sean-parent.stlab.cc/papers/2008-03-sac/p171-pirkelbauer.pdf)
 
-- A Generic, Extendable and Efficient Solution for Polymorphic Programming (p0957r4):
+A Generic, Extendable and Efficient Solution for Polymorphic Programming (p0957r4):
 
-http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p0957r4.pdf
+- [http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p0957r4.pdf](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p0957r4.pdf)
 
 Dynamic Generic Programming with Virtual Concepts by Andrea Proli:
 
-- https://github.com/andyprowl/virtual-concepts/blob/master/draft/Dynamic%20Generic%20Programming%20with%20Virtual%20Concepts.pdf
+- [https://github.com/andyprowl/virtual-concepts/blob/master/draft/Dynamic%20Generic%20Programming%20with%20Virtual%20Concepts.pdf](https://github.com/andyprowl/virtual-concepts/blob/master/draft/Dynamic%20Generic%20Programming%20with%20Virtual%20Concepts.pdf)
 
 Runtime Polymorphic Generic Programming — Mixing Objects and Concepts in ConceptC++
 
-- https://pdfs.semanticscholar.org/aa3f/fdcb687f2b5115996f4ef1f2a1ea0a01cb6a.pdf
+- [https://pdfs.semanticscholar.org/aa3f/fdcb687f2b5115996f4ef1f2a1ea0a01cb6a.pdf](https://pdfs.semanticscholar.org/aa3f/fdcb687f2b5115996f4ef1f2a1ea0a01cb6a.pdf)
 
 ## Before installation
 
@@ -61,7 +61,13 @@ GIT_SSL_NO_VERIFY=true \
           -e flex_typeclass_plugin:enable_tests=True
 ```
 
+## CMake and conan integration
+
+Example code can be found in `flex_typeclass_plugin/tests` directory.
+
 ## How it works
+
+Example code can be found in `flex_typeclass_plugin/tests` directory.
 
 0. declare interface what you want to implement
 
@@ -98,13 +104,17 @@ tcFireSpell->has_enough_mana("...");
 
 Note that we separated data (`FireSpell`), interface (`MagicItemTraits`) and implementation (see definition of `has_enough_mana` below).
 
-1. generete typeclass
+1. generate typeclass
 
 ```cpp
 // generates typeclass MagicItem
 // that must have same functions as
 // MagicItemTraits
-_typeclass(public MagicItemTraits, name = MagicItem)
+struct
+_typeclass()
+MagicItem
+  : public MagicItemTraits
+{};
 ```
 
 generates class `Typeclass<MagicItemTraits>` and `using MagicItem = Typeclass<MagicItemTraits>;`
@@ -162,9 +172,9 @@ class Typeclass<MagicItemTraits>
 
 `TypeclassImplBase<MagicItemTraits>` will be used as base class.
 
-`TypeclassImplBase` is Concept - abstract base class that is hidden under the covers.
+`TypeclassImplBase` is `Concept` - abstract base class that is hidden under the covers.
 
-`name` parameter is optional, `name = MagicItem` used to generate:
+`MagicItem` used to generate:
 
 ```cpp
 using MagicItem = Typeclass<MagicItemTraits>;
@@ -173,24 +183,30 @@ using MagicItem = Typeclass<MagicItemTraits>;
 also `name` parameter controls name of generated `.hpp` and `.cpp` files.
 
 ```cpp
-// will generate files with names based on `name = MagicItem`:
+// will generate files with names based on `MagicItem`:
 // 1. MagicItem.typeclass.generated.cpp
 // 2. MagicItem.typeclass.generated.hpp
-_typeclass(public MagicItemTraits, name = MagicItem)
+struct
+_typeclass()
+MagicItem
+  : public MagicItemTraits
+{};
 ```
 
-2. generete typeclass instance
+2. generate typeclass instance
 
 ```cpp
-// will generate files with names based on `target = "FireSpell"`:
+// will generate files with names based on `FireSpell_MagicItem`:
 // 1. FireSpell_MagicItem.typeclass_instance.generated.cpp
 // 2. FireSpell_MagicItem.typeclass_instance.generated.hpp
-_generate(
-  typeclass_instance(
-    impl_target = "FireSpell"
-    , "MagicItem"
-  )
-)
+template<
+  typename typeclass_target = MagicItem
+  , typename impl_target = FireSpell
+>
+struct
+_typeclass_instance()
+FireSpell_MagicItem
+{};
 ```
 
 generates class `TypeclassImpl<FireSpell,MagicItemTraits>`
@@ -199,7 +215,7 @@ generates class `TypeclassImpl<FireSpell,MagicItemTraits>`
 
 `TypeclassImpl<FireSpell,MagicItemTraits>` inherits from `TypeclassImplBase<MagicItemTraits>`.
 
-`TypeclassImpl` is Model - class that stores data and implements Concept.
+`TypeclassImpl` is `Model` - class that stores data and implements Concept.
 
 3. define functionality related to typeclass instance
 
@@ -340,12 +356,13 @@ Use `generator = InPlace` with custom `BufferSize`:
 // MagicItemTraits
 // We specified `BufferSize = 64` and `generator = InPlace`
 // to optimize performance
+struct
 _typeclass(
-  "name = MagicItem"
-  ", generator = InPlace"
-  ", BufferSize = 64"
-  , public MagicItemTraits
-)
+  "generator = InPlace"
+  ", BufferSize = 64")
+MagicLongTypeExample
+  : public MagicTemplatedTraits<std::string, int>
+{};
 ```
 
 `generator = InPlace` will generate code that uses aligned storage.
@@ -386,7 +403,7 @@ flextool can interpret arbitrary C++ code at runtime, just pass command-line arg
 --cling_scripts=${flex_typeclass_plugin_settings}
 ```
 
-## When to use typeclasses
+## When to use typeclass-es
 
 Use `Typeclass<MagicItemTraits>` only for polymorphic objects.
 
@@ -415,31 +432,35 @@ MagicTemplatedTraits {
 // generates typeclass MagicLongTypeExample
 // that must have same functions as
 // MagicTemplatedTraits<std::string, int>
-_typeclass(
-  "name = MagicLongTypeExample"
-  , public MagicTemplatedTraits<std::string, int>
-)
+struct
+_typeclass()
+MagicLongTypeExample
+  : public MagicTemplatedTraits<std::string, int>
+{};
 
 // note that we combined multiple concepts,
 // where each concept with `template`
-_typeclass(
-  "name = MagicLongType"
-  , public MagicTemplatedTraits<std::string, int>
+struct
+_typeclass()
+MagicLongType
+  : public MagicTemplatedTraits<std::string, int>
   , public ParentTemplatedTraits_1<const char *>
   , public ParentTemplatedTraits_2<const int &>
-)
+{};
 
-// note that we use "MagicLongType" as alias (by "name = MagicLongType")
+// note that we use "MagicLongType" as alias (by `MagicLongType`)
 // because without alias type will be too long, like
 // FireSpell_MagicTemplated_std__string__int__ParentTemplated_1_const_char____ParentTemplated_2_const_int___
 // code below allows to create short file name like
 // FireSpell_MagicLongType.typeclass_instance.generated.hpp
-_generate(
-  typeclass_instance(
-    impl_target = "FireSpell"
-    , "MagicLongType"
-  )
-)
+template<
+  typename typeclass_target = MagicLongType
+  , typename impl_target = FireSpell
+>
+struct
+_typeclass_instance()
+FireSpell_MagicItem
+{};
 
 // implement generated functions somewhere
 
@@ -558,6 +579,8 @@ You can find details about that problem at [https://aherrmann.github.io/programm
 
 Merge typeclass-es, use only one model.
 
+If you want to merge typeclass-es `Opener` and `Greeter`, than you can use multiple inheritance:
+
 ```cpp
 struct Opener {
   virtual void open() const noexcept = 0;
@@ -567,20 +590,15 @@ struct Greeter {
   virtual void greet() const noexcept = 0;
 };
 
-$typeclass(
-  "name = OpenerAndGreeter"
-  , public Opener
+struct
+_typeclass()
+OpenerAndGreeter
+  : public Opener
   , public Greeter
-)
+{};
 ```
 
-For example, `class OpenerAndGreeter` can store:
-
-```cpp
-OpenerAndGreeter model;
-```
-
-And you can use it like below:
+And you can use `OpenerAndGreeter` like below:
 
 ```cpp
 OpenerAndGreeter openerAndGreeter{
@@ -596,9 +614,11 @@ Pros:
 - Useful when you want to make each typeclass NOT optional.
 
 Cons:
-- Function names from different typeclasses must not collide.
+- Function names from different typeclass-es must not collide.
 
 ### Approach 2: multiple optional models (each model stores separate data)
+
+TODO: IN DEVELOPMENT
 
 Merge typeclass-es, use multiple optional models.
 
@@ -652,17 +672,19 @@ if(openerAndGreeter.has<Greeter>())
 ```
 
 Pros:
-- Function names from different typeclasses can collide.
+- Function names from different typeclass-es can collide.
 - Useful when you want to make each typeclass optional.
+- Useful when you want to use custom storage type for each typeclass.
 
 Cons:
-- Normal performance
-- Normal memory usage
+- Normal performance (must use `has` function before usage of stored typeclass-es)
+- Normal memory usage (stores multiple typeclass-es not in single storage)
 
 ## Proxy Dilemma
 
-The problem stems from the fact that a
-referencing type-erasure wrapper is itself a distinct object from the object it erases. In other words:
+The problem stems from the fact that a referencing type-erasure wrapper is itself a distinct object from the object it erases.
+
+In other words:
 
 ```cpp
 auto r = Rectangle{{1.0, 2.0}, 5.0, 6.0};
@@ -671,12 +693,38 @@ assert(&r == &s); // THIS ASSERTION ALWAYS FAILS
 ```
 
 This is an issue for compile-time generic algorithms written in the form of function templates:
-depending on how they are written, these algorithms may not be allowed to work transparently with
-objects accessed through a type-erasing wrapper
 
-See for details:
+Depending on how they are written, these algorithms may not be allowed to work transparently with objects accessed through a type-erasing wrapper
 
-- Dynamic Generic Programming with Virtual Concepts by Andrea Proli: https://github.com/andyprowl/virtual-concepts/blob/master/draft/Dynamic%20Generic%20Programming%20with%20Virtual%20Concepts.pdf
+See for details `Dynamic Generic Programming with Virtual Concepts by Andrea Proli`:
+
+- [https://github.com/andyprowl/virtual-concepts/blob/master/draft/Dynamic%20Generic%20Programming%20with%20Virtual%20Concepts.pdf](https://github.com/andyprowl/virtual-concepts/blob/master/draft/Dynamic%20Generic%20Programming%20with%20Virtual%20Concepts.pdf)
+
+## Design decisions
+
+1. Use template parameters to generate typeclass instance (instead of string with parameters passed as part of annotation attribute)
+
+```cpp
+// generates int_IntSummable
+// like impl for trait
+// allow typeclass<IntSummableTraits> to store int
+template<
+  typename typeclass_target = IntSummableType
+  , typename impl_target = int
+>
+struct
+_typeclass_instance()
+int_IntSummable
+{};
+```
+
+Template parameters require to specify valid type, so typo probability is minimal.
+
+Because template parameter is valid type, we can extract reflection information from it.
+
+That allows to use any valid C++ type as input passed to `_typeclass_instance` and import already generated typeclass from thirparty library.
+
+Ability to import typeclass from thirparty library is important for plugin-based applications.
 
 ## Development flow (for contributors)
 

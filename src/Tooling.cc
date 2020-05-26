@@ -183,14 +183,17 @@ clang_utils::SourceTransformResult
   clang::SourceManager &SM
     = sourceTransformOptions.rewriter.getSourceMgr();
 
-  const clang::CXXRecordDecl *node1 =
+  const clang::CXXRecordDecl* nodeRecordDecl =
     sourceTransformOptions.matchResult.Nodes.getNodeAs<
       clang::CXXRecordDecl>("bind_gen");
+
+  clang::PrintingPolicy printingPolicy(
+    sourceTransformOptions.rewriter.getLangOpts());
 
   const clang::LangOptions& langOptions
     = sourceTransformOptions.rewriter.getLangOpts();
 
-  if (!node1) {
+  if (!nodeRecordDecl) {
     LOG(ERROR)
       << "CXXRecordDecl not found ";
     CHECK(false);
@@ -223,19 +226,23 @@ clang_utils::SourceTransformResult
   */
   std::string baseClassesCode;
 
-  if (node1) {
+  if (nodeRecordDecl) {
     reflection::AstReflector reflector(
       sourceTransformOptions.matchResult.Context);
 
     std::vector<clang::CXXRecordDecl *> nodes;
     std::vector<reflection::ClassInfoPtr> structInfos;
+
+    /// \todo replace with std::vector<MethodInfoPtr>
     reflection::ClassInfoPtr structInfo;
 
-    DCHECK(node1->bases().begin() != node1->bases().end())
-      << "no bases for: "
-      << node1->getNameAsString();
+    DCHECK(nodeRecordDecl->bases().begin()
+      != nodeRecordDecl->bases().end())
+      << "(typeclass) no bases for: "
+      << nodeRecordDecl->getNameAsString();
+    /// \todo make recursive (support bases of bases)
     for(const clang::CXXBaseSpecifier& it
-        : node1->bases())
+        : nodeRecordDecl->bases())
     {
       {
         clang::SourceRange varSourceRange
@@ -244,7 +251,8 @@ clang_utils::SourceTransformResult
           varSourceRange,
           true // IsTokenRange
         );
-        clang::SourceLocation initStartLoc = charSourceRange.getBegin();
+        clang::SourceLocation initStartLoc
+          = charSourceRange.getBegin();
         if(varSourceRange.isValid()) {
           StringRef sourceText
             = clang::Lexer::getSourceText(
@@ -257,14 +265,23 @@ clang_utils::SourceTransformResult
           DCHECK(false);
         }
       }
+      CHECK(it.getType()->getAsCXXRecordDecl())
+        << "failed getAsCXXRecordDecl for "
+        << it.getTypeSourceInfo()->getType().getAsString();
       if(it.getType()->getAsCXXRecordDecl()) {
         nodes.push_back(
           it.getType()->getAsCXXRecordDecl());
 
-        const auto refled
+        const reflection::ClassInfoPtr refled
           = reflector.ReflectClass(
-            it.getType()->getAsCXXRecordDecl(),
-            &m_namespaces, false);
+              it.getType()->getAsCXXRecordDecl()
+              , &m_namespaces
+              , false // recursive
+            );
+        DCHECK(refled);
+        CHECK(!refled->methods.empty())
+          << "no methods in "
+          << refled->name;
 
         structInfos.push_back(refled);
 
@@ -285,7 +302,9 @@ clang_utils::SourceTransformResult
         std::string preparedFullBaseType
           = it.getType().getAsString();
         preparedFullBaseType
-          = exatractTypeName(preparedFullBaseType);
+          = exatractTypeName(
+              preparedFullBaseType
+            );
 
         structInfo->compoundId.push_back(
           preparedFullBaseType);
@@ -305,7 +324,7 @@ clang_utils::SourceTransformResult
       << "baseClassesCode: "
       << baseClassesCode
       << " of "
-      << node1->getNameAsString();
+      << nodeRecordDecl->getNameAsString();
 
     // remove last comma
     if (!fullBaseType.empty()) {
@@ -319,8 +338,8 @@ clang_utils::SourceTransformResult
       return clang_utils::SourceTransformResult{""};
     }
 
-    std::string targetTypeName
-      = node1->getNameAsString();
+    const std::string& targetTypeName
+      = nodeRecordDecl->getNameAsString();
 
     std::string targetGenerator;
     for(const auto& tit : typeclassBaseNames.as_vec_) {
@@ -355,28 +374,20 @@ clang_utils::SourceTransformResult
       const clang::QualType& paramType =
         //template_type->getDefaultArgument();
         sourceTransformOptions.matchResult.Context
-          ->getTypeDeclType(node1);
+          ->getTypeDeclType(nodeRecordDecl);
       std::string registryTargetName =
-        exatractTypeName(paramType.getAsString());
+        exatractTypeName(
+          paramType.getAsString(printingPolicy)
+        );
 
       VLOG(9) << "ReflectionRegistry... for record " <<
         registryTargetName;
-
-      /// \todo remove ReflectionRegistry, use template args
-      reflection::ReflectionRegistry::getInstance()->
-        reflectionCXXRecordRegistry[registryTargetName]
-          = std::make_unique<
-              reflection::ReflectionCXXRecordRegistry>(
-                registryTargetName, /*node,*/ structInfo);
 
       VLOG(9)
         << "registering type for trait..."
         << registryTargetName
         << " "
         << fullBaseType;
-
-      traitToItsType_[registryTargetName]
-        = fullBaseType;
 
       /// \todo template support
       DCHECK(!structInfo->templateParams.size());
@@ -422,6 +433,7 @@ clang_utils::SourceTransformResult
 
         reflection::ClassInfoPtr ReflectedStructInfo
           = structInfo;
+        DCHECK(ReflectedStructInfo);
 
         // squarets will generate code from template file
         // and append it after annotated variable
@@ -464,6 +476,7 @@ clang_utils::SourceTransformResult
 
         reflection::ClassInfoPtr ReflectedStructInfo
           = structInfo;
+        DCHECK(ReflectedStructInfo);
 
         const auto fileID = SM.getMainFileID();
         const auto fileEntry = SM.getFileEntryForID(
@@ -540,11 +553,18 @@ clang_utils::SourceTransformResult
 
   std::string targetName;
 
-  std::string typeclassBaseName;
+  std::string typeclassQualType;
+
+  std::string typeclassBaseTypeIdentifier;
+
+  clang::QualType typeclassArgQualType;
 
   const clang::CXXRecordDecl *node =
     sourceTransformOptions.matchResult.Nodes.getNodeAs<
       clang::CXXRecordDecl>("bind_gen");
+
+  const clang::LangOptions& langOptions
+    = sourceTransformOptions.rewriter.getLangOpts();
 
   CHECK(node->getDescribedClassTemplate())
     << "node "
@@ -570,9 +590,16 @@ clang_utils::SourceTransformResult
     //clang::TemplateParameterList *tArgs =
     //  templateDecl->getTemplateA();
     for(clang::NamedDecl *parameter_decl: *tp) {
-      DCHECK(!parameter_decl->isParameterPack());
+      CHECK(!parameter_decl->isParameterPack())
+        << node->getNameAsString();
 
-      std::string parameterType;
+      // example: namespace::IntSummable
+      std::string parameterQualType;
+
+      // example: IntSummable (without namespace)
+      std::string parameterBaseTypeIdentifier;
+
+      clang::QualType defaultArgQualType;
 
       /// \brief Declaration of a template type parameter.
       ///
@@ -583,27 +610,28 @@ clang_utils::SourceTransformResult
       if (clang::TemplateTypeParmDecl* template_type
           = clang::dyn_cast<clang::TemplateTypeParmDecl>(parameter_decl))
       {
-        DCHECK(template_type->wasDeclaredWithTypename())
+        CHECK(template_type->wasDeclaredWithTypename())
           << node->getNameAsString();
-        DCHECK(template_type->hasDefaultArgument())
+        CHECK(template_type->hasDefaultArgument())
           << node->getNameAsString();
 
-        DCHECK(parameterType.empty())
+        CHECK(parameterQualType.empty())
           << node->getNameAsString();
-        //llvm::raw_string_ostream out(parameterType);
-        //parameterType
-        //  = template_type->getDefaultArgument()->printPretty(
-        //    printingPolicy
-        //  );
-        const clang::QualType& paramType =
+        defaultArgQualType =
           template_type->getDefaultArgument();
-          //sourceTransformOptions.matchResult.Context
-          //  ->getTypeDeclType(template_type->getDefaultArgument());
-        parameterType
+        parameterQualType
           = exatractTypeName(
-              paramType.getAsString(printingPolicy));
-        DCHECK(!parameterType.empty())
+              defaultArgQualType.getAsString(printingPolicy)
+            );
+        CHECK(!parameterQualType.empty())
           << node->getNameAsString();
+
+        if(defaultArgQualType.getBaseTypeIdentifier()) {
+          parameterBaseTypeIdentifier
+            = exatractTypeName(
+                  defaultArgQualType.getBaseTypeIdentifier()->getName().str()
+              );
+        }
       }
       /// NonTypeTemplateParmDecl - Declares a non-type template parameter,
       /// e.g., "Size" in
@@ -613,30 +641,30 @@ clang_utils::SourceTransformResult
       else if (clang::NonTypeTemplateParmDecl* non_template_type
           = clang::dyn_cast<clang::NonTypeTemplateParmDecl>(parameter_decl))
       {
-        DCHECK(parameterType.empty())
+        CHECK(parameterQualType.empty())
           << node->getNameAsString();
-        //parameterType
-        //  += non_template_type->getType().getAsString(printingPolicy);
-        DCHECK(non_template_type->hasDefaultArgument())
+        CHECK(non_template_type->hasDefaultArgument())
           << node->getNameAsString();
-        llvm::raw_string_ostream out(parameterType);
+        llvm::raw_string_ostream out(parameterQualType);
+        defaultArgQualType =
+          template_type->getDefaultArgument();
         non_template_type->getDefaultArgument()->printPretty(
           out
           , nullptr // clang::PrinterHelper
           , printingPolicy
           , 0 // indent
         );
-        DCHECK(!parameterType.empty())
+        CHECK(!parameterQualType.empty())
           << node->getNameAsString();
       }
-      DCHECK(!parameterType.empty())
+      CHECK(!parameterQualType.empty())
           << node->getNameAsString();
 
       DVLOG(9)
         << " template parameter decl: "
         << parameter_decl->getNameAsString()
-        << " parameterType: "
-        << parameterType;
+        << " parameterQualType: "
+        << parameterQualType;
 
       /**
        * Example input:
@@ -650,14 +678,29 @@ clang_utils::SourceTransformResult
           {};
        **/
       if(parameter_decl->getNameAsString() == "typeclass_target") {
-        DCHECK(typeclassBaseName.empty())
+        CHECK(typeclassQualType.empty())
           << node->getNameAsString();
-        typeclassBaseName = exatractTypeName(parameterType);
+        CHECK(!parameterQualType.empty())
+          << node->getNameAsString();
+        typeclassQualType
+          = exatractTypeName(parameterQualType);
+        CHECK(!parameterBaseTypeIdentifier.empty())
+          << node->getNameAsString();
+        typeclassBaseTypeIdentifier
+          = exatractTypeName(parameterBaseTypeIdentifier);
+        CHECK(!defaultArgQualType.isNull())
+          << node->getNameAsString();
+        CHECK(defaultArgQualType->getAsCXXRecordDecl())
+          << node->getNameAsString();
+        typeclassArgQualType = defaultArgQualType;
       }
       else if(parameter_decl->getNameAsString() == "impl_target") {
-        DCHECK(targetName.empty())
+        CHECK(targetName.empty())
           << node->getNameAsString();
-        targetName = exatractTypeName(parameterType);
+        CHECK(!parameterQualType.empty())
+          << node->getNameAsString();
+        targetName
+          = exatractTypeName(parameterQualType);
       } else {
         LOG(ERROR)
           << "Unknown argument "
@@ -678,43 +721,17 @@ clang_utils::SourceTransformResult
       return clang_utils::SourceTransformResult{nullptr};
   }
 
-  std::string typeAlias;
-  for(const auto& tit : typeclassBaseNames.as_vec_) {
-    if(tit.name_ == "trait_type") {
-      typeAlias = tit.value_;
-      prepareTplArg(typeAlias);
-    }
-  }
-
-  //size_t processedTimes = 0;
-
-  DCHECK(!targetName.empty())
+  CHECK(!targetName.empty())
     << node->getNameAsString();
 
-  DCHECK(!typeclassBaseName.empty())
+  CHECK(!typeclassQualType.empty())
     << node->getNameAsString();
 
-  /// \todo remove loop
-  //for(const auto& tit : typeclassBaseNames.as_vec_)
   {
-    /*VLOG(9)
-      << "arg name: "
-      << tit.name_
-      << " arg value: "
-      << tit.value_;
-
-    if(tit.name_ == "trait_type") {
-      continue;
-    }*/
-
-    //processedTimes++;
-
-    //std::string typeclassBaseName = tit.value_;
-    //prepareTplArg(typeclassBaseName);
 
     VLOG(9)
-      << "typeclassBaseName = "
-      << typeclassBaseName;
+      << "typeclassQualType = "
+      << typeclassQualType;
 
     VLOG(9)
       << "target = "
@@ -724,60 +741,13 @@ clang_utils::SourceTransformResult
       << "node->getNameAsString() = "
       << node->getNameAsString();
 
-    if(typeclassBaseName.empty()) {
+    if(typeclassQualType.empty()) {
         return clang_utils::SourceTransformResult{""};
         CHECK(false);
     }
 
-    std::string validTypeAlias = typeAlias;
-    if(std::map<std::string, std::string>
-        ::const_iterator it
-          = traitToItsType_.find(typeclassBaseName)
-       ; it != traitToItsType_.end())
-    {
-      if(!typeAlias.empty() && typeAlias != it->second) {
-        LOG(ERROR)
-          << "user provided invalid type "
-          << typeAlias
-          << " for trait: "
-          << it->first
-          << " Valid type is: "
-          << it->second;
-       CHECK(false);
-      }
-      validTypeAlias = it->second;
-    } else {
-      LOG(ERROR)
-        << "user not registered typeclass"
-        << " for trait: "
-        << typeclassBaseName;
-       CHECK(false);
-    }
-
-    /// \todo remove ReflectionRegistry, use template args
-    if(reflection::ReflectionRegistry::getInstance()->
-      reflectionCXXRecordRegistry.find(typeclassBaseName)
-        == reflection::ReflectionRegistry::getInstance()->
-          reflectionCXXRecordRegistry.end())
-    {
-        LOG(ERROR)
-          << "ERROR: typeclassBaseName = "
-          << typeclassBaseName
-          << " not found!";
-        CHECK(false);
-        return clang_utils::SourceTransformResult{""};
-    }
-
-    const reflection::ReflectionCXXRecordRegistry*
-      ReflectedBaseTypeclassRegistry =
-        reflection::ReflectionRegistry::getInstance()->
-          reflectionCXXRecordRegistry[typeclassBaseName].get();
-
-    DVLOG(9) << "ReflectedBaseTypeclass->classInfoPtr_->name = "
-      << ReflectedBaseTypeclassRegistry->classInfoPtr_->name;
-
-    DVLOG(9) << "typeclassBaseName = "
-      << typeclassBaseName;
+    DVLOG(9) << "typeclassQualType = "
+      << typeclassQualType;
 
     const auto fileID = SM.getMainFileID();
     const auto fileEntry = SM.getFileEntryForID(
@@ -790,8 +760,9 @@ clang_utils::SourceTransformResult
       << original_full_file_path;
 
     {
+        DCHECK(!typeclassBaseTypeIdentifier.empty());
         std::string fileTypeclassBaseName
-          = ReflectedBaseTypeclassRegistry->classInfoPtr_->name;
+          = typeclassBaseTypeIdentifier;
         normalizeFileName(fileTypeclassBaseName);
         DCHECK(!fileTypeclassBaseName.empty());
 
@@ -807,20 +778,151 @@ clang_utils::SourceTransformResult
 
         /*
          * Used by:
-         * struct _tc_impl_t<ImplTypeclassName, BaseTypeclassName>
+         * struct _tc_impl_t<ImplTypeclassName, TypeclassBasesCode>
         >*/
         std::string& ImplTypeclassName
           = targetName;
 
-        DCHECK(!validTypeAlias.empty());
-        std::string& BaseTypeclassName
-          //= ReflectedBaseTypeclassRegistry->classInfoPtr_->name;
-          = validTypeAlias.empty()
-            ? typeclassBaseName
-            : validTypeAlias;
-
+        reflection::AstReflector reflector(
+          sourceTransformOptions.matchResult.Context);
+        DCHECK(typeclassArgQualType->getAsCXXRecordDecl());
+        /// \todo support custom namespaces
+        reflection::NamespacesTree m_namespaces;
         reflection::ClassInfoPtr ReflectedBaseTypeclass
-          = ReflectedBaseTypeclassRegistry->classInfoPtr_;
+          = reflector.ReflectClass(
+              typeclassArgQualType->getAsCXXRecordDecl()
+              , &m_namespaces
+              , true // recursive
+            );
+        DCHECK(ReflectedBaseTypeclass);
+        CHECK(typeclassArgQualType
+              ->getAsCXXRecordDecl()->hasDefinition())
+          << "no definition in "
+          << typeclassArgQualType
+              ->getAsCXXRecordDecl()->getNameAsString();
+        DCHECK(typeclassArgQualType
+              ->getAsCXXRecordDecl()->bases().begin()
+          != typeclassArgQualType
+              ->getAsCXXRecordDecl()->bases().end())
+          << "(typeclass instance) no bases for: "
+          << typeclassArgQualType
+              ->getAsCXXRecordDecl()->getNameAsString();
+        /// \todo make recursive (support bases of bases)
+        for(const clang::CXXBaseSpecifier& it
+            : typeclassArgQualType->getAsCXXRecordDecl()->bases())
+        {
+          CHECK(it.getType()->getAsCXXRecordDecl())
+            << "failed getAsCXXRecordDecl for "
+            << it.getTypeSourceInfo()->getType().getAsString();
+          if(it.getType()->getAsCXXRecordDecl()) {
+            const reflection::ClassInfoPtr refled
+              = reflector.ReflectClass(
+                  it.getType()->getAsCXXRecordDecl()
+                  , &m_namespaces
+                  , false // recursive
+                );
+            DCHECK(refled);
+            CHECK(!refled->methods.empty())
+              << "no methods in "
+              << refled->name;
+
+            DCHECK(ReflectedBaseTypeclass);
+            {
+              for(const auto& it : refled->members) {
+                ReflectedBaseTypeclass->members.push_back(it);
+              }
+              for(const auto& it : refled->methods) {
+                ReflectedBaseTypeclass->methods.push_back(it);
+              }
+              for(const auto& it : refled->innerDecls) {
+                ReflectedBaseTypeclass->innerDecls.push_back(it);
+              }
+            }
+          }
+        }
+        CHECK(!ReflectedBaseTypeclass->methods.empty())
+          << "no methods in "
+          << ReflectedBaseTypeclass->name;
+        bool hasAtLeastOneValidMethod = false;
+        for(const auto& method: ReflectedBaseTypeclass->methods) {
+          const size_t methodParamsSize = method->params.size();
+          const bool needPrint = isTypeclassMethod(method);
+          if(needPrint) {
+            hasAtLeastOneValidMethod = needPrint;
+          }
+          // log all methods
+          VLOG(9)
+            << "ReflectedBaseTypeclass: "
+            << ReflectedBaseTypeclass->name
+            << " method: "
+            << method->name;
+        }
+        CHECK(hasAtLeastOneValidMethod)
+          << "no valid methods in "
+          << ReflectedBaseTypeclass->name;
+        /*
+         * example input:
+            struct
+            _typeclass(
+              "generator = InPlace"
+              ", BufferSize = 64")
+            MagicLongType
+              : public MagicTemplatedTraits<std::string, int>
+              , public ParentTemplatedTraits_1<const char *>
+              , public ParentTemplatedTraits_2<const int &>
+            {};
+         *
+         * exatracted node->bases()
+         * via clang::Lexer::getSourceText(clang::CharSourceRange) are:
+         *
+         *  MagicTemplatedTraits<std::string, int>
+         *  , ParentTemplatedTraits_1<const char *>
+         *  , ParentTemplatedTraits_2<const int &>
+         *
+         * (without access specifiers like public/private)
+        */
+        std::string TypeclassBasesCode;
+        {
+          DCHECK(typeclassArgQualType->getAsCXXRecordDecl()->bases().begin()
+            != typeclassArgQualType->getAsCXXRecordDecl()->bases().end())
+            << "(ReflectedBaseTypeclass) no bases for: "
+            << ReflectedBaseTypeclass->decl->getNameAsString();
+          for(const clang::CXXBaseSpecifier& it
+              : typeclassArgQualType->getAsCXXRecordDecl()->bases())
+          {
+            clang::SourceRange varSourceRange
+              = it.getSourceRange();
+            clang::CharSourceRange charSourceRange(
+              varSourceRange,
+              true // IsTokenRange
+            );
+            clang::SourceLocation initStartLoc
+              = charSourceRange.getBegin();
+            if(varSourceRange.isValid()) {
+              DCHECK(initStartLoc.isValid());
+              TypeclassBasesCode
+                += exatractTypeName(
+                     it.getType().getAsString(printingPolicy)
+                   );
+              TypeclassBasesCode += kSingleComma;
+            } else {
+              DCHECK(false);
+            }
+          }
+          // remove last comma
+          if (!TypeclassBasesCode.empty()) {
+            DCHECK(TypeclassBasesCode.back() == kSingleComma);
+            TypeclassBasesCode.pop_back();
+          }
+        }
+        CHECK(!TypeclassBasesCode.empty())
+          << "invalid bases for: "
+          << ReflectedBaseTypeclass->decl->getNameAsString();
+        DVLOG(9) <<
+          "TypeclassBasesCode: "
+          << TypeclassBasesCode
+          << " for: "
+          << ReflectedBaseTypeclass->decl->getNameAsString();
 
         std::string headerGuard = "";
 
@@ -831,9 +933,9 @@ clang_utils::SourceTransformResult
           << "generator_path.empty()";
 
         std::vector<std::string> generator_includes{
-             buildIncludeDirective(
+             //buildIncludeDirective(
               /// \todo utf8 support
-              gen_base_typeclass_hpp_name.AsUTF8Unsafe()),
+             // gen_base_typeclass_hpp_name.AsUTF8Unsafe()),
              buildIncludeDirective(
               original_full_file_path),
              buildIncludeDirective(
@@ -870,12 +972,6 @@ clang_utils::SourceTransformResult
 
     }
   }
-  /*if(processedTimes <= 0) {
-    LOG(ERROR)
-      << "nothing to do with "
-      << sourceTransformOptions.func_with_args.func_with_args_as_string_;
-    CHECK(false);
-  }*/
 
   return clang_utils::SourceTransformResult{nullptr};
 }

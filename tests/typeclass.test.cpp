@@ -161,25 +161,26 @@
 
 //#include "LongMagicItemSpell.typeclass_combo.generated.hpp"
 
+#include <flex_typeclass_plugin/pregenerated/IntSummable.typeclass.generated.hpp>
+//#include "IntSummable.typeclass.generated.hpp"
 
-#include "IntSummable.typeclass.generated.hpp"
+#include "Spell.typeclass.generated.hpp"
+#include "MagicLongType.typeclass.generated.hpp"
+#include "Printable.typeclass.generated.hpp"
+#include "MagicItem.typeclass.generated.hpp"
+
 #include "FireSpell_IntSummable.typeclass_instance.generated.hpp"
 #include "int_IntSummable.typeclass_instance.generated.hpp"
 #include "double_IntSummable.typeclass_instance.generated.hpp"
 
-#include "Spell.typeclass.generated.hpp"
 #include "FireSpell_MagicItem.typeclass_instance.generated.hpp"
 
-#include "Spell.typeclass.generated.hpp"
 #include "WaterSpell_MagicItem.typeclass_instance.generated.hpp"
-
-#include "MagicLongType.typeclass.generated.hpp"
 
 #include "FireSpell_MagicLongType.typeclass_instance.generated.hpp"
 
 #include "WaterSpell_MagicLongType.typeclass_instance.generated.hpp"
 
-#include "Printable.typeclass.generated.hpp"
 #include "FireSpell_Printable.typeclass_instance.generated.hpp"
 
 namespace morph {
@@ -328,7 +329,6 @@ void print<Printable::typeclass>
 } // namespace morph
 } // namespace generated
 
-#include "Printable.typeclass.generated.hpp"
 #include "WaterSpell_Printable.typeclass_instance.generated.hpp"
 
 namespace morph {
@@ -346,7 +346,6 @@ void print<Printable::typeclass>
 } // namespace morph
 } // namespace generated
 
-#include "Spell.typeclass.generated.hpp"
 #include "FireSpell_Spell.typeclass_instance.generated.hpp"
 
 namespace morph {
@@ -415,7 +414,6 @@ void set_spell_power<Spell::typeclass>
 } // namespace morph
 } // namespace generated
 
-#include "Spell.typeclass.generated.hpp"
 #include "WaterSpell_Spell.typeclass_instance.generated.hpp"
 
 void some_test_func
@@ -763,7 +761,7 @@ TEST(Typeclass, TypeclassGeneration) {
     FireSpell spell {"title4", "description4"};
     Spell myspell = std::move(spell);
 
-    InPlaceSpell myspell_move{std::move(myspell)}; // move Spell
+    Spell myspell_move{std::move(myspell)}; // move Spell
 
     myspell_move.set_spell_power(
       /*spellname*/ "spellname4"
@@ -818,8 +816,10 @@ TEST(Typeclass, TypeclassGeneration) {
         FireSpell{"someTmpSpell0", "someTmpSpell0"}};
       spellmagicItems.push_back(std::move(pushed));
     }
+
     {
-      MagicLongType pushed{};
+      MagicLongType pushed{
+        FireSpell{"someTmpSpell12", "someTmpSpell12"}};
       MagicLongType someTmpSpell{
         FireSpell{"someTmpSpell1", "someTmpSpell1"}};
       pushed = std::move(someTmpSpell); // move

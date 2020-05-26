@@ -69,30 +69,6 @@
   /* generate definition required to use __attribute__ */ \
   __attribute__((annotate("{gen};{squaretsCodeAndReplace};CXTPL;" #__VA_ARGS__)))
 
-namespace reflection {
-
-typedef std::string reflectionID;
-
-class ReflectionCXXRecordRegistry {
-public:
-    ReflectionCXXRecordRegistry(const reflectionID& id,
-                                //clang::CXXRecordDecl const *node,
-                                ClassInfoPtr classInfoPtr);
-    reflectionID id_;
-    //clang::CXXRecordDecl const *node_;
-    ClassInfoPtr classInfoPtr_;
-};
-
-class ReflectionRegistry {
-public:
-    static ReflectionRegistry *instance;
-public:
-    static ReflectionRegistry *getInstance();
-    std::map<reflectionID, std::unique_ptr<ReflectionCXXRecordRegistry>> reflectionCXXRecordRegistry;
-};
-
-} // namespace reflection
-
 namespace MethodPrinter {
 
 namespace Forwarding {
@@ -105,7 +81,7 @@ namespace Forwarding {
 /// 1 << 4, // 10000 == 16
 enum Options
 {
-  FORWARDING_NOTHING = 0
+  NOTHING = 0
   , EXPLICIT
       = 1 << 1
   , VIRTUAL
@@ -116,7 +92,7 @@ enum Options
       = 1 << 4
   , RETURN_TYPE
       = 1 << 5
-  , FORWARDING_ALL
+  , ALL
       = MethodPrinter::Forwarding::Options::EXPLICIT
         | MethodPrinter::Forwarding::Options::VIRTUAL
         | MethodPrinter::Forwarding::Options::CONSTEXPR
@@ -136,7 +112,7 @@ namespace Trailing {
 /// 1 << 4, // 10000 == 16
 enum Options
 {
-  TRAILING_NOTHING = 0
+  NOTHING = 0
   , CONST
       = 1 << 1
   , NOEXCEPT
@@ -149,7 +125,7 @@ enum Options
       = 1 << 5
   , BODY
       = 1 << 6
-  , TRAILING_ALL
+  , ALL
       = MethodPrinter::Trailing::Options::CONST
         | MethodPrinter::Trailing::Options::NOEXCEPT
         | MethodPrinter::Trailing::Options::PURE
@@ -226,12 +202,12 @@ std::string expandTemplateNames(
 
 // input: vector<a, b, c>
 // output: "a, b, c"
-std::string expandMethodParameterDeclarations(
+std::string methodParamDecls(
   const std::vector<reflection::MethodParamInfo>& params);
 
 // input: vector<a, b, c>
 // output: "a, b, c"
-std::string expandMethodParameterNames(
+std::string methodParamNames(
   const std::vector<reflection::MethodParamInfo>& params);
 
 std::string startHeaderGuard(
@@ -263,12 +239,12 @@ void normalizeFileName(std::string &in);
 ///   methodName(...) {}
 /// \note to disallow some options you can pass
 /// something like:
-/// (MethodPrinter::Options::FORWARDING_ALL
+/// (MethodPrinter::Options::ALL
 ///  & ~MethodPrinter::Options::EXPLICIT
 ///  & ~MethodPrinter::Options::VIRTUAL)
 /// \note to allow only some options you can pass
 /// something like:
-/// MethodPrinter::Options::TRAILING_NOTHING
+/// MethodPrinter::Options::NOTHING
 /// | MethodPrinter::Options::CONST
 /// | MethodPrinter::Options::NOEXCEPT);
 std::string printMethodForwarding(
@@ -276,7 +252,7 @@ std::string printMethodForwarding(
   , const std::string& separator = kSeparatorWhitespace
   // what method printer is allowed to print
   // |options| is a bitmask of |MethodPrinter::Options|
-  , int options = MethodPrinter::Forwarding::Options::FORWARDING_ALL
+  , int options = MethodPrinter::Forwarding::Options::ALL
 );
 
 /// \note order matters:
@@ -285,12 +261,12 @@ std::string printMethodForwarding(
 /// {}
 /// \note to disallow some options you can pass
 /// something like:
-/// (MethodPrinter::Options::TRAILING_ALL
+/// (MethodPrinter::Options::ALL
 ///  & ~MethodPrinter::Options::EXPLICIT
 ///  & ~MethodPrinter::Options::VIRTUAL)
 /// \note to allow only some options you can pass
 /// something like:
-/// MethodPrinter::Options::TRAILING_NOTHING
+/// MethodPrinter::Options::NOTHING
 /// | MethodPrinter::Options::CONST
 /// | MethodPrinter::Options::NOEXCEPT);
 std::string printMethodTrailing(
@@ -298,7 +274,7 @@ std::string printMethodTrailing(
   , const std::string& separator = kSeparatorWhitespace
   // what method printer is allowed to print
   // |options| is a bitmask of |MethodPrinter::Trailing::Options|
-  , int options = MethodPrinter::Trailing::Options::TRAILING_ALL
+  , int options = MethodPrinter::Trailing::Options::ALL
 );
 
 enum class StrJoin

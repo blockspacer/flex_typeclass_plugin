@@ -105,7 +105,7 @@ struct InplaceTypeclassImpl
 
   static_assert(
     typename_false<type_t, typeclass...>::value
-    , "unable to find Typeclass implementation");
+    , "unable to find in-place Typeclass implementation");
 };
 
 template<typename... typeclass>

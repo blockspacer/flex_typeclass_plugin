@@ -1,3 +1,6 @@
+/// \note that file behaves as included header file,
+/// but must be source file (not header file) to be
+/// processed by flextool (Clang LibTooling)
 #pragma once
 
 #include <string>
@@ -6,6 +9,22 @@
 
 #include <type_erasure_common.hpp>
 #include <example_datatypes.hpp>
+
+/// \note imports existing typeclass (may be from external lib)
+/**
+ * code used for codegen:
+   // like `trait`
+   struct
+   _typeclass(
+     "generator = InPlace"
+     ", BufferSize = 64")
+   IntSummable
+     : public SummableTraits<int, int>
+   {};
+ **/
+/// \note flextool must be able to find that file, use --extra-arg=-I
+/// \note prevent recursive include of that file into itself
+#include <flex_typeclass_plugin/pregenerated/IntSummable.typeclass.generated.hpp>
 
 namespace only_for_code_generation {
 
@@ -210,14 +229,8 @@ using shared_function = basic_function<Signature,
                                        dyno::shared_remote_storage>;
 **/
 
-// like `trait`
-struct
-_typeclass(
-  "generator = InPlace"
-  ", BufferSize = 64")
-IntSummable
-  : public SummableTraits<int, int>
-{};
+/// \note imports existing typeclass (may be from external lib)
+using IntSummableType = ::morph::generated::IntSummable::type;
 
 // like `trait`
 struct
@@ -264,7 +277,7 @@ Spell
 // like impl for trait
 // allow typeclass<IntSummableTraits> to store FireSpell
 template<
-  typename typeclass_target = IntSummable
+  typename typeclass_target = IntSummableType
   , typename impl_target = FireSpell
 >
 struct
@@ -276,7 +289,7 @@ FireSpell_IntSummable
 // like impl for trait
 // allow typeclass<IntSummableTraits> to store int
 template<
-  typename typeclass_target = IntSummable
+  typename typeclass_target = IntSummableType
   , typename impl_target = int
 >
 struct
@@ -289,7 +302,7 @@ int_IntSummable
 // like impl for trait
 // allow typeclass<IntSummableTraits> to store double
 template<
-  typename typeclass_target = IntSummable
+  typename typeclass_target = IntSummableType
   , typename impl_target = double
 >
 struct
@@ -302,7 +315,7 @@ double_IntSummable
 // like impl for trait
 // allow typeclass<MagicItemTraits> to store FireSpell
 template<
-  typename typeclass_target = IntSummable
+  typename typeclass_target = MagicItem
   , typename impl_target = FireSpell
 >
 struct

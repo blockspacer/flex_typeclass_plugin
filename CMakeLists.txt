@@ -419,6 +419,12 @@ set(flextool_input_files
   ${flex_typeclass_plugin_src_DIR}/CodeGenerator.cc
 )
 
+# contains generated code that is under version control
+# path to flex_typeclass_plugin/pregenerated/IntSummable.typeclass.generated.hpp
+set(pregenerated_DIR
+  ${CMAKE_CURRENT_SOURCE_DIR}/include
+)
+
 # you can link with library via --extra-arg=-l
 # example: --extra-arg=-l${flexlib_file}
 message(STATUS "flextool=${flextool}")

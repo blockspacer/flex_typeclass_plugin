@@ -112,23 +112,6 @@ private:
 
   SEQUENCE_CHECKER(sequence_checker_);
 
-  /**
-    * example:
-    $typeclass(
-      "name = MagicLongType"
-      , public MagicTemplatedTraits<std::string, int>
-      , public ParentTemplatedTraits_1<const char *>
-      , public ParentTemplatedTraits_2<const int &>
-    )
-
-    Its type is:
-      "MagicTemplatedTraits<std::string, int>,"
-      "ParentTemplatedTraits_1<const char *>,"
-      "ParentTemplatedTraits_2<const int &>"
-   **/
-  std::map<std::string, std::string>
-    traitToItsType_{};
-
   // output directory for generated files
   base::FilePath outDir_;
 
