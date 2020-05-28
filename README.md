@@ -847,3 +847,7 @@ In order to revert the editable mode just remove the link using:
 conan editable remove \
   flex_typeclass_plugin/master@conan/stable
 ```
+
+## TODOs
+
+TODO: required and optional methods, see https://github.com/seanbaxter/circle/blob/master/erasure/type_erasure.md#specifying-core-and-optional-methods

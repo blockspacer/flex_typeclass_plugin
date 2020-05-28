@@ -157,14 +157,21 @@ std::string methodParamDecls(
   return out;
 }
 
-std::string methodParamNames(
+std::string forwardMethodParamNames(
   const std::vector<reflection::MethodParamInfo>& params)
 {
   std::string out;
   size_t paramIter = 0;
   const size_t methodParamsSize = params.size();
   for(const auto& param: params) {
+    reflection::TypeInfoPtr pType = param.type;
+    if(pType->canBeMoved() || pType->getIsRVReference()) {
+      out += "std::move(";
+    }
     out += param.name;
+    if(pType->canBeMoved() || pType->getIsRVReference()) {
+      out += ")";
+    }
     paramIter++;
     if(paramIter != methodParamsSize) {
       out += kSeparatorCommaAndWhitespace;
@@ -321,9 +328,12 @@ std::string printMethodForwarding(
           : "method without return type");
   }
 
-  DCHECK(!result.empty())
-    << "printMethodForwarding failed for method: "
-    << methodInfo->name;
+  if(result.empty()) {
+    VLOG(9)
+      << "printMethodForwarding returned nothing for method: "
+      << methodInfo->name;
+  }
+
   return result;
 }
 
@@ -455,9 +465,12 @@ std::string printMethodTrailing(
           : "method can't have body");
   }
 
-  DCHECK(!result.empty())
-    << "printMethodTrailing failed for method: "
-    << methodInfo->name;
+  if(result.empty()) {
+    VLOG(9)
+      << "printMethodTrailing returned nothing for method: "
+      << methodInfo->name;
+  }
+
   return result;
 }
 

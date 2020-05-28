@@ -1,13 +1,15 @@
 #pragma once
 
-#if defined(CODEGEN_RUNNING)
-#define FOO_HPP_NO_CODEGEN 1
-#include "Foo.hpp"
-#else
-#include "Foo.hpp.generated.hpp"
-#endif
-
 #include <string>
+
+// exec is similar to executeCodeAndReplace,
+// but returns empty source code modification
+#define _executeCode(...) \
+  /* generate definition required to use __attribute__ */ \
+  __attribute__((annotate( \
+        "{gen};{executeCodeAndReplace};" \
+        #__VA_ARGS__ \
+    )))
 
 class
 _executeCode(
@@ -52,7 +54,7 @@ _executeCode(
     }
 
     const std::string typeToMapKey
-      = "Foo::FooImpl";
+      = "FooImpl";
 
     global_storage["global_typeSize_for_" + typeToMapKey]
       = typeSize;
@@ -67,7 +69,7 @@ _executeCode(
     return new llvm::Optional<std::string>{};
   }(clangMatchResult, clangRewriter, clangDecl);
 )
-Foo::FooImpl
+FooImpl
 {
  public:
   FooImpl();

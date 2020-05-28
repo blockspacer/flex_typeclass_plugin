@@ -205,7 +205,7 @@ template< [[+ expandTemplateNames(method->tplParams) +]] >
           concreteData_
           [[+
             methodParamsSize
-              ? (", " + methodParamNames(method->params))
+              ? (", " + forwardMethodParamNames(method->params))
               : ""
           +]]
         );
@@ -352,7 +352,7 @@ final
           concreteData_
           [[+
             methodParamsSize
-              ? (", " + methodParamNames(method->params))
+              ? (", " + forwardMethodParamNames(method->params))
               : ""
           +]]
         );

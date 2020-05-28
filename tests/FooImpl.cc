@@ -5,16 +5,16 @@
 
 #include "FooImpl.hpp.generated.hpp"
 
-int Foo::FooImpl::foo() {
+int FooImpl::foo() {
   return 1234;
 }
 
-std::string Foo::FooImpl::baz() {
+std::string FooImpl::baz() {
   return data_;
 }
 
-Foo::FooImpl::FooImpl() {
+FooImpl::FooImpl() {
 }
 
-Foo::FooImpl::~FooImpl() {
+FooImpl::~FooImpl() {
 }

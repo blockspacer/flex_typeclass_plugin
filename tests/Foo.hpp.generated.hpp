@@ -31,6 +31,8 @@
         #__VA_ARGS__ \
     )))
 
+class FooImpl;
+
 class Foo {
 public:
   Foo();
@@ -42,8 +44,6 @@ public:
   std::string baz();
 
 private:
-  class FooImpl;
-
 #if !defined(FOO_HPP_NO_CODEGEN)
   pimpl::FastPimpl<FooImpl, /*Size*/32, /*Alignment*/8> m_impl;
 #endif // !defined(FOO_HPP_NO_CODEGEN)

@@ -31,6 +31,9 @@
         #__VA_ARGS__ \
     )))
 
+// forward declaration, the crux of the Pimpl pattern
+class FooImpl;
+
 class Foo {
 public:
   Foo();
@@ -42,8 +45,6 @@ public:
   std::string baz();
 
 private:
-  class FooImpl;
-
 #if !defined(FOO_HPP_NO_CODEGEN)
   class
   _executeCode(
@@ -55,7 +56,7 @@ private:
     )
     {
       const std::string typeToMapKey
-        = "Foo::FooImpl";
+        = "FooImpl";
 
       uint64_t typeSize
         = std::any_cast<uint64_t>(
@@ -70,11 +71,11 @@ private:
 
       fastPimplCode += "FooImpl";
 
-      // sizeof(Foo::FooImpl)
+      // sizeof(FooImpl)
       fastPimplCode += ", /*Size*/";
       fastPimplCode += std::to_string(typeSize);
 
-      // alignof(Foo::FooImpl)
+      // alignof(FooImpl)
       fastPimplCode += ", /*Alignment*/";
       fastPimplCode += std::to_string(fieldAlign);
 

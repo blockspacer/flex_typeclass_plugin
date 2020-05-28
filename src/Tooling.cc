@@ -26,6 +26,7 @@
 #include <clang/AST/ASTContext.h>
 #include <clang/Lex/Preprocessor.h>
 #include <clang/AST/DeclTemplate.h>
+#include <clang/AST/RecordLayout.h>
 
 #include <llvm/Support/raw_ostream.h>
 
@@ -742,8 +743,8 @@ clang_utils::SourceTransformResult
       << node->getNameAsString();
 
     if(typeclassQualType.empty()) {
-        return clang_utils::SourceTransformResult{""};
-        CHECK(false);
+      CHECK(false);
+      return clang_utils::SourceTransformResult{""};
     }
 
     DVLOG(9) << "typeclassQualType = "
@@ -844,7 +845,11 @@ clang_utils::SourceTransformResult
           << "no methods in "
           << ReflectedBaseTypeclass->name;
         bool hasAtLeastOneValidMethod = false;
-        for(const auto& method: ReflectedBaseTypeclass->methods) {
+        for(const reflector::MethodInfoPtr& method
+          : ReflectedBaseTypeclass->methods)
+        {
+          DCHECK(method);
+
           const size_t methodParamsSize = method->params.size();
           const bool needPrint = isTypeclassMethod(method);
           if(needPrint) {

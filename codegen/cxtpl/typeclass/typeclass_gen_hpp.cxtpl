@@ -334,7 +334,7 @@ template< [[+ expandTemplateNames(method->tplParams) +]] >
     return implBase_->__[[+ method->name +]]
       [[+
         "("
-        + methodParamNames(method->params)
+        + forwardMethodParamNames(method->params)
         + ");"
       +]]
   }
@@ -699,7 +699,7 @@ template< [[+ expandTemplateNames(method->tplParams) +]] >
   + "__"
   + method->name
   + "("
-  + methodParamNames(method->params)
+  + forwardMethodParamNames(method->params)
   + ")"
   + ";"
   + "}"

@@ -442,6 +442,14 @@ add_custom_command(
     #COMMAND
     #  ${CMAKE_COMMAND} -E echo " Creating ${flex_typeclass_plugin_generated_sources}."
     COMMAND
+      # NOTE: can be run under gdb
+      #gdb
+      #  -ex "run"
+      #  -ex "set pagination off"
+      #  -ex "bt"
+      #  -ex "set confirm off"
+      #  -ex "quit"
+      #  --args
       ${flextool}
         --vmodule=*=200 --enable-logging=stderr --log-level=100
         --indir=${CMAKE_CURRENT_SOURCE_DIR}
@@ -460,6 +468,7 @@ add_custom_command(
         --extra-arg=-I${chromium_build_util_headers}
         --extra-arg=-I${basis_headers}
         --extra-arg=-I${flexlib_headers}
+        --extra-arg=-I${flextool_outdir}
         # path to tests/example_datatypes.hpp
         --extra-arg=-I${CMAKE_CURRENT_SOURCE_DIR}/tests
         --extra-arg=-Wno-undefined-inline
