@@ -118,6 +118,9 @@ add_custom_command(
         # path to flex_typeclass_plugin/include/flex_typeclass_plugin/pregenerated
         --extra-arg=-I${pregenerated_DIR}
         --extra-arg=-Wno-undefined-inline
+        # custom define for basis
+        --extra-arg=-DDISABLE_DOCTEST=1
+        --extra-arg=-DDOCTEST_CONFIG_DISABLE=1
         ${flextool_extra_args}
         ${flextool_input_files}
         # cling_scripts must be ending argument

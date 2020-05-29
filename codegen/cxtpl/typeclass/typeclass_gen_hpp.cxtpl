@@ -11,7 +11,7 @@ const size_t ReflectedStructInfoCompoundIdSize =
 // This is generated file. Do not modify directly.
 // Path to the code generator: [[+ generator_path +]].
 
-[[+ startHeaderGuard(headerGuard) /* no newline */ +]][[~]]
+[[+ clang_utils::startHeaderGuard(headerGuard) /* no newline */ +]][[~]]
 
 [[~]] for(const auto& fileName: generator_includes) {
 [[+ fileName +]]
@@ -54,21 +54,21 @@ namespace generated {
    // where fullCompoundId is combination of
    // impl types (types may be templated)
    const std::string fullCompoundId
-    = joinWithSeparator(
+    = clang_utils::joinWithSeparator(
         ReflectedStructInfo->compoundId
         , ", "
-        , StrJoin::STRIP_LAST_SEPARATOR);
+        , clang_utils::StrJoin::STRIP_LAST_SEPARATOR);
    const std::string methodForwarding
-      = printMethodForwarding(
+      = clang_utils::printMethodForwarding(
           method
-          , kSeparatorWhitespace
+          , clang_utils::kSeparatorWhitespace
           // what method printer is allowed to print
           , MethodPrinter::Forwarding::Options::ALL
             & ~MethodPrinter::Forwarding::Options::VIRTUAL);
    const std::string methodTrailing
-      = printMethodTrailing(
+      = clang_utils::printMethodTrailing(
           method
-          , kSeparatorWhitespace
+          , clang_utils::kSeparatorWhitespace
           // what method printer is allowed to print
           , MethodPrinter::Trailing::Options::NOEXCEPT);
 /* no newline */ ~]][[~]]
@@ -152,15 +152,15 @@ struct TypeclassImplBase<[[+ fullBaseType +]]> {
       continue;
     }
     const std::string methodForwarding
-       = printMethodForwarding(
+       = clang_utils::printMethodForwarding(
            method
-           , kSeparatorWhitespace
+           , clang_utils::kSeparatorWhitespace
            // what method printer is allowed to print
            , MethodPrinter::Forwarding::Options::ALL);
     const std::string methodTrailing
-       = printMethodTrailing(
+       = clang_utils::printMethodTrailing(
            method
-           , kSeparatorWhitespace
+           , clang_utils::kSeparatorWhitespace
            // what method printer is allowed to print
            , MethodPrinter::Trailing::Options::NOTHING
              | MethodPrinter::Trailing::Options::CONST
@@ -301,16 +301,16 @@ Generate functions. Example:
      continue;
    }
    const std::string methodForwarding
-      = printMethodForwarding(
+      = clang_utils::printMethodForwarding(
           method
-          , kSeparatorWhitespace
+          , clang_utils::kSeparatorWhitespace
          // what method printer is allowed to print
           , MethodPrinter::Forwarding::Options::ALL
             & ~MethodPrinter::Forwarding::Options::VIRTUAL);
    const std::string methodTrailing
-      = printMethodTrailing(
+      = clang_utils::printMethodTrailing(
           method
-          , kSeparatorWhitespace
+          , clang_utils::kSeparatorWhitespace
           // what method printer is allowed to print
           , MethodPrinter::Trailing::Options::NOTHING
             | MethodPrinter::Trailing::Options::CONST
@@ -334,7 +334,8 @@ template< [[+ expandTemplateNames(method->tplParams) +]] >
     return implBase_->__[[+ method->name +]]
       [[+
         "("
-        + forwardMethodParamNames(method->params)
+        + clang_utils::forwardMethodParamNames(
+            method->params)
         + ");"
       +]]
   }
@@ -386,15 +387,15 @@ struct InplaceTypeclassImplBase<[[+ fullBaseType +]]>
         continue;
       }
       const std::string methodForwarding
-         = printMethodForwarding(
+         = clang_utils::printMethodForwarding(
              method
-             , kSeparatorWhitespace
+             , clang_utils::kSeparatorWhitespace
              // what method printer is allowed to print
              , MethodPrinter::Forwarding::Options::ALL);
       const std::string methodTrailing
-         = printMethodTrailing(
+         = clang_utils::printMethodTrailing(
              method
-             , kSeparatorWhitespace
+             , clang_utils::kSeparatorWhitespace
              // what method printer is allowed to print
              , MethodPrinter::Trailing::Options::NOTHING
                | MethodPrinter::Trailing::Options::CONST
@@ -662,16 +663,16 @@ Generate functions. Example:
      continue;
    }
    const std::string methodForwarding
-      = printMethodForwarding(
+      = clang_utils::printMethodForwarding(
           method
-          , kSeparatorWhitespace
+          , clang_utils::kSeparatorWhitespace
          // what method printer is allowed to print
           , MethodPrinter::Forwarding::Options::ALL
             & ~MethodPrinter::Forwarding::Options::VIRTUAL);
    const std::string methodTrailing
-      = printMethodTrailing(
+      = clang_utils::printMethodTrailing(
           method
-          , kSeparatorWhitespace
+          , clang_utils::kSeparatorWhitespace
           // what method printer is allowed to print
           , MethodPrinter::Trailing::Options::NOTHING
             | MethodPrinter::Trailing::Options::CONST
@@ -699,7 +700,8 @@ template< [[+ expandTemplateNames(method->tplParams) +]] >
   + "__"
   + method->name
   + "("
-  + forwardMethodParamNames(method->params)
+  + clang_utils::forwardMethodParamNames(
+      method->params)
   + ")"
   + ";"
   + "}"
@@ -800,4 +802,4 @@ using [[+ targetTypeName +]]
 } // namespace morph
 } // namespace generated
 
-[[+ endHeaderGuard(headerGuard) /* no newline */ +]][[~]]
+[[+ clang_utils::endHeaderGuard(headerGuard) /* no newline */ +]][[~]]

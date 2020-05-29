@@ -303,7 +303,7 @@ clang_utils::SourceTransformResult
         std::string preparedFullBaseType
           = it.getType().getAsString();
         preparedFullBaseType
-          = exatractTypeName(
+          = clang_utils::extractTypeName(
               preparedFullBaseType
             );
 
@@ -377,7 +377,7 @@ clang_utils::SourceTransformResult
         sourceTransformOptions.matchResult.Context
           ->getTypeDeclType(nodeRecordDecl);
       std::string registryTargetName =
-        exatractTypeName(
+        clang_utils::extractTypeName(
           paramType.getAsString(printingPolicy)
         );
 
@@ -403,7 +403,7 @@ clang_utils::SourceTransformResult
         ? fullBaseType
         : targetTypeName;
 
-      normalizeFileName(fileTargetName);
+      clang_utils::normalizeFileName(fileTargetName);
 
       base::FilePath gen_hpp_name
         = outDir_.Append(fileTargetName + ".typeclass.generated.hpp");
@@ -426,9 +426,9 @@ clang_utils::SourceTransformResult
         std::string full_file_path = fileEntry->getName();
 
         std::vector<std::string> generator_includes{
-             buildIncludeDirective(
+             clang_utils::buildIncludeDirective(
               full_file_path),
-             buildIncludeDirective(
+             clang_utils::buildIncludeDirective(
               R"raw(type_erasure_common.hpp)raw")
           };
 
@@ -485,10 +485,10 @@ clang_utils::SourceTransformResult
         std::string full_file_path = fileEntry->getName();
 
         std::vector<std::string> generator_includes{
-             buildIncludeDirective(
+             clang_utils::buildIncludeDirective(
               /// \todo utf8 support
               gen_hpp_name.AsUTF8Unsafe()),
-             buildIncludeDirective(
+             clang_utils::buildIncludeDirective(
               R"raw(type_erasure_common.hpp)raw")
           };
 
@@ -563,6 +563,8 @@ clang_utils::SourceTransformResult
   const clang::CXXRecordDecl *node =
     sourceTransformOptions.matchResult.Nodes.getNodeAs<
       clang::CXXRecordDecl>("bind_gen");
+  CHECK(node)
+    << "node must be CXXRecordDecl";
 
   const clang::LangOptions& langOptions
     = sourceTransformOptions.rewriter.getLangOpts();
@@ -586,11 +588,15 @@ clang_utils::SourceTransformResult
   if(node->getDescribedClassTemplate()) {
     clang::TemplateDecl* templateDecl =
       node->getDescribedClassTemplate();
+    DCHECK(templateDecl);
     clang::TemplateParameterList *tp =
       templateDecl->getTemplateParameters();
+    DCHECK(tp);
     //clang::TemplateParameterList *tArgs =
     //  templateDecl->getTemplateA();
     for(clang::NamedDecl *parameter_decl: *tp) {
+      DCHECK(parameter_decl);
+
       CHECK(!parameter_decl->isParameterPack())
         << node->getNameAsString();
 
@@ -611,6 +617,7 @@ clang_utils::SourceTransformResult
       if (clang::TemplateTypeParmDecl* template_type
           = clang::dyn_cast<clang::TemplateTypeParmDecl>(parameter_decl))
       {
+        DCHECK(template_type);
         CHECK(template_type->wasDeclaredWithTypename())
           << node->getNameAsString();
         CHECK(template_type->hasDefaultArgument())
@@ -621,7 +628,7 @@ clang_utils::SourceTransformResult
         defaultArgQualType =
           template_type->getDefaultArgument();
         parameterQualType
-          = exatractTypeName(
+          = clang_utils::extractTypeName(
               defaultArgQualType.getAsString(printingPolicy)
             );
         CHECK(!parameterQualType.empty())
@@ -629,7 +636,7 @@ clang_utils::SourceTransformResult
 
         if(defaultArgQualType.getBaseTypeIdentifier()) {
           parameterBaseTypeIdentifier
-            = exatractTypeName(
+            = clang_utils::extractTypeName(
                   defaultArgQualType.getBaseTypeIdentifier()->getName().str()
               );
         }
@@ -642,6 +649,7 @@ clang_utils::SourceTransformResult
       else if (clang::NonTypeTemplateParmDecl* non_template_type
           = clang::dyn_cast<clang::NonTypeTemplateParmDecl>(parameter_decl))
       {
+        DCHECK(non_template_type);
         CHECK(parameterQualType.empty())
           << node->getNameAsString();
         CHECK(non_template_type->hasDefaultArgument())
@@ -684,11 +692,11 @@ clang_utils::SourceTransformResult
         CHECK(!parameterQualType.empty())
           << node->getNameAsString();
         typeclassQualType
-          = exatractTypeName(parameterQualType);
+          = clang_utils::extractTypeName(parameterQualType);
         CHECK(!parameterBaseTypeIdentifier.empty())
           << node->getNameAsString();
         typeclassBaseTypeIdentifier
-          = exatractTypeName(parameterBaseTypeIdentifier);
+          = clang_utils::extractTypeName(parameterBaseTypeIdentifier);
         CHECK(!defaultArgQualType.isNull())
           << node->getNameAsString();
         CHECK(defaultArgQualType->getAsCXXRecordDecl())
@@ -701,7 +709,7 @@ clang_utils::SourceTransformResult
         CHECK(!parameterQualType.empty())
           << node->getNameAsString();
         targetName
-          = exatractTypeName(parameterQualType);
+          = clang_utils::extractTypeName(parameterQualType);
       } else {
         LOG(ERROR)
           << "Unknown argument "
@@ -764,7 +772,7 @@ clang_utils::SourceTransformResult
         DCHECK(!typeclassBaseTypeIdentifier.empty());
         std::string fileTypeclassBaseName
           = typeclassBaseTypeIdentifier;
-        normalizeFileName(fileTypeclassBaseName);
+        clang_utils::normalizeFileName(fileTypeclassBaseName);
         DCHECK(!fileTypeclassBaseName.empty());
 
         DCHECK(!node->getNameAsString().empty());
@@ -795,6 +803,9 @@ clang_utils::SourceTransformResult
               , &m_namespaces
               , true // recursive
             );
+        DVLOG(9)
+          << "reflected class "
+          << typeclassArgQualType.getAsString();
         DCHECK(ReflectedBaseTypeclass);
         CHECK(typeclassArgQualType
               ->getAsCXXRecordDecl()->hasDefinition())
@@ -822,6 +833,9 @@ clang_utils::SourceTransformResult
                   , &m_namespaces
                   , false // recursive
                 );
+            DVLOG(9)
+              << "reflected base "
+              << typeclassArgQualType.getAsString();
             DCHECK(refled);
             CHECK(!refled->methods.empty())
               << "no methods in "
@@ -845,7 +859,7 @@ clang_utils::SourceTransformResult
           << "no methods in "
           << ReflectedBaseTypeclass->name;
         bool hasAtLeastOneValidMethod = false;
-        for(const reflector::MethodInfoPtr& method
+        for(const reflection::MethodInfoPtr& method
           : ReflectedBaseTypeclass->methods)
         {
           DCHECK(method);
@@ -906,7 +920,7 @@ clang_utils::SourceTransformResult
             if(varSourceRange.isValid()) {
               DCHECK(initStartLoc.isValid());
               TypeclassBasesCode
-                += exatractTypeName(
+                += clang_utils::extractTypeName(
                      it.getType().getAsString(printingPolicy)
                    );
               TypeclassBasesCode += kSingleComma;
@@ -938,12 +952,12 @@ clang_utils::SourceTransformResult
           << "generator_path.empty()";
 
         std::vector<std::string> generator_includes{
-             //buildIncludeDirective(
+             //clang_utils::buildIncludeDirective(
               /// \todo utf8 support
              // gen_base_typeclass_hpp_name.AsUTF8Unsafe()),
-             buildIncludeDirective(
+             clang_utils::buildIncludeDirective(
               original_full_file_path),
-             buildIncludeDirective(
+             clang_utils::buildIncludeDirective(
               R"raw(type_erasure_common.hpp)raw")
           };
 
@@ -1112,7 +1126,7 @@ clang_utils::SourceTransformResult
       );
 
       generator_includes.push_back(
-        buildIncludeDirective(
+        clang_utils::buildIncludeDirective(
           typeclassBaseName + R"raw(.typeclass.generated.hpp)raw"));
 
       DVLOG(9)
@@ -1185,7 +1199,7 @@ clang_utils::SourceTransformResult
         + ".typeclass_combo.generated.hpp");
 
   generator_includes.push_back(
-    buildIncludeDirective(R"raw(type_erasure_common.hpp)raw"));
+    clang_utils::buildIncludeDirective(R"raw(type_erasure_common.hpp)raw"));
 
   {
     std::string headerGuard = "";
@@ -1250,7 +1264,7 @@ clang_utils::SourceTransformResult
       << TYPECLASS_COMBO_TEMPLATE_HPP;
 
     generator_includes.push_back(
-         buildIncludeDirective(
+         clang_utils::buildIncludeDirective(
           /// \todo utf8 support
           gen_hpp_name.AsUTF8Unsafe()));
 
