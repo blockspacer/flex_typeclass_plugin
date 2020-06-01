@@ -1,6 +1,4 @@
-﻿# see https://github.com/chromium/chromium/blob/9db0b5162b8648833c3a6b1af044cebd9d7d3855/base/BUILD.gn
-
-cmake_minimum_required(VERSION 3.4)
+﻿cmake_minimum_required(VERSION 3.4)
 
 # project() must be before checks, see https://stackoverflow.com/a/26437667/10904212
 set(PROJECT_NAME "flex_typeclass_plugin")
@@ -13,22 +11,11 @@ set(LIB_NAME ${PROJECT_NAME})
 
 option(ENABLE_TESTS "Enable tests" OFF)
 
-# path to /generated folder,
-# auto-completion in IDE will not work
-# if IDE can not find header file
-# NOTE: don't forget to set ENABLE_TESTS in IDE settings
-# and build type to Debug
-set(GENERATED_FOLDER_FOR_IDE
-  # default must be same as ${flextool_outdir}
-  "${CMAKE_CURRENT_BINARY_DIR}"
-  CACHE
-  STRING "GENERATED_FOLDER_FOR_IDE" )
-
 # Hack to depend NOT on CONAN_PKG::libname, but on libname directly
 # See for details
 # https://docs.conan.io/en/latest/developing_packages/workspaces.html
-set(LOCAL_BUILD FALSE CACHE BOOL "LOCAL_BUILD")
-message(STATUS "LOCAL_BUILD=${LOCAL_BUILD}")
+set(${PROJECT_NAME}_LOCAL_BUILD FALSE CACHE BOOL "${PROJECT_NAME}_LOCAL_BUILD")
+message(STATUS "${PROJECT_NAME}_LOCAL_BUILD=${${PROJECT_NAME}_LOCAL_BUILD}")
 
 set(${PROJECT_NAME}_BUILD_SHARED_LIBS
   TRUE CACHE BOOL
@@ -271,7 +258,7 @@ endmacro(add_relative_include_dir)
 #  message(FATAL_ERROR "Use flexlib from conan")
 #endif()
 #set(flexlib CONAN_PKG::flexlib)
-#if(LOCAL_BUILD)
+#if(${PROJECT_NAME}_LOCAL_BUILD)
 #  set(flexlib flexlib)
 #  get_property(flexlib_file
 #    TARGET ${flexlib}
@@ -298,7 +285,7 @@ if(NOT flextool OR ${flextool} STREQUAL "")
   message(FATAL_ERROR "flextool not found ${flextool}")
 endif()
 #
-if(LOCAL_BUILD)
+if(${PROJECT_NAME}_LOCAL_BUILD)
   get_property(flex_reflect_plugin_location TARGET flex_reflect_plugin PROPERTY LIBRARY_OUTPUT_DIRECTORY)
   message (STATUS "flex_reflect_plugin_location == ${flex_reflect_plugin_location}")
   set(flex_reflect_plugin
@@ -310,7 +297,7 @@ else()
   )
 endif()
 #
-if(LOCAL_BUILD)
+if(${PROJECT_NAME}_LOCAL_BUILD)
   get_property(flex_squarets_plugin_location TARGET flex_squarets_plugin PROPERTY LIBRARY_OUTPUT_DIRECTORY)
   message (STATUS "flex_squarets_plugin_location == ${flex_squarets_plugin_location}")
   set(flex_squarets_plugin
@@ -321,6 +308,22 @@ else()
     ${CONAN_FLEX_SQUARETS_PLUGIN_ROOT}/lib/flex_squarets_plugin${CMAKE_SHARED_LIBRARY_SUFFIX}
   )
 endif()
+#
+if(NOT TARGET CONAN_PKG::basis)
+  message(FATAL_ERROR "Use basis from conan")
+endif()
+set(basis CONAN_PKG::basis)
+set(basis_location ${CONAN_BASIS_ROOT})
+set(basis_headers
+  ${basis_location}/include
+)
+if(basis_LOCAL_BUILD)
+  set(basis basis)
+  set(basis_headers
+    ${CONAN_BASIS_ROOT}
+  )
+endif(basis_LOCAL_BUILD)
+message(STATUS "basis_headers=${basis_headers}")
 #
 #set(flex_meta_plugin
 #  ${CONAN_FLEX_META_PLUGIN_ROOT}/lib/flex_meta_plugin${CMAKE_SHARED_LIBRARY_SUFFIX}
@@ -350,10 +353,6 @@ set(flexlib_headers
   ${CONAN_FLEXLIB_ROOT}/include
 )
 message(STATUS "flexlib_headers=${flexlib_headers}")
-set(basis_headers
-  ${CONAN_BASIS_ROOT}/include
-)
-message(STATUS "basis_headers=${basis_headers}")
 set(chromium_base_headers
   ${CONAN_CHROMIUM_BASE_ROOT}/include
 )
@@ -513,13 +512,13 @@ if(NOT TARGET CONAN_PKG::flexlib)
   message(FATAL_ERROR "Use flexlib from conan")
 endif()
 set(flexlib CONAN_PKG::flexlib)
-if(LOCAL_BUILD)
+if(${PROJECT_NAME}_LOCAL_BUILD)
   set(flexlib flexlib)
-endif(LOCAL_BUILD)
+endif(${PROJECT_NAME}_LOCAL_BUILD)
 
 list(APPEND USED_3DPARTY_LIBS
   ${flexlib}
-  CONAN_PKG::basis
+  ${basis}
   CONAN_PKG::clang_folly_conan
   CONAN_PKG::boost
   CONAN_PKG::double-conversion
@@ -661,14 +660,14 @@ target_compile_definitions(${LIB_NAME} PUBLIC
 # install and export steps
 include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/Exports.cmake)
 
-if(LOCAL_BUILD)
+if(${PROJECT_NAME}_LOCAL_BUILD)
   # for builds with conan workspace
   execute_process(
     COMMAND ${CMAKE_COMMAND} -E copy_if_different
             ${CMAKE_CURRENT_SOURCE_DIR}/conf/${LIB_NAME}.conf
             ${CMAKE_BINARY_DIR}/${LIB_NAME}.conf
   )
-endif(LOCAL_BUILD)
+endif(${PROJECT_NAME}_LOCAL_BUILD)
 
 # for builds without conan
 # allows to run tests without `cmake install` step
