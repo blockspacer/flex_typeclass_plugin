@@ -32,7 +32,7 @@ Dynamic Generic Programming with Virtual Concepts by Andrea Proli:
 
 - [https://github.com/andyprowl/virtual-concepts/blob/master/draft/Dynamic%20Generic%20Programming%20with%20Virtual%20Concepts.pdf](https://github.com/andyprowl/virtual-concepts/blob/master/draft/Dynamic%20Generic%20Programming%20with%20Virtual%20Concepts.pdf)
 
-Runtime Polymorphic Generic Programming — Mixing Objects and Concepts in ConceptC++
+Runtime Polymorphic Generic Programming ï¿½ Mixing Objects and Concepts in ConceptC++
 
 - [https://pdfs.semanticscholar.org/aa3f/fdcb687f2b5115996f4ef1f2a1ea0a01cb6a.pdf](https://pdfs.semanticscholar.org/aa3f/fdcb687f2b5115996f4ef1f2a1ea0a01cb6a.pdf)
 
@@ -174,14 +174,6 @@ class Typeclass<MagicItemTraits>
 
 `TypeclassImplBase` is `Concept` - abstract base class that is hidden under the covers.
 
-`MagicItem` used to generate:
-
-```cpp
-using MagicItem = Typeclass<MagicItemTraits>;
-```
-
-also `name` parameter controls name of generated `.hpp` and `.cpp` files.
-
 ```cpp
 // will generate files with names based on `MagicItem`:
 // 1. MagicItem.typeclass.generated.cpp
@@ -191,6 +183,12 @@ _typeclass()
 MagicItem
   : public MagicItemTraits
 {};
+```
+
+`MagicItem` also generates type alias:
+
+```cpp
+using MagicItem = Typeclass<MagicItemTraits>;
 ```
 
 2. generate typeclass instance
@@ -469,12 +467,11 @@ namespace generated {
 
 template<>
 void has_T<
-    MagicLongType
+    MagicLongType::typeclass
   >(const FireSpell& data
   , const std::string &name1
   , const int &name2) noexcept
 {
-  /// \note do not use get_concrete<type> here, it may be get_concrete<ref_type>
   LOG(WARNING)
     << "(Fire) has_T on " << name1
     << " by " << name2 << " "
@@ -488,7 +485,6 @@ void has_P1<
     MagicLongType::typeclass
   >(const FireSpell& data, const char *name1) noexcept
 {
-  /// \note do not use get_concrete<type> here, it may be get_concrete<ref_type>
   LOG(WARNING)
     << "(FireSpell) has_P1 on " << name1
     << " by "
@@ -501,7 +497,6 @@ void has_P2<
     MagicLongType::typeclass
   >(const FireSpell& data, const int& name1) noexcept
 {
-  /// \note do not use get_concrete<type> here, it may be get_concrete<ref_type>
   LOG(WARNING)
     << "(FireSpell) has_P2 on " << name1
     << " by "
@@ -521,7 +516,7 @@ void has_P2<
     spellmagicItems.push_back(std::move(pushed));
   }
   {
-    Typeclass<DEFINE_MagicLongType> pushed{};
+    MagicLongType pushed{};
     MagicLongType someTmpSpell{
       FireSpell{"someTmpSpell1", "someTmpSpell1"}};
     pushed = std::move(someTmpSpell); // move
@@ -571,7 +566,7 @@ impl MagicItem for FireSpell {
 }
 ```
 
-## How to combine mul­tiple con­cepts (typeclass-es)
+## How to combine mulï¿½tiple conï¿½cepts (typeclass-es)
 
 You can find details about that problem at [https://aherrmann.github.io/programming/2014/10/19/type-erasure-with-merged-concepts/](https://aherrmann.github.io/programming/2014/10/19/type-erasure-with-merged-concepts/)
 
