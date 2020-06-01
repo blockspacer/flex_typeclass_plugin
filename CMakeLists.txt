@@ -392,7 +392,6 @@ set(TYPECLASS_COMBO_TEMPLATE_HPP
 
 set(flex_typeclass_plugin_generated_sources
   ${CMAKE_CURRENT_BINARY_DIR}/Tooling.cc.generated.cc
-  ${CMAKE_CURRENT_BINARY_DIR}/CodeGenerator.cc.generated.cc
 )
 
 # Set GENERATED properties of your generated source file.
@@ -416,7 +415,6 @@ set(flex_typeclass_plugin_settings
 
 set(flextool_input_files
   ${flex_typeclass_plugin_src_DIR}/Tooling.cc
-  ${flex_typeclass_plugin_src_DIR}/CodeGenerator.cc
 )
 
 # contains generated code that is under version control

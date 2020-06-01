@@ -10,6 +10,7 @@
 
 #include <base/logging.h>
 #include <base/sequenced_task_runner.h>
+#include <base/files/file_path.h>
 
 namespace flex_typeclass_plugin {
 

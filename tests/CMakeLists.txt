@@ -309,14 +309,6 @@ option(${ROOT_PROJECT_NAME}_BUILD_TESTS "Enable tests" ON)
 if(${ROOT_PROJECT_NAME}_BUILD_TESTS)
   message( "${PROJECT_NAME} testing enabled" )
 
-  set ( pimpl_deps
-    pimpl.test.cpp
-    Foo.cc
-    FooImpl.cc
-  )
-  tests_add_executable(${ROOT_PROJECT_NAME}-pimpl
-    "${pimpl_deps}" "${CATCH2_TEST_ARGS}" "${test_main_catch}")
-
     set ( typeclass_deps
       typeclass.test.cpp
     )
@@ -331,7 +323,6 @@ if(${ROOT_PROJECT_NAME}_BUILD_TESTS)
 endif()
 
 #add_to_tests_list(utils)
-#add_to_tests_list(pimpl)
 
 #tests_add_executable(check_all ${UNIT_TEST_SOURCE_LIST} ${GTEST_TEST_ARGS})
 #message(FATAL_ERROR ${UNIT_TEST_SOURCE_LIST})
