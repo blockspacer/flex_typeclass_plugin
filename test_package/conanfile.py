@@ -6,7 +6,7 @@ from functools import total_ordering
 
 class TestPackageConan(ConanFile):
     settings = "os", "compiler", "build_type", "arch"
-    generators = "cmake", "cmake_paths", "virtualenv", "cmake_find_package_multi"
+    generators = "cmake", "cmake_paths", "virtualenv"
 
     topics = ('c++')
 
