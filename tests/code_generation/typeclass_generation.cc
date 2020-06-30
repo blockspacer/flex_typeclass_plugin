@@ -239,7 +239,12 @@ _typeclass(
   ", BufferSize = 64")
 MagicItem
   : public MagicItemTraits
-{};
+{
+  // If you want to store move-only types,
+  // then your interface should have the
+  // |bool kIsMoveOnly = true| member variable.
+  bool kIsMoveOnly = true;
+};
 
 // like `trait`
 /// \note example of merged typeclasses

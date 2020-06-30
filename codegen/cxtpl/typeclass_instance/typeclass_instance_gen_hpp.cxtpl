@@ -87,10 +87,20 @@ struct
 {
   typedef [[+ ImplTypeclassName +]] type;
 
+[[~]]  if (typeclassImplSettings.moveOnly)
+[[~]]  {
+  bool kIsMoveOnly = true;
+[[~]]  } else {
+  bool kIsMoveOnly = false;
+[[~]]  } // typeclassImplSettings.moveOnly
+
+[[~]]  if (!typeclassImplSettings.moveOnly)
+[[~]]  {
   TypeclassImpl(
     const [[+ ImplTypeclassName +]]& arg)
     : concreteData_(arg)
   {}
+[[~]]  }
 
   TypeclassImpl(
     [[+ ImplTypeclassName +]]&& arg)
@@ -109,6 +119,8 @@ struct
     : concreteData_(std::forward<args_t>(args)...)
   {}
 
+[[~]]  if (!typeclassImplSettings.moveOnly)
+[[~]]  {
   std::unique_ptr<
     TypeclassImplBase<[[+ TypeclassBasesCode +]]>
   >
@@ -125,6 +137,7 @@ struct
         [[+ TypeclassBasesCode +]]
       >>(concreteData_);
   }
+[[~]]  }
 
   std::unique_ptr<
     TypeclassImplBase<[[+ TypeclassBasesCode +]]>
@@ -239,10 +252,13 @@ struct
 {
   typedef [[+ ImplTypeclassName +]] type;
 
+[[~]]  if (!typeclassImplSettings.moveOnly)
+[[~]]  {
   InplaceTypeclassImpl(
     const [[+ ImplTypeclassName +]]& arg)
     : concreteData_(arg)
   {}
+[[~]]  }
 
   InplaceTypeclassImpl(
     [[+ ImplTypeclassName +]]&& arg)
@@ -261,6 +277,8 @@ struct
     : concreteData_(std::forward<args_t>(args)...)
   {}
 
+[[~]]  if (!typeclassImplSettings.moveOnly)
+[[~]]  {
   InplaceTypeclassImplBase<[[+ TypeclassBasesCode +]]>*
     clone_as_raw_ptr(void* addr) const
 [[~]] // mark all generated methods as override
@@ -277,6 +295,7 @@ struct
       >
       (concreteData_);
   }
+[[~]]  }
 
   InplaceTypeclassImplBase<[[+ TypeclassBasesCode +]]>*
     move_clone_as_raw_ptr(void* addr)

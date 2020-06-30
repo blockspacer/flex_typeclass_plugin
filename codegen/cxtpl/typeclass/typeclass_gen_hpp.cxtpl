@@ -131,9 +131,12 @@ struct TypeclassImplBase<[[+ fullBaseType +]]> {
   // and rely on TypeclassImplBase's virtual dtor to free the object.
   virtual ~TypeclassImplBase() {}
 
+[[~]]  if (!typeclassSettings.moveOnly)
+[[~]]  {
   virtual
     std::unique_ptr<TypeclassImplBase>
       clone_as_unique_ptr() const = 0;
+[[~]]  }
 
   virtual
     std::unique_ptr<TypeclassImplBase>
@@ -197,7 +200,14 @@ struct Typeclass<[[+ fullBaseType +]]>
   // may be used to import existing typeclass
   struct type
     : [[+ baseClassesCode +]]
-  {};
+  {
+[[~]]  if (typeclassSettings.moveOnly)
+[[~]]  {
+  static constexpr bool kIsMoveOnly = true;
+[[~]]  } else {
+  static constexpr bool kIsMoveOnly = false;
+[[~]]  } // typeclassSettings.moveOnly
+  };
 
   // use it when you want to implement logic, example:
   //  `void has_enough_mana<MagicItem::typeclass>`
@@ -209,12 +219,15 @@ struct Typeclass<[[+ fullBaseType +]]>
     : implBase_{}
   {}
 
+[[~]]  if (!typeclassSettings.moveOnly)
+[[~]]  {
   Typeclass(
     const Typeclass<[[+ fullBaseType +]]>
       & rhs)
     : implBase_(
         rhs.implBase_->clone_as_unique_ptr())
   {}
+[[~]]  }
 
   Typeclass(
     Typeclass<[[+ fullBaseType +]]>
@@ -266,6 +279,8 @@ struct Typeclass<[[+ fullBaseType +]]>
     return *this;
   }
 
+[[~]]  if (!typeclassSettings.moveOnly)
+[[~]]  {
   Typeclass<[[+ fullBaseType +]]>& operator=
     (const Typeclass<[[+ fullBaseType +]]>
       & rhs)
@@ -274,6 +289,7 @@ struct Typeclass<[[+ fullBaseType +]]>
       = rhs.implBase_->clone_as_unique_ptr();
     return *this;
   }
+[[~]]  }
 
   Typeclass<[[+ fullBaseType +]]>& operator=
     (Typeclass<[[+ fullBaseType +]]>
@@ -366,9 +382,12 @@ struct InplaceTypeclassImplBase<[[+ fullBaseType +]]>
   // and rely on InplaceTypeclassImplBase's virtual dtor to free the object.
   virtual ~InplaceTypeclassImplBase() {}
 
+[[~]]  if (!typeclassSettings.moveOnly)
+[[~]]  {
   virtual
     InplaceTypeclassImplBase*
       clone_as_raw_ptr(void* addr) const = 0;
+[[~]]  }
 
   virtual
     InplaceTypeclassImplBase*
@@ -433,7 +452,14 @@ struct InplaceTypeclass<
   // may be used to import existing typeclass
   struct type
     : [[+ baseClassesCode +]]
-  {};
+  {
+[[~]]  if (typeclassSettings.moveOnly)
+[[~]]  {
+  bool kIsMoveOnly = true;
+[[~]]  } else {
+  bool kIsMoveOnly = false;
+[[~]]  } // typeclassSettings.moveOnly
+  };
 
   // use it when you want to implement logic, example:
   //  `void has_enough_mana<MagicItem::typeclass>`
@@ -444,6 +470,8 @@ struct InplaceTypeclass<
   InplaceTypeclass()
   {}
 
+[[~]]  if (!typeclassSettings.moveOnly)
+[[~]]  {
   InplaceTypeclass(
     const InplaceTypeclass<
         [[+ fullBaseType +]]
@@ -455,6 +483,7 @@ struct InplaceTypeclass<
 #endif // _GLIBCXX_HAVE_BUILTIN_LAUNDER
       rhs.__implBase()->clone_as_raw_ptr(&storage_);
   }
+[[~]]  }
 
   InplaceTypeclass(
     InplaceTypeclass<
@@ -600,6 +629,8 @@ struct InplaceTypeclass<
     return *this;
   }
 
+[[~]]  if (!typeclassSettings.moveOnly)
+[[~]]  {
   InplaceTypeclass<
     [[+ fullBaseType +]]
   >& operator=
@@ -622,6 +653,7 @@ struct InplaceTypeclass<
 
     return *this;
   }
+[[~]]  }
 
   InplaceTypeclass<
     [[+ fullBaseType +]]

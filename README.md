@@ -721,6 +721,43 @@ That allows to use any valid C++ type as input passed to `_typeclass_instance` a
 
 Ability to import typeclass from thirparty library is important for plugin-based applications.
 
+Note that typeclass (`IntSummable` below) has inner `type` (`IntSummable::type`).
+
+That inner `type` stores information about some settings used during code generation and can be used to import already generated typeclass from thirparty library:
+
+```cpp
+/// \note imports existing typeclass (may be from external lib)
+using IntSummableType = ::morph::generated::IntSummable::type;
+
+// generates FireSpell_IntSummable
+// like impl for trait
+// allow typeclass<IntSummableTraits> to store FireSpell
+template<
+  typename typeclass_target = IntSummableType
+  , typename impl_target = FireSpell
+>
+struct
+_typeclass_instance()
+FireSpell_IntSummable
+{};
+```
+
+## Move-only types
+
+If you want to store move-only types, then your interface should have the `bool kIsMoveOnly = true` member variable.
+
+```cpp
+// like `trait`
+struct
+_typeclass()
+MagicItem
+  : public MagicItemTraits
+{
+  // To store move-only types
+  bool kIsMoveOnly = true;
+};
+```
+
 ## Development flow (for contributors)
 
 Commands below may be used to build project locally, without system-wide installation.

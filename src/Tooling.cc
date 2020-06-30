@@ -55,6 +55,8 @@ namespace plugin {
 
 static constexpr const char kSingleComma = ',';
 
+static const char kIsMoveOnlyFieldName[] = "kIsMoveOnly";
+
 TypeclassTooling::TypeclassTooling(
   const ::plugin::ToolPlugin::Events::RegisterAnnotationMethods& event
 #if defined(CLING_IS_ON)
@@ -175,8 +177,10 @@ clang_utils::SourceTransformResult
   VLOG(9)
     << "typeclass called...";
 
-  // used by code generator of inline typeclass
+  // used by code generator of inline (in-place) typeclass
   InlineTypeclassSettings inlineTypeclassSettings;
+
+  TypeclassSettings typeclassSettings;
 
   flexlib::args typeclassBaseNames =
     sourceTransformOptions.func_with_args.parsed_func_.args_;
@@ -236,6 +240,24 @@ clang_utils::SourceTransformResult
 
     /// \todo replace with std::vector<MethodInfoPtr>
     reflection::ClassInfoPtr structInfo;
+
+    for(const auto& field
+        : nodeRecordDecl->fields())
+    {
+      const std::string& name = field->getNameAsString();
+      DVLOG(9)
+        << "reflected class "
+        << nodeRecordDecl->getNameAsString()
+        << " has field "
+        << name;
+      if(name == kIsMoveOnlyFieldName) {
+        DVLOG(9)
+          << "reflected class "
+          << nodeRecordDecl->getNameAsString()
+          << " marked for move-only types";
+      }
+      typeclassSettings.moveOnly = true;
+    }
 
     DCHECK(nodeRecordDecl->bases().begin()
       != nodeRecordDecl->bases().end())
@@ -537,6 +559,8 @@ clang_utils::SourceTransformResult
   VLOG(9)
     << "typeclass_instance called...";
 
+  TypeclassImplSettings typeclassImplSettings;
+
   // EXAMPLE:
   // _typeclass_impl(
   //   typeclass_instance(target = "FireSpell", "Printable")
@@ -558,6 +582,7 @@ clang_utils::SourceTransformResult
 
   std::string typeclassBaseTypeIdentifier;
 
+  // hold type of "typeclass_target" argument
   clang::QualType typeclassArgQualType;
 
   const clang::CXXRecordDecl *node =
@@ -819,6 +844,23 @@ clang_utils::SourceTransformResult
           << "(typeclass instance) no bases for: "
           << typeclassArgQualType
               ->getAsCXXRecordDecl()->getNameAsString();
+        for(const auto& field
+            : typeclassArgQualType->getAsCXXRecordDecl()->fields())
+        {
+          const std::string& name = field->getNameAsString();
+          DVLOG(9)
+            << "reflected class "
+            << typeclassArgQualType->getAsCXXRecordDecl()->getNameAsString()
+            << " has field "
+            << name;
+          if(name == kIsMoveOnlyFieldName) {
+            DVLOG(9)
+              << "reflected class "
+              << typeclassArgQualType->getAsCXXRecordDecl()->getNameAsString()
+              << " marked for move-only types";
+          }
+          typeclassImplSettings.moveOnly = true;
+        }
         /// \todo make recursive (support bases of bases)
         for(const clang::CXXBaseSpecifier& it
             : typeclassArgQualType->getAsCXXRecordDecl()->bases())

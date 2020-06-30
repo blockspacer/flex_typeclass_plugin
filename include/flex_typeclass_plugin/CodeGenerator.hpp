@@ -84,7 +84,7 @@ enum class AlignPolicy {
   AtLeast // Alignment >= alignof(T)
 };
 
-// used by code generator of inline typeclass
+// used by code generator of inline (in-place) typeclass
 struct InlineTypeclassSettings {
   std::string BufferSize
     /// \note empty value means sizeof(T)
@@ -103,6 +103,16 @@ struct InlineTypeclassSettings {
   // used by code generator of inline typeclass
   AlignPolicy AlignPolicyType
     = AlignPolicy::AtLeast;
+};
+
+struct TypeclassSettings
+{
+  bool moveOnly = false;
+};
+
+struct TypeclassImplSettings
+{
+  bool moveOnly = false;
 };
 
 // used to prohibit Ctor/Dtor/etc. generation in typeclass
