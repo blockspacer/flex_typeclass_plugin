@@ -758,6 +758,12 @@ MagicItem
 };
 ```
 
+```bash
+\todo try approach with
+https://stackoverflow.com/questions/27073082/conditionally-disabling-a-copy-constructor
+std::is_copy_constructible
+```
+
 ## Development flow (for contributors)
 
 Commands below may be used to build project locally, without system-wide installation.
