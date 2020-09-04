@@ -32,7 +32,7 @@ Dynamic Generic Programming with Virtual Concepts by Andrea Proli:
 
 - [https://github.com/andyprowl/virtual-concepts/blob/master/draft/Dynamic%20Generic%20Programming%20with%20Virtual%20Concepts.pdf](https://github.com/andyprowl/virtual-concepts/blob/master/draft/Dynamic%20Generic%20Programming%20with%20Virtual%20Concepts.pdf)
 
-Runtime Polymorphic Generic Programming � Mixing Objects and Concepts in ConceptC++
+Runtime Polymorphic Generic Programming: Mixing Objects and Concepts in ConceptC++
 
 - [https://pdfs.semanticscholar.org/aa3f/fdcb687f2b5115996f4ef1f2a1ea0a01cb6a.pdf](https://pdfs.semanticscholar.org/aa3f/fdcb687f2b5115996f4ef1f2a1ea0a01cb6a.pdf)
 
@@ -566,7 +566,7 @@ impl MagicItem for FireSpell {
 }
 ```
 
-## How to combine mul�tiple con�cepts (typeclass-es)
+## How to combine multiple concepts (typeclass-es)
 
 You can find details about that problem at [https://aherrmann.github.io/programming/2014/10/19/type-erasure-with-merged-concepts/](https://aherrmann.github.io/programming/2014/10/19/type-erasure-with-merged-concepts/)
 
