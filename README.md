@@ -59,6 +59,9 @@ GIT_SSL_NO_VERIFY=true \
       --profile clang \
           -o flex_typeclass_plugin:enable_clang_from_conan=False \
           -e flex_typeclass_plugin:enable_tests=True
+
+# clean build cache
+conan remove "*" --build --force
 ```
 
 ## CMake and conan integration
