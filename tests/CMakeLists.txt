@@ -211,7 +211,7 @@ macro(set_test_compile_options target)
     $<$<CXX_COMPILER_ID:Clang>:-O0> )
 
   set_target_properties( ${target} PROPERTIES
-    CXX_STANDARD 20
+    CXX_STANDARD 17
     CXX_EXTENSIONS OFF
     CMAKE_CXX_STANDARD_REQUIRED ON
     CMAKE_CXX_FLAGS "-frtti /std:c++latest"
@@ -260,7 +260,7 @@ add_library( ${test_main_catch} OBJECT
   testsCommon.h # include in IDE
 )
 
-set_property(TARGET ${test_main_catch} PROPERTY CXX_STANDARD 20)
+set_property(TARGET ${test_main_catch} PROPERTY CXX_STANDARD 17)
 
 # ensure that dependencies build before <target> does.
 add_dependencies(${test_main_catch}
@@ -293,7 +293,7 @@ target_sources(${test_main_gtest} PRIVATE
   ${generated_typeclasses}
 )
 
-set_property(TARGET ${test_main_gtest} PROPERTY CXX_STANDARD 20)
+set_property(TARGET ${test_main_gtest} PROPERTY CXX_STANDARD 17)
 
 # ensure that dependencies build before <target> does.
 add_dependencies(${test_main_gtest}
