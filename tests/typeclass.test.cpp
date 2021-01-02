@@ -671,7 +671,7 @@ TEST(Typeclass, TypeclassGeneration) {
   {
     // `InplaceTypeclass<SpellTraits>` must be same as `InplaceSpell`
     // i.e. using InplaceSpell = InplaceTypeclass<SpellTraits>;
-    InPlaceSpell myspell{
+    Spell myspell{
       FireSpell{"title0", "description0"}};
 
     myspell.set_spell_power(
@@ -685,7 +685,7 @@ TEST(Typeclass, TypeclassGeneration) {
   }
 
   {
-    std::vector<InPlaceSpell> spells;
+    std::vector<Spell> spells;
     spells.push_back(FireSpell{"FireSpelltitle1"
       , "FireSpelldescription1"});
     {
@@ -698,7 +698,7 @@ TEST(Typeclass, TypeclassGeneration) {
         , "WaterSpelldescription2"};
       spells.push_back(std::move(ws));
     }
-    for(const InplaceTypeclass<SpellTraits>& spell
+    for(const Typeclass<SpellTraits>& spell
         : spells)
     {
       spell.cast(
@@ -726,9 +726,9 @@ TEST(Typeclass, TypeclassGeneration) {
 
   {
     FireSpell fireSpell{"title2", "description2"};
-    InplaceTypeclass<SpellTraits> myspell(fireSpell);
+    Typeclass<SpellTraits> myspell(fireSpell);
 
-    InplaceTypeclass<SpellTraits> myspell_copy = myspell; // copy Spell
+    Typeclass<SpellTraits> myspell_copy = myspell; // copy Spell
 
     myspell_copy.set_spell_power(
       /*spellname*/ "spellname2"

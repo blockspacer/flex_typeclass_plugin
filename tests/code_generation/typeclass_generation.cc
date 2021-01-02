@@ -234,9 +234,7 @@ using IntSummableType = ::morph::generated::IntSummable::type;
 
 // like `trait`
 struct
-_typeclass(
-  "generator = InPlace"
-  ", BufferSize = 64")
+_typeclass()
 MagicItem
   : public MagicItemTraits
 {
@@ -255,9 +253,7 @@ MagicItem
 /// you must define them all.
 // like `trait`
 struct
-_typeclass(
-  "generator = InPlace"
-  ", BufferSize = 64")
+_typeclass()
 MagicLongType
   : public MagicTemplatedTraits<std::string, int>
   , public ParentTemplatedTraits_1<const char *>
